@@ -15,27 +15,23 @@ function HexImage({ src, alt, className, emphasized }: HexImageProps) {
       <div
         className={[
           'relative',
-          'w-[190px] h-[190px]',
-          'md:w-[220px] md:h-[220px]',
+          // sized down to match AboutUs scale
+          'w-[140px] h-[140px]',
+          'md:w-[170px] md:h-[170px]',
           'transition-transform duration-300 ease-in-out',
-          'group-hover:scale-[1.04]',
-          emphasized ? 'scale-[1.02]' : '',
+          'group-hover:scale-[1.03]',
+          emphasized ? '' : '',
         ].join(' ')}
       >
-        {/* dark offset shadow hex (like the reference) */}
-        <div className="hexagon absolute inset-0 translate-x-3 translate-y-3 bg-[#061645]/70 blur-[0.2px]" />
-
-        {/* main hex */}
-        <div className="hexagon relative z-10 h-full w-full overflow-hidden bg-white shadow-[0_10px_24px_rgba(0,0,0,0.18)] transition-shadow duration-300 ease-in-out group-hover:shadow-[0_16px_34px_rgba(0,0,0,0.22)]">
-          <Image
-            src={src}
-            alt={alt}
-            fill
-            className="object-contain p-4 md:p-5"
-            sizes="(min-width: 768px) 220px, 190px"
-            priority={false}
-          />
-        </div>
+        {/* PNGs are already hexagonal, so render them directly (no extra shape/frame). */}
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          className="object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.18)] transition-[filter] duration-300 ease-in-out group-hover:drop-shadow-[0_14px_24px_rgba(0,0,0,0.22)]"
+          sizes="(min-width: 768px) 170px, 140px"
+          priority={false}
+        />
       </div>
     </div>
   );
@@ -56,26 +52,26 @@ export default function Services() {
         />
 
         {/* Layout wrapper (fits in one desktop viewport) */}
-        <div className="container mx-auto flex min-h-screen max-w-7xl flex-col justify-between px-6 py-12 md:px-10 md:py-12">
+        <div className="container mx-auto flex min-h-screen max-w-7xl flex-col justify-between px-4 py-10 md:px-8 md:py-10 lg:px-16">
           {/* Top area: left copy + right hex cluster */}
-          <div className="grid w-full items-center gap-14 md:grid-cols-2">
+          <div className="grid w-full items-center gap-10 md:grid-cols-2">
             {/* Left copy */}
-            <div className="font-sans">
-              <h2 className="text-5xl font-semibold leading-[1.02] tracking-tight md:text-6xl">
+            <div className="space-y-2 pr-4 md:pr-8 font-sans -mt-[50px]">
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
                 Our Services
               </h2>
 
-              <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-white/85 md:text-[16px]">
+              <p className="text-xs leading-relaxed font-normal text-white/85 max-w-xl">
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed
                 consequat quam. Sed vel lorem finibus enim consectetur eleifend sit
                 amet vel neque.
               </p>
 
-              <ul className="mt-6 space-y-3 text-[18px] font-semibold text-white md:text-[20px]">
+              <ul className="mt-5 space-y-3 text-sm md:text-base font-semibold text-white">
                 {['Development', 'Support', 'Analysis & Design', 'Sales'].map(
                   (t) => (
                     <li key={t} className="flex items-center gap-3">
-                      <span className="text-[22px] leading-none text-white/90">
+                      <span className="text-[18px] leading-none text-white/90">
                         •
                       </span>
                       <span>{t}</span>
@@ -88,7 +84,7 @@ export default function Services() {
             {/* Right hex cluster */}
             <div className="flex justify-center md:justify-end">
               <div className="w-full max-w-[760px]">
-                <div className="grid grid-cols-3 grid-rows-2 place-items-center gap-x-6 gap-y-10">
+                <div className="grid grid-cols-3 grid-rows-2 place-items-center gap-x-[80px] md:gap-x-[88px] gap-y-8">
                   {/* top row */}
                   <HexImage
                     src="/services/SALES.png"
@@ -106,12 +102,12 @@ export default function Services() {
                   <HexImage
                     src="/services/DEVELOPEMENT.png"
                     alt="Development"
-                    className="col-start-1 row-start-2 -mt-8 md:-mt-10"
+                    className="col-start-1 row-start-2 -mt-6 md:-mt-[170px] translate-x-[82px] md:translate-x-[100px]"
                   />
                   <HexImage
                     src="/services/SUPPORT.png"
                     alt="Support"
-                    className="col-start-2 row-start-2 -mt-8 md:-mt-10"
+                    className="col-start-2 row-start-2 -mt-6 md:-mt-[165px] translate-x-[82px] md:translate-x-[100px]"
                   />
                 </div>
               </div>
@@ -119,54 +115,79 @@ export default function Services() {
           </div>
 
           {/* Red Scrolling Ticker Bar */}
-          <div className="bg-[#DC2626] py-3 md:py-3.5">
-            <div className="ticker-container">
+          <div className="relative left-1/2 w-screen -translate-x-1/2 bg-[#5B0A0A] py-2.5 md:py-3">
+            <div className="ticker-container ticker-fade">
               <div className="ticker-content">
-                <span className="ticker-text">
-                  TV INSTALLATION * GADGETS * PRINTERS * LAPTOP * SOFTWARE
-                  DEVELOPMENT * UI/UX DESIGN * SOFTWARE INSTALLATION * HARDWARE
-                  REPAIRS * CCTV INSTALLATION
-                </span>
-                <span className="ticker-text">
-                  TV INSTALLATION * GADGETS * PRINTERS * LAPTOP * SOFTWARE
-                  DEVELOPMENT * UI/UX DESIGN * SOFTWARE INSTALLATION * HARDWARE
-                  REPAIRS * CCTV INSTALLATION
-                </span>
+                {/* One loop */}
+                <div className="ticker-row">
+                  <span className="ticker-item">SOFTWARE DEVELOPMENT</span>
+                  <span className="ticker-star">*</span>
+                  <span className="ticker-item">UI/UX DESIGN</span>
+                  <span className="ticker-star">*</span>
+                  <span className="ticker-item">SOFTWARE INSTALLATION</span>
+                  <span className="ticker-star">*</span>
+                  <span className="ticker-item">HARDWARE REPAIRS</span>
+                  <span className="ticker-star">*</span>
+                  <span className="ticker-item">CCTV INSTALLATION</span>
+                  <span className="ticker-star">*</span>
+                  <span className="ticker-item">GADGETS</span>
+                  <span className="ticker-star">*</span>
+                  <span className="ticker-item">PRINTERS</span>
+                  <span className="ticker-star">*</span>
+                  <span className="ticker-item">LAPTOP</span>
+                </div>
+
+                {/* Duplicate loop for seamless scroll */}
+                <div className="ticker-row" aria-hidden>
+                  <span className="ticker-item">SOFTWARE DEVELOPMENT</span>
+                  <span className="ticker-star">*</span>
+                  <span className="ticker-item">UI/UX DESIGN</span>
+                  <span className="ticker-star">*</span>
+                  <span className="ticker-item">SOFTWARE INSTALLATION</span>
+                  <span className="ticker-star">*</span>
+                  <span className="ticker-item">HARDWARE REPAIRS</span>
+                  <span className="ticker-star">*</span>
+                  <span className="ticker-item">CCTV INSTALLATION</span>
+                  <span className="ticker-star">*</span>
+                  <span className="ticker-item">GADGETS</span>
+                  <span className="ticker-star">*</span>
+                  <span className="ticker-item">PRINTERS</span>
+                  <span className="ticker-star">*</span>
+                  <span className="ticker-item">LAPTOP</span>
+                </div>
               </div>
             </div>
           </div>
 
           {/* By the Numbers (kept compact so it stays visible) */}
-          <div className="pt-10 md:pt-10">
+          <div className="pt-8 md:pt-8">
             <div className="text-center font-sans">
-              <h3 className="text-4xl font-semibold md:text-5xl">
+              <h3 className="text-2xl md:text-3xl font-bold">
                 By the Numbers
               </h3>
 
-              <div className="mt-10 grid grid-cols-2 gap-y-10 md:grid-cols-4 md:gap-y-0">
+              <div className="mt-8 grid grid-cols-2 gap-y-8 md:grid-cols-4 md:gap-y-0">
                 <div>
-                  <div className="text-6xl font-semibold md:text-7xl">30+</div>
-                  <div className="mt-2 text-xl font-semibold md:text-2xl">
+                  <div className="text-4xl md:text-5xl font-bold">30+</div>
+                  <div className="mt-1 text-sm md:text-base font-semibold">
                     Clients
                   </div>
                 </div>
                 <div>
-                  <div className="text-6xl font-semibold md:text-7xl">
-                    5000+
-                  </div>
-                  <div className="mt-2 text-xl font-semibold md:text-2xl">
+                  <div className="text-4xl md:text-5xl font-bold">5000+</div>
+                  <div className="mt-1 text-sm md:text-base font-semibold">
                     Customers
                   </div>
                 </div>
                 <div>
-                  <div className="text-6xl font-semibold md:text-7xl">100+</div>
-                  <div className="mt-2 text-xl font-semibold md:text-2xl">
+                  <div className="text-4xl md:text-5xl font-bold">100+</div>
+                  <div className="mt-1 text-sm md:text-base font-semibold">
                     Projects
                   </div>
                 </div>
                 <div>
-                  <div className="text-6xl font-semibold md:text-7xl">16</div>
-                  <div className="mt-2 text-xl font-semibold md:text-2xl">
+                  <div className="text-4xl md:text-5xl font-bold">16</div>
+                  <div className="mt-1 text-sm md:text-base font-semibold">
                     Dedicated Staff
                   </div>
                 </div>

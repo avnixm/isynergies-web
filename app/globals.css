@@ -52,16 +52,83 @@ body {
   white-space: nowrap;
 }
 
+.ticker-fade {
+  mask-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) 35%,
+    rgba(0, 0, 0, 0.35) 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) 35%,
+    rgba(0, 0, 0, 0.35) 100%
+  );
+}
+
 .ticker-content {
   display: inline-flex;
   animation: scrollTicker 30s linear infinite;
 }
 
-.ticker-text {
-  padding: 0 2rem;
-  font-weight: bold;
+.projects-marquee {
+  overflow: hidden;
+}
+
+@keyframes projectsMarquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.projects-marquee-row {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.projects-marquee-track {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  width: max-content;
+  animation: projectsMarquee var(--marquee-duration, 60s) linear infinite;
+  will-change: transform;
+}
+
+.projects-marquee-track--ahead {
+  /* make the second row start ahead */
+  animation-delay: var(--marquee-offset, -18s);
+}
+
+.projects-marquee:hover .projects-marquee-track,
+.projects-marquee:focus-within .projects-marquee-track {
+  animation-play-state: paused;
+}
+
+.ticker-row {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.ticker-item {
+  padding: 0 1rem;
+  font-weight: 700;
   text-transform: uppercase;
-  font-size: 1rem;
+  font-size: 0.95rem;
+  color: white;
+  white-space: nowrap;
+}
+
+.ticker-star {
+  margin: 0 1rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 0.95rem;
   color: white;
   white-space: nowrap;
 }

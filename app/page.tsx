@@ -12,6 +12,11 @@ const navLinks = [
 import AboutUs from './components/AboutUs';
 import BoardOfDirectors from './components/BoardOfDirectors';
 import Services from './components/Services';
+import Projects from './components/Projects';
+import Team from './components/Team';
+import Shop from './components/Shop';
+import Contact from './components/Contact';
+import Footer from './components/Footer';
 
 export default function Home() {
   return (
@@ -183,6 +188,21 @@ export default function Home() {
       
       {/* Services Section */}
       <Services />
+
+      {/* Projects Section */}
+      <Projects />
+
+      {/* Our Team Section */}
+      <Team />
+
+      {/* Shop Section */}
+      <Shop />
+
+      {/* Contact Section */}
+      <Contact />
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }
