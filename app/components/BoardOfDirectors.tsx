@@ -1,15 +1,36 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 
+type BoardMember = {
+  id: number;
+  firstName: string;
+  lastName: string;
+  position: string;
+  image: string;
+  displayOrder: number;
+};
+
 export default function BoardOfDirectors() {
-  const boardMembers = [
-    { name: 'Divina Gracia', lastName: 'Santos', position: 'President', image: '/board-of-directors/divinagraciasantos.png' },
-    { name: 'Rolando', lastName: 'Victoria', position: 'Vice President', image: '/board-of-directors/rolandovictoria.png' },
-    { name: 'Irma', lastName: 'Santos', position: 'Secretary', image: '/board-of-directors/irmasantos.png' },
-    { name: 'Emeteria', lastName: 'Quijano', position: 'Treasurer', image: '/board-of-directors/emeteriaquijano.png' },
-    { name: 'Joel', lastName: 'Respicio', position: 'AUDITOR', image: '/board-of-directors/joelrespicio.png' },
-  ];
+  const [boardMembers, setBoardMembers] = useState<BoardMember[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchBoardMembers();
+  }, []);
+
+  const fetchBoardMembers = async () => {
+    try {
+      const response = await fetch('/api/admin/board-members');
+      const data = await response.json();
+      setBoardMembers(data);
+    } catch (error) {
+      console.error('Error fetching board members:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <section
@@ -46,31 +67,47 @@ export default function BoardOfDirectors() {
 
           {/* Board Members Grid */}
           <div className="flex justify-center relative z-10">
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-5 mb-8 w-fit mx-auto">
-              {boardMembers.map((member, index) => (
-                <div key={index} className="relative group">
-                  <div className="relative rounded-xl overflow-hidden w-[150px] h-[200px] md:w-[180px] md:h-[240px]"
-                    style={{
-                      background: 'linear-gradient(to right, rgba(255, 150, 100, 0.9) 0%, rgba(255, 200, 150, 0.8) 50%, rgba(255, 255, 255, 0.9) 100%)',
-                    }}
-                  >
-                    <Image
-                      src={member.image}
-                      alt={`${member.name} ${member.lastName}`}
-                      width={350}
-                      height={433}
-                      className="w-full h-full object-cover"
-                    />
-                    {/* Hover overlay with dark blue gradient showing name and position */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0D1E66] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
-                      <p className="text-white font-bold text-xl md:text-2xl mb-0.5">{member.name}</p>
-                      <p className="text-white font-bold text-xl md:text-2xl mb-0.5">{member.lastName}</p>
-                      <p className="text-white text-[10px] md:text-xs font-normal uppercase">{member.position}</p>
+            {loading ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-700"></div>
+              </div>
+            ) : boardMembers.length === 0 ? (
+              <div className="text-center py-16">
+                <p className="text-gray-600 text-lg">No board members to display</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-5 mb-8 w-fit mx-auto">
+                {boardMembers.map((member) => (
+                  <div key={member.id} className="relative group">
+                    <div className="relative rounded-xl overflow-hidden w-[150px] h-[200px] md:w-[180px] md:h-[240px]"
+                      style={{
+                        background: 'linear-gradient(to right, rgba(255, 150, 100, 0.9) 0%, rgba(255, 200, 150, 0.8) 50%, rgba(255, 255, 255, 0.9) 100%)',
+                      }}
+                    >
+                      {member.image ? (
+                        <Image
+                          src={member.image}
+                          alt={`${member.firstName} ${member.lastName}`}
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-full">
+                          <span className="text-6xl text-gray-300">👤</span>
+                        </div>
+                      )}
+                      {/* Hover overlay with dark blue gradient showing name and position */}
+                      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0D1E66] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
+                        <p className="text-white font-bold text-xl md:text-2xl mb-0.5">{member.firstName}</p>
+                        <p className="text-white font-bold text-xl md:text-2xl mb-0.5">{member.lastName}</p>
+                        <p className="text-white text-[10px] md:text-xs font-normal uppercase">{member.position}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
 
