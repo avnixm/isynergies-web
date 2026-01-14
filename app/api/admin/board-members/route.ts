@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/app/db';
 import { boardMembers } from '@/app/db/schema';
 import { requireAuth } from '@/app/lib/auth-middleware';
-import { desc } from 'drizzle-orm';
+import { asc } from 'drizzle-orm';
 
 // GET all board members
 export async function GET(request: Request) {
@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     const members = await db
       .select()
       .from(boardMembers)
-      .orderBy(desc(boardMembers.displayOrder));
+      .orderBy(asc(boardMembers.displayOrder));
 
     return NextResponse.json(members);
   } catch (error) {

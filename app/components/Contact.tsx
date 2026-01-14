@@ -1,19 +1,77 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useToast } from './ui/toast';
+
+type SiteSettings = {
+  companyName: string;
+  companyAddress: string;
+  companyPhone: string;
+  companyEmail: string;
+  companyFacebook: string;
+};
 
 export default function Contact() {
+  const toast = useToast();
   const [formData, setFormData] = useState({
     email: '',
     contactNo: '',
     name: '',
     message: '',
   });
+  const [settings, setSettings] = useState<SiteSettings>({
+    companyName: 'iSynergies Inc.',
+    companyAddress: 'ASKI Building 105 Maharlika Highway, Cabanatuan City, Nueva Ecija',
+    companyPhone: '+63 123 456 7890',
+    companyEmail: 'info@isynergies.com',
+    companyFacebook: 'https://facebook.com/isynergies',
+  });
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch('/api/admin/site-settings');
+        if (response.ok) {
+          const data = await response.json();
+          setSettings(data);
+        }
+      } catch (error) {
+        console.error('Error fetching site settings:', error);
+      }
+    };
+
+    fetchSettings();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log('Form submitted:', formData);
+    setSubmitting(true);
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        toast.success('Message sent successfully! We\'ll get back to you soon.');
+        setFormData({
+          email: '',
+          contactNo: '',
+          name: '',
+          message: '',
+        });
+      } else {
+        toast.error('Failed to send message. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      toast.error('An error occurred. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -67,7 +125,7 @@ export default function Contact() {
                     </svg>
                   </div>
                   <p className="text-base md:text-lg">
-                    105 Maharlika Highway, Cabanatuan City, Philippines
+                    {settings.companyAddress}
                   </p>
                 </div>
 
@@ -89,7 +147,7 @@ export default function Contact() {
                       />
                     </svg>
                   </div>
-                  <p className="text-base md:text-lg">(044) 329 2400</p>
+                  <p className="text-base md:text-lg">{settings.companyPhone}</p>
                 </div>
 
                 {/* Facebook */}
@@ -108,7 +166,7 @@ export default function Contact() {
                       />
                     </svg>
                   </div>
-                  <p className="text-base md:text-lg">facebook.com/isynergiesinc</p>
+                  <p className="text-base md:text-lg">{settings.companyFacebook.replace('https://', '').replace('http://', '')}</p>
                 </div>
 
                 {/* Email */}
@@ -129,7 +187,7 @@ export default function Contact() {
                       />
                     </svg>
                   </div>
-                  <p className="text-base md:text-lg">infoho@isynergiesinc.com</p>
+                  <p className="text-base md:text-lg">{settings.companyEmail}</p>
                 </div>
               </div>
             </div>
@@ -225,16 +283,19 @@ export default function Contact() {
               </div>
 
               {/* Submit Button */}
-              <div className="flex justify-end pt-2">
-                <button
-                  type="submit"
-                  className="inline-flex items-center justify-center rounded-full px-8 py-3 text-sm font-semibold text-white font-sans transition-all duration-300 hover:shadow-lg"
-                  style={{
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  }}
-                >
-                  Send Message
-                </button>
+              <div className="pt-2">
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="inline-flex items-center justify-center rounded-full px-8 py-3 text-sm font-semibold text-white font-sans transition-all duration-300 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    }}
+                  >
+                    {submitting ? 'Sending...' : 'Send Message'}
+                  </button>
+                </div>
               </div>
             </form>
             </div>

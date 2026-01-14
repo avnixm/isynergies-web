@@ -2,9 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Users, Briefcase, UserCog, Wrench, Activity } from 'lucide-react';
+import { Users, Briefcase, UserCog, Wrench, Activity, Mail } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Button } from '@/app/components/ui/button';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/app/components/ui/table';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -47,28 +56,24 @@ export default function AdminDashboard() {
       label: 'Board Members', 
       value: stats.boardMembers, 
       icon: Users, 
-      color: 'from-blue-500 to-blue-600',
       href: '/admin/dashboard/board-members'
     },
     { 
       label: 'Projects', 
       value: stats.projects, 
       icon: Briefcase, 
-      color: 'from-purple-500 to-purple-600',
       href: '/admin/dashboard/projects'
     },
     { 
       label: 'Team Members', 
       value: stats.teamMembers, 
       icon: UserCog, 
-      color: 'from-green-500 to-green-600',
       href: '/admin/dashboard/team'
     },
     { 
       label: 'Services', 
       value: stats.services, 
       icon: Wrench, 
-      color: 'from-orange-500 to-orange-600',
       href: '/admin/dashboard/services'
     },
   ];
@@ -79,46 +84,103 @@ export default function AdminDashboard() {
       description: 'Add, edit, or remove board members',
       icon: Users,
       href: '/admin/dashboard/board-members',
-      color: 'text-blue-600'
     },
     {
       title: 'Manage Projects',
       description: 'Update your portfolio and project showcase',
       icon: Briefcase,
       href: '/admin/dashboard/projects',
-      color: 'text-purple-600'
     },
     {
       title: 'Site Settings',
       description: 'Update company information and contact details',
       icon: Activity,
       href: '/admin/dashboard/site-settings',
-      color: 'text-green-600'
+    },
+  ];
+
+  const recentActivity = [
+    {
+      type: 'Message',
+      entity: 'New contact form submission',
+      section: 'Messages',
+      time: '5 min ago',
+    },
+    {
+      type: 'Project',
+      entity: 'Updated “Digital Transformation Roadmap”',
+      section: 'Projects',
+      time: '1 hour ago',
+    },
+    {
+      type: 'Board Member',
+      entity: 'Added new board member',
+      section: 'Board of Directors',
+      time: 'Yesterday',
+    },
+    {
+      type: 'Service',
+      entity: 'Edited “Managed IT Services”',
+      section: 'Services',
+      time: '2 days ago',
     },
   ];
 
   return (
     <div className="space-y-8">
       {/* Header */}
+      <div className="flex items-start justify-between gap-4">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Dashboard</h1>
-        <p className="text-gray-500 mt-2">Welcome to the iSynergies Content Management System</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-800">
+            Overview
+          </h1>
+          <p className="mt-1 text-sm text-gray-800">
+            High-level view of your content and recent activity.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link href="/admin/dashboard/site-settings" className="hidden sm:inline-flex">
+            <Button
+              type="button"
+              variant="outline"
+              className="bg-background/80 backdrop-blur-sm"
+            >
+              <Wrench className="mr-2 h-4 w-4" />
+              Site settings
+            </Button>
+          </Link>
+          <Link href="/admin/dashboard/messages">
+            <Button
+              type="button"
+              className="bg-accent/90 text-accent-foreground hover:bg-accent"
+            >
+              <Mail className="mr-2 h-4 w-4" />
+              View messages
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
             <Link key={stat.label} href={stat.href}>
-              <Card className={`bg-gradient-to-br ${stat.color} text-white hover:shadow-xl transition-all cursor-pointer border-0`}>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
+              <Card className="group cursor-pointer border border-border bg-white/90 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-white hover:shadow-md">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between gap-2">
                     <div>
-                      <p className="text-white/80 text-sm font-medium">{stat.label}</p>
-                      <p className="text-4xl font-bold mt-2">{stat.value}</p>
+                      <p className="text-xs font-medium uppercase tracking-wide text-gray-800">
+                        {stat.label}
+                      </p>
+                      <p className="mt-2 text-3xl font-semibold text-gray-800">
+                        {stat.value}
+                      </p>
                     </div>
-                    <Icon className="h-12 w-12 opacity-30" />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 text-accent group-hover:bg-accent/20">
+                      <Icon className="h-5 w-5" />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -127,23 +189,32 @@ export default function AdminDashboard() {
         })}
       </div>
 
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       {/* Quick Actions */}
-      <Card>
+        <Card className="lg:col-span-2">
         <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>Frequently used management tools</CardDescription>
+            <CardTitle>Quick actions</CardTitle>
+            <CardDescription>
+              Jump into the sections you manage the most.
+            </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {quickActions.map((action) => {
               const Icon = action.icon;
               return (
                 <Link key={action.title} href={action.href}>
-                  <div className="flex items-start gap-4 p-4 rounded-lg border-2 border-gray-200 hover:border-[#0D1E66] hover:bg-blue-50 transition-all cursor-pointer">
-                    <Icon className={`h-6 w-6 ${action.color} flex-shrink-0 mt-1`} />
+                    <div className="flex items-start gap-3 rounded-xl border border-border bg-white/90 p-4 shadow-xs transition-all hover:-translate-y-0.5 hover:border-accent/70 hover:bg-accent/5">
+                      <div className="mt-1 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
+                        <Icon className="h-4 w-4" />
+                      </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">{action.title}</h3>
-                      <p className="text-sm text-gray-500 mt-1">{action.description}</p>
+                        <h3 className="text-sm font-semibold text-gray-800">
+                          {action.title}
+                        </h3>
+                        <p className="mt-1 text-xs text-gray-800">
+                          {action.description}
+                        </p>
                     </div>
                   </div>
                 </Link>
@@ -153,20 +224,63 @@ export default function AdminDashboard() {
         </CardContent>
       </Card>
 
+        {/* Recent Activity Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent activity</CardTitle>
+            <CardDescription>
+              Latest changes across messages, projects, and content.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Item</TableHead>
+                  <TableHead>Section</TableHead>
+                  <TableHead className="text-right">When</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recentActivity.map((item) => (
+                  <TableRow key={`${item.type}-${item.time}`}>
+                    <TableCell className="font-medium">{item.type}</TableCell>
+                    <TableCell>{item.entity}</TableCell>
+                    <TableCell className="text-xs text-gray-800">
+                      {item.section}
+                    </TableCell>
+                    <TableCell className="text-right text-xs text-gray-800">
+                      {item.time}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+              <TableCaption>
+                Activity shown is from the last few days.
+              </TableCaption>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Info Card */}
-      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+      <Card className="border border-accent/20 bg-gradient-to-r from-blue-50/80 via-white to-indigo-50/80">
         <CardContent className="p-6">
           <div className="flex items-start gap-4">
             <div className="flex-shrink-0">
-              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <Activity className="h-5 w-5 text-blue-600" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10">
+                <Activity className="h-5 w-5 text-accent" />
               </div>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-blue-900 mb-1">Content Management System</h3>
-              <p className="text-blue-700 text-sm">
-                Use the sidebar to navigate between different content sections. All changes made here will be reflected on the live website. 
-                Upload images directly from your management pages.
+              <h3 className="mb-1 text-base font-semibold text-gray-800">
+                Content Management System
+              </h3>
+              <p className="text-sm text-gray-800">
+                Use the sidebar to navigate between different content sections. All changes
+                made here will be reflected on the live website. Upload assets directly from
+                your management pages and keep your content up to date.
               </p>
             </div>
           </div>

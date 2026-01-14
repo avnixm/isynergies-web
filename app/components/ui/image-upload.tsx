@@ -36,7 +36,9 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
       if (!response.ok) throw new Error('Upload failed');
 
       const data = await response.json();
-      onChange(data.url);
+      // Return the image ID (which is part of the URL path)
+      const imageId = data.id || data.url.split('/').pop();
+      onChange(imageId);
     } catch (error) {
       console.error('Upload error:', error);
       alert('Failed to upload image');
@@ -54,12 +56,19 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
     disabled: disabled || uploading,
   });
 
+  // Construct proper image URL for display
+  const displayUrl = value
+    ? (typeof value === 'string' && (value.startsWith('/api/images/') || value.startsWith('http'))
+        ? value 
+        : `/api/images/${value}`)
+    : '';
+
   return (
     <div className="space-y-4">
       {value ? (
         <div className="relative w-full h-64 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
           <Image
-            src={value}
+            src={displayUrl}
             alt="Upload"
             fill
             className="object-contain"

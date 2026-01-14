@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/app/db';
 import { projects } from '@/app/db/schema';
 import { requireAuth } from '@/app/lib/auth-middleware';
-import { desc } from 'drizzle-orm';
+import { asc } from 'drizzle-orm';
 
 // GET all projects
 export async function GET() {
@@ -10,7 +10,7 @@ export async function GET() {
     const allProjects = await db
       .select()
       .from(projects)
-      .orderBy(desc(projects.displayOrder), desc(projects.createdAt));
+      .orderBy(asc(projects.displayOrder));
 
     return NextResponse.json(allProjects);
   } catch (error) {

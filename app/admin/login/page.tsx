@@ -3,6 +3,12 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { Lock, User } from 'lucide-react';
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
+import { Input } from '@/app/components/ui/input';
+import { Label } from '@/app/components/ui/label';
+import { Button } from '@/app/components/ui/button';
 
 export default function AdminLogin() {
   const router = useRouter();
@@ -31,10 +37,7 @@ export default function AdminLogin() {
         return;
       }
 
-      // Store token in localStorage
       localStorage.setItem('admin_token', data.token);
-      
-      // Redirect to admin dashboard
       router.push('/admin/dashboard');
     } catch (err) {
       setError('An error occurred. Please try again.');
@@ -43,12 +46,12 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0D1E66] via-[#1A3A8A] to-[#0D1E66]">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
-          {/* Logo */}
-          <div className="flex justify-center mb-8">
-            <div className="relative h-16 w-52">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary via-primary/90 to-primary">
+      <div className="w-full max-w-md px-4">
+        <Card className="border-border/20 bg-white/95 shadow-xl backdrop-blur-md">
+          <CardHeader className="space-y-4 text-center">
+            <div className="flex justify-center">
+              <div className="relative h-14 w-40">
               <Image
                 src="/logos/isynergiesinclogo.png"
                 alt="iSynergies Inc."
@@ -58,70 +61,63 @@ export default function AdminLogin() {
               />
             </div>
           </div>
-
-          <h1 className="text-2xl font-bold text-gray-900 text-center mb-2">
-            Admin Login
-          </h1>
-          <p className="text-gray-600 text-center mb-8">
-            Content Management System
-          </p>
-
+            <CardTitle className="text-xl">Admin Login</CardTitle>
+            <CardDescription>Secure access to the iSynergies CMS</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+              <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label
-                htmlFor="username"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Username
-              </label>
-              <input
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-accent focus-within:ring-offset-2">
+                  <User className="h-4 w-4 text-gray-800" />
+                  <Input
                 id="username"
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D1E66] focus:border-transparent text-gray-900"
+                    className="border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
                 placeholder="Enter your username"
               />
+                </div>
             </div>
 
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Password
-              </label>
-              <input
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 shadow-sm focus-within:ring-2 focus-within:ring-accent focus-within:ring-offset-2">
+                  <Lock className="h-4 w-4 text-gray-800" />
+                  <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D1E66] focus:border-transparent text-gray-900"
+                    className="border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
                 placeholder="Enter your password"
               />
+                </div>
             </div>
 
-            <button
+              <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-[#0D1E66] to-[#1A3A8A] text-white py-3 px-4 rounded-lg font-semibold hover:from-[#1A3A8A] hover:to-[#0D1E66] focus:outline-none focus:ring-2 focus:ring-[#0D1E66] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                className="mt-2 w-full bg-primary/90 text-primary-foreground backdrop-blur-sm hover:bg-primary"
             >
-              {loading ? 'Logging in...' : 'Login'}
-            </button>
+                {loading ? 'Signing in…' : 'Sign in'}
+              </Button>
           </form>
 
-          <p className="mt-6 text-center text-xs text-gray-500">
+            <p className="pt-2 text-center text-xs text-gray-800">
             © 2026 iSynergies Inc. All rights reserved.
           </p>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

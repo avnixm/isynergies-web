@@ -1,12 +1,123 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import Loading from './ui/loading';
+
+type AboutUsContent = {
+  title: string;
+  paragraph1: string;
+  paragraph2: string;
+  paragraph3: string;
+  paragraph4: string;
+  paragraph5: string;
+  missionTitle: string;
+  missionText: string;
+  visionTitle: string;
+  visionText: string;
+  galleryImage: string;
+};
+
+type AboutUsGalleryImage = {
+  id: number;
+  image: string;
+  alt: string;
+  displayOrder: number;
+};
 
 export default function AboutUs() {
+  const [content, setContent] = useState<AboutUsContent | null>(null);
+  const [galleryImages, setGalleryImages] = useState<AboutUsGalleryImage[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchContent();
+    fetchGalleryImages();
+  }, []);
+
+  const fetchContent = async () => {
+    try {
+      const response = await fetch('/api/admin/about-us');
+      const data = await response.json();
+      setContent(data);
+    } catch (error) {
+      console.error('Error fetching about us content:', error);
+      // Set default content if fetch fails
+      setContent({
+        title: 'About Us',
+        paragraph1: 'Isynergies, Inc was established and officially registered with the Securities and Exchange Commission (SEC) on October 30, 2012 as Stock Corporation inline in Other Software and Consultancy and Supply industry.',
+        paragraph2: 'The office is based in ASKI Building 105 Maharlika Highway, Cabanatuan City, Nueva Ecija.',
+        paragraph3: 'iSynergies, Inc. is a strategic business unit of ASKI Group of Companies, Inc. responsible for providing hardware and software solutions. It also offers products and services to the public and is composed of the Marketing and Sales Unit, Software Development and Quality Assurance Unit, and System Technical and Network Administration Unit.',
+        paragraph4: 'The Software Development unit creates web, mobile, and computer applications that help companies digitize manual processes and improve transaction speed and efficiency. The System Technical unit ensures network and hardware security through proper licensing, configurations, server maintenance, and the installation of security systems such as digital locks, biometrics, and CCTV. The Marketing and Sales unit provides essential hardware and software products, including computers, printers, software licenses, and mobile phones to support daily business operations.',
+        paragraph5: 'Our team helps your IT to the next level. We make your IT plans possible.',
+        missionTitle: 'Our Mission',
+        missionText: 'To provide Information Technology Solutions to clientele rendered by skilled and competent workforce.',
+        visionTitle: 'Our Vision',
+        visionText: 'A Trusted Partner of Every Businesses in Software and Hardware Technological Transformation.',
+        galleryImage: '/aboutusgallery.png',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchGalleryImages = async () => {
+    try {
+      const response = await fetch('/api/admin/about-us/gallery-images');
+      if (!response.ok) return;
+      const data = await response.json();
+      setGalleryImages(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error fetching about us gallery images:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <section
+        id="about"
+        className="relative min-h-screen pb-5 flex items-center justify-center"
+        style={{ backgroundColor: '#D7E1E4' }}
+      >
+        <Loading message="Loading About Us content" size="lg" />
+      </section>
+    );
+  }
+
+  if (!content) return null;
+
+  const getImageSrc = (value: string | null | undefined, fallback: string) => {
+    if (!value || value.toString().trim() === '') return fallback;
+    const v = value.toString();
+    if (v.startsWith('/api/images/') || v.startsWith('http') || v.startsWith('/')) return v;
+    return `/api/images/${v}`;
+  };
+
+  // If no gallery images are configured yet, fall back to the single galleryImage repeated.
+  const baseGallery = galleryImages.length
+    ? [...galleryImages]
+        .sort((a, b) => a.displayOrder - b.displayOrder)
+        .map((g) => ({
+        key: `db-${g.id}`,
+        src: getImageSrc(g.image, '/aboutusgallery.png'),
+        alt: g.alt || 'About Us gallery image',
+      }))
+    : Array.from({ length: 6 }).map((_, i) => ({
+        key: `fallback-${i}`,
+        src: getImageSrc(content.galleryImage, '/aboutusgallery.png'),
+        alt: 'About Us gallery image',
+      }));
+
+  // Sort by order (displayOrder) and duplicate for seamless loop.
+  const orderedGallery = [...baseGallery]; // baseGallery is already derived from ordered data below
+  const tiledGallery = [...orderedGallery, ...orderedGallery];
+  const tileHeight = `${100 / orderedGallery.length}%`;
+  const scrollSeconds = Math.max(20, baseGallery.length * 6);
+
   return (
       <section
         id="about"
-        className="relative min-h-screen pb-5"
+        className="relative"
         style={{ backgroundColor: '#D7E1E4' }}
       >
         {/* Red circle gradient in top left - behind text */}
@@ -18,150 +129,66 @@ export default function AboutUs() {
             WebkitFilter: 'blur(40px)',
           }}
         />
-        
-        {/* Right Side - Auto-scrolling Image Gallery (Extended to right edge) - Positioned relative to section */}
-        <div className="absolute left-1/2 right-0 top-0 bottom-[60px] overflow-hidden z-0">
-          <div className="scroll-animation h-full w-full">
-            {/* First set of images */}
-            <div className="w-full h-full overflow-hidden">
-              <Image
-                src="/aboutusgallery.png"
-                alt="iSynergies team group photo"
-                width={600}
-                height={600}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            
-            <div className="w-full h-full overflow-hidden">
-              <Image
-                src="/aboutusgallery.png"
-                alt="Team meeting and training"
-                width={600}
-                height={600}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            
-            <div className="w-full h-full overflow-hidden">
-              <Image
-                src="/aboutusgallery.png"
-                alt="iSynergies team"
-                width={600}
-                height={600}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            
-            <div className="w-full h-full overflow-hidden">
-              <Image
-                src="/aboutusgallery.png"
-                alt="iSynergies team"
-                width={600}
-                height={600}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            
-            <div className="w-full h-full overflow-hidden">
-              <Image
-                src="/aboutusgallery.png"
-                alt="iSynergies team"
-                width={600}
-                height={600}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            
-            {/* Duplicate set for seamless loop */}
-            <div className="w-full h-full overflow-hidden">
-              <Image
-                src="/aboutusgallery.png"
-                alt="iSynergies team group photo"
-                width={600}
-                height={600}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            
-            <div className="w-full h-full overflow-hidden">
-              <Image
-                src="/aboutusgallery.png"
-                alt="Team meeting and training"
-                width={600}
-                height={600}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            
-            <div className="w-full h-full overflow-hidden">
-              <Image
-                src="/aboutusgallery.png"
-                alt="iSynergies team"
-                width={600}
-                height={600}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </div>
-        </div>
-        
-        <div className="container mx-auto max-w-7xl h-screen flex items-center px-4 md:px-8 lg:px-16 relative z-10">
-          <div className="w-full h-full flex relative">
+        {/* Main content area: 2 columns, text defines height, image column stretches to match */}
+        <div className="container mx-auto max-w-7xl px-4 md:px-8 lg:px-16 relative z-10">
+          <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-stretch">
             {/* Left Side - Text Content */}
-            <div className="space-y-2 pr-4 md:pr-8 pt-20 flex-shrink-0 w-1/2 relative z-10 font-sans">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">About Us</h2>
+            <div className="md:w-1/2 space-y-2 md:pr-8 relative z-10 font-sans py-5">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{content.title}</h2>
               
               <div className="space-y-2 text-gray-900 text-xs leading-relaxed font-normal">
-                <p>
-                  Isynergies, Inc was established and officially registered with the Securities and Exchange Commission (SEC) on October 30, 2012 as Stock Corporation inline in Other Software and Consultancy and Supply industry.
-                </p>
-                
-                <p>
-                  The office is based in ASKI Building 105 Maharlika Highway, Cabanatuan City, Nueva Ecija.
-                </p>
-                
-                <p>
-                  iSynergies, Inc. is a strategic business unit of ASKI Group of Companies, Inc. responsible for providing hardware and software solutions. It also offers products and services to the public and is composed of the Marketing and Sales Unit, Software Development and Quality Assurance Unit, and System Technical and Network Administration Unit.
-                </p>
-                
-                <p>
-                  The <strong className="font-bold">Software Development</strong> unit creates web, mobile, and computer applications that help companies digitize manual processes and improve transaction speed and efficiency. The <strong className="font-bold">System Technical</strong> unit ensures network and hardware security through proper licensing, configurations, server maintenance, and the installation of security systems such as digital locks, biometrics, and CCTV. The <strong className="font-bold">Marketing and Sales</strong> unit provides essential hardware and software products, including computers, printers, software licenses, and mobile phones to support daily business operations.
-                </p>
-                
-                <p>
-                  Our team helps your IT to the next level. We make your IT plans possible.
-                </p>
+                <p>{content.paragraph1}</p>
+                <p>{content.paragraph2}</p>
+                <p>{content.paragraph3}</p>
+                <p dangerouslySetInnerHTML={{ __html: content.paragraph4 }} />
+                <p>{content.paragraph5}</p>
               </div>
 
               {/* Mission and Vision Boxes */}
               <div className="grid md:grid-cols-2 gap-3 mt-4">
                 <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <h3 className="text-base font-bold text-gray-900 mb-1">Our Mission</h3>
+                  <h3 className="text-base font-bold text-gray-900 mb-1">{content.missionTitle}</h3>
                   <p className="text-gray-900 text-[10px] leading-tight font-normal">
-                    To provide Information Technology Solutions to clientele rendered by skilled and competent workforce.
+                    {content.missionText}
                   </p>
                 </div>
                 
                 <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <h3 className="text-base font-bold text-gray-900 mb-1">Our Vision</h3>
+                  <h3 className="text-base font-bold text-gray-900 mb-1">{content.visionTitle}</h3>
                   <p className="text-gray-900 text-[10px] leading-tight font-normal">
-                    A Trusted Partner of Every Businesses in Software and Hardware Technological Transformation.
+                    {content.visionText}
                   </p>
                 </div>
               </div>
             </div>
+
+            {/* Right Side - Auto-scrolling Image Gallery (multi-image, infinite) */}
+            <div className="hidden md:block md:w-1/2 -mt-0">
+              <div className="relative h-[600px] w-full overflow-hidden shadow-lg">
+                <div
+                  className="scroll-animation absolute top-0 left-0 w-full flex flex-col"
+                  style={{ height: '200%', animationDuration: `${scrollSeconds}s` }}
+                >
+                  {tiledGallery.map((item, idx) => (
+                    <div
+                      key={`${item.key}-${idx}`}
+                      className="w-full"
+                      style={{ height: tileHeight }}
+                    >
+                      <Image
+                        src={item.src}
+                        alt={item.alt}
+                        width={600}
+                        height={600}
+                        className="w-full h-full object-cover"
+                        unoptimized
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-        
-        {/* Red gradient bar at the bottom */}
-        <div 
-          className="absolute bottom-0 left-0 w-full h-15 z-10 flex items-center px-4 md:px-8 lg:px-16"
-          style={{
-            background: 'linear-gradient(to right, #DC2626 0%, rgba(220, 38, 38, 0.8) 30%, rgba(220, 38, 38, 0.4) 60%, transparent 100%)',
-          }}
-        >
-          <p className="text-2xl md:text-3xl font-bold text-white mr-10">Our Board of Directors</p>
         </div>
       </section>
   );

@@ -1,6 +1,8 @@
 'use client';
 
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
+import Loading from './ui/loading';
 
 type HexImageProps = {
   src: string;
@@ -37,7 +39,70 @@ function HexImage({ src, alt, className, emphasized }: HexImageProps) {
   );
 }
 
+type Statistic = {
+  id: number;
+  label: string;
+  value: string;
+  displayOrder: number;
+};
+
+type TickerItem = {
+  id: number;
+  text: string;
+  displayOrder: number;
+};
+
 export default function Services() {
+  const [statistics, setStatistics] = useState<Statistic[]>([]);
+  const [tickerItems, setTickerItems] = useState<TickerItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch statistics
+        const statsResponse = await fetch('/api/admin/statistics');
+        if (statsResponse.ok) {
+          const data = await statsResponse.json();
+          setStatistics(data);
+        } else {
+          // Fallback to default data
+          setStatistics([
+            { id: 1, label: 'Clients', value: '30+', displayOrder: 0 },
+            { id: 2, label: 'Customers', value: '5000+', displayOrder: 1 },
+            { id: 3, label: 'Projects', value: '100+', displayOrder: 2 },
+            { id: 4, label: 'Dedicated Staff', value: '16', displayOrder: 3 },
+          ]);
+        }
+
+        // Fetch ticker items
+        const tickerResponse = await fetch('/api/admin/ticker');
+        if (tickerResponse.ok) {
+          const data = await tickerResponse.json();
+          setTickerItems(data);
+        } else {
+          // Fallback to default ticker items
+          setTickerItems([
+            { id: 1, text: 'SOFTWARE DEVELOPMENT', displayOrder: 0 },
+            { id: 2, text: 'UI/UX DESIGN', displayOrder: 1 },
+            { id: 3, text: 'SOFTWARE INSTALLATION', displayOrder: 2 },
+            { id: 4, text: 'HARDWARE REPAIRS', displayOrder: 3 },
+            { id: 5, text: 'CCTV INSTALLATION', displayOrder: 4 },
+            { id: 6, text: 'GADGETS', displayOrder: 5 },
+            { id: 7, text: 'PRINTERS', displayOrder: 6 },
+            { id: 8, text: 'LAPTOP', displayOrder: 7 },
+          ]);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <section id="services" className="relative bg-[#0D1E66] text-white">
       <div className="relative min-h-screen overflow-hidden">
@@ -120,40 +185,22 @@ export default function Services() {
               <div className="ticker-content">
                 {/* One loop */}
                 <div className="ticker-row">
-                  <span className="ticker-item">SOFTWARE DEVELOPMENT</span>
-                  <span className="ticker-star">*</span>
-                  <span className="ticker-item">UI/UX DESIGN</span>
-                  <span className="ticker-star">*</span>
-                  <span className="ticker-item">SOFTWARE INSTALLATION</span>
-                  <span className="ticker-star">*</span>
-                  <span className="ticker-item">HARDWARE REPAIRS</span>
-                  <span className="ticker-star">*</span>
-                  <span className="ticker-item">CCTV INSTALLATION</span>
-                  <span className="ticker-star">*</span>
-                  <span className="ticker-item">GADGETS</span>
-                  <span className="ticker-star">*</span>
-                  <span className="ticker-item">PRINTERS</span>
-                  <span className="ticker-star">*</span>
-                  <span className="ticker-item">LAPTOP</span>
+                  {tickerItems.map((item) => (
+                    <span key={`ticker-1-${item.id}`}>
+                      <span className="ticker-item">{item.text}</span>
+                      <span className="ticker-star">*</span>
+                    </span>
+                  ))}
                 </div>
 
                 {/* Duplicate loop for seamless scroll */}
                 <div className="ticker-row" aria-hidden>
-                  <span className="ticker-item">SOFTWARE DEVELOPMENT</span>
-                  <span className="ticker-star">*</span>
-                  <span className="ticker-item">UI/UX DESIGN</span>
-                  <span className="ticker-star">*</span>
-                  <span className="ticker-item">SOFTWARE INSTALLATION</span>
-                  <span className="ticker-star">*</span>
-                  <span className="ticker-item">HARDWARE REPAIRS</span>
-                  <span className="ticker-star">*</span>
-                  <span className="ticker-item">CCTV INSTALLATION</span>
-                  <span className="ticker-star">*</span>
-                  <span className="ticker-item">GADGETS</span>
-                  <span className="ticker-star">*</span>
-                  <span className="ticker-item">PRINTERS</span>
-                  <span className="ticker-star">*</span>
-                  <span className="ticker-item">LAPTOP</span>
+                  {tickerItems.map((item) => (
+                    <span key={`ticker-2-${item.id}`}>
+                      <span className="ticker-item">{item.text}</span>
+                      <span className="ticker-star">*</span>
+                    </span>
+                  ))}
                 </div>
               </div>
             </div>
@@ -166,31 +213,21 @@ export default function Services() {
                 By the Numbers
               </h3>
 
-              <div className="mt-8 grid grid-cols-2 gap-y-8 md:grid-cols-4 md:gap-y-0">
-                <div>
-                  <div className="text-4xl md:text-5xl font-bold">30+</div>
-                  <div className="mt-1 text-sm md:text-base font-semibold">
-                    Clients
+              <div className="mt-8 grid grid-cols-2 gap-x-8 gap-y-8 md:grid-cols-4 md:gap-x-12 md:gap-y-10">
+                {loading ? (
+                  <div className="col-span-2 md:col-span-4">
+                    <Loading message="Loading statistics" size="md" className="text-white" />
                   </div>
-                </div>
-                <div>
-                  <div className="text-4xl md:text-5xl font-bold">5000+</div>
-                  <div className="mt-1 text-sm md:text-base font-semibold">
-                    Customers
-                  </div>
-                </div>
-                <div>
-                  <div className="text-4xl md:text-5xl font-bold">100+</div>
-                  <div className="mt-1 text-sm md:text-base font-semibold">
-                    Projects
-                  </div>
-                </div>
-                <div>
-                  <div className="text-4xl md:text-5xl font-bold">16</div>
-                  <div className="mt-1 text-sm md:text-base font-semibold">
-                    Dedicated Staff
-                  </div>
-                </div>
+                ) : (
+                  statistics.map((stat) => (
+                    <div key={stat.id}>
+                      <div className="text-4xl md:text-5xl font-bold">{stat.value}</div>
+                      <div className="mt-1 text-sm md:text-base font-semibold">
+                        {stat.label}
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>

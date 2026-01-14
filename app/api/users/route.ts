@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
-import { db, users } from '@/db';
+import { db } from '@/app/db';
+import { adminUsers } from '@/app/db/schema';
 import { eq } from 'drizzle-orm';
 
-// GET /api/users - Get all users
+// GET /api/users - Get all admin users
 export async function GET() {
   try {
-    const allUsers = await db.select().from(users);
+    const allUsers = await db.select().from(adminUsers);
     return NextResponse.json(allUsers);
   } catch (error) {
     console.error('Error fetching users:', error);
@@ -61,9 +62,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const newUser = await db.insert(users).values({
-      name,
+    const newUser = await db.insert(adminUsers).values({
+      username: name,
       email,
+      password: '', // Note: password should be hashed before storing
     });
 
     return NextResponse.json(newUser, { status: 201 });

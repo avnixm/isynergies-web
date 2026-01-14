@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Loading from './ui/loading';
 
 type ProjectCategory = 'desktop' | 'mobile' | 'tools';
 
@@ -11,6 +12,11 @@ type Project = {
   subtitle: string;
   description: string;
   category: ProjectCategory;
+  thumbnail?: string | null;
+  screenshot1?: string | null;
+  screenshot2?: string | null;
+  screenshot3?: string | null;
+  screenshot4?: string | null;
 };
 
 type ProjectView = 'all' | ProjectCategory;
@@ -35,7 +41,11 @@ function ExternalIcon({ className }: { className?: string }) {
 }
 
 export default function Projects() {
-  const projects: Project[] = useMemo(
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Fallback data
+  const fallbackProjects: Project[] = useMemo(
     () => [
       {
         id: 'project-1',
@@ -111,15 +121,53 @@ export default function Projects() {
 
   const marqueeRow1 = useMemo(() => {
     if (view !== 'all') return [];
-    const base = projects.filter((_, i) => i % 2 === 0);
-    return [...base, ...base];
+    // Top row: Show all projects in order, duplicated multiple times for seamless infinite loop
+    // Repeat 4 times to ensure smooth looping (1,2,3,1,2,3,1,2,3,1,2,3)
+    return [...projects, ...projects, ...projects, ...projects];
   }, [projects, view]);
 
   const marqueeRow2 = useMemo(() => {
     if (view !== 'all') return [];
-    const base = projects.filter((_, i) => i % 2 === 1);
-    return [...base, ...base];
+    // Bottom row: Show all projects in order, duplicated multiple times for seamless infinite loop
+    // Repeat 4 times to ensure smooth looping (1,2,3,1,2,3,1,2,3,1,2,3)
+    return [...projects, ...projects, ...projects, ...projects];
   }, [projects, view]);
+
+  // Fetch projects from API
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const response = await fetch('/api/admin/projects');
+        if (response.ok) {
+          const data = await response.json();
+          // Sort by displayOrder (ascending)
+          const sortedData = data.sort((a: any, b: any) => a.displayOrder - b.displayOrder);
+          setProjects(sortedData.map((p: any) => ({
+            id: p.id.toString(),
+            title: p.title,
+            year: p.year,
+            subtitle: p.subtitle,
+            description: p.description,
+            category: p.category as ProjectCategory,
+            thumbnail: p.thumbnail,
+            screenshot1: p.screenshot1,
+            screenshot2: p.screenshot2,
+            screenshot3: p.screenshot3,
+            screenshot4: p.screenshot4,
+          })));
+        } else {
+          setProjects(fallbackProjects);
+        }
+      } catch (error) {
+        console.error('Error fetching projects:', error);
+        setProjects(fallbackProjects);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, [fallbackProjects]);
 
   useEffect(() => {
     if (!selected) return;
@@ -266,19 +314,24 @@ export default function Projects() {
 
         {/* Grid / Marquee */}
         {view === 'all' ? (
-          <div
-            className="mt-10 projects-marquee relative left-1/2 w-screen -translate-x-1/2"
-            style={
-              {
-                ['--marquee-duration' as any]: '65s',
-                ['--marquee-offset' as any]: '-22s',
-              } as React.CSSProperties
-            }
-          >
-            {/* Row 1 */}
-            <div className="projects-marquee-row">
+          loading ? (
+            <div className="mt-10">
+              <Loading message="Loading projects" size="lg" />
+            </div>
+          ) : (
+            <div
+              className="mt-10 projects-marquee relative left-1/2 w-screen -translate-x-1/2"
+              style={
+                {
+                  ['--marquee-duration' as any]: '65s',
+                  ['--marquee-offset' as any]: '-22s',
+                } as React.CSSProperties
+              }
+            >
+              {/* Row 1 */}
+              <div className="projects-marquee-row">
               {/* Top row starts ahead by ~half a card */}
-              <div className="projects-marquee-track -ml-[160px] sm:-ml-[190px] md:-ml-[220px]">
+              <div className="projects-marquee-track -ml-[480px] sm:-ml-[570px] md:-ml-[660px]">
                 {marqueeRow1.map((p, idx) => (
                   <button
                     key={`r1-${p.id}-${idx}`}
@@ -288,20 +341,36 @@ export default function Projects() {
                     aria-haspopup="dialog"
                     aria-controls="project-modal"
                   >
-                    <div
-                      className="absolute inset-0"
-                      style={{
-                        background:
-                          idx % 4 === 0
-                            ? 'linear-gradient(135deg, rgba(120,58,180,0.55) 0%, rgba(29,185,84,0.25) 45%, rgba(0,120,255,0.35) 100%)'
-                            : idx % 4 === 1
-                              ? 'linear-gradient(135deg, rgba(0,120,255,0.50) 0%, rgba(0,0,0,0.15) 60%, rgba(255,255,255,0.10) 100%)'
-                              : idx % 4 === 2
-                                ? 'linear-gradient(135deg, rgba(0,180,120,0.50) 0%, rgba(0,0,0,0.10) 55%, rgba(255,255,255,0.10) 100%)'
-                                : 'linear-gradient(135deg, rgba(40,120,255,0.35) 0%, rgba(255,255,255,0.35) 55%, rgba(0,0,0,0.10) 100%)',
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-black/5" />
+                    {/* Thumbnail image if available */}
+                    {p.thumbnail ? (
+                      <>
+                        <img
+                          src={typeof p.thumbnail === 'string' && (p.thumbnail.startsWith('/api/images/') || p.thumbnail.startsWith('http'))
+                            ? p.thumbnail 
+                            : `/api/images/${p.thumbnail}`}
+                          alt={p.title}
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                      </>
+                    ) : (
+                      <>
+                        <div
+                          className="absolute inset-0"
+                          style={{
+                            background:
+                              idx % 4 === 0
+                                ? 'linear-gradient(135deg, rgba(120,58,180,0.55) 0%, rgba(29,185,84,0.25) 45%, rgba(0,120,255,0.35) 100%)'
+                                : idx % 4 === 1
+                                  ? 'linear-gradient(135deg, rgba(0,120,255,0.50) 0%, rgba(0,0,0,0.15) 60%, rgba(255,255,255,0.10) 100%)'
+                                  : idx % 4 === 2
+                                    ? 'linear-gradient(135deg, rgba(0,180,120,0.50) 0%, rgba(0,0,0,0.10) 55%, rgba(255,255,255,0.10) 100%)'
+                                    : 'linear-gradient(135deg, rgba(40,120,255,0.35) 0%, rgba(255,255,255,0.35) 55%, rgba(0,0,0,0.10) 100%)',
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-black/5" />
+                      </>
+                    )}
                     <div className="absolute right-4 top-4 z-10 rounded-full bg-black/25 p-2 text-white opacity-0 backdrop-blur-md transition-opacity duration-200 group-hover:opacity-100">
                       <ExternalIcon className="h-5 w-5" />
                     </div>
@@ -323,6 +392,69 @@ export default function Projects() {
                     aria-haspopup="dialog"
                     aria-controls="project-modal"
                   >
+                    {/* Thumbnail image if available */}
+                    {p.thumbnail ? (
+                      <>
+                        <img
+                          src={typeof p.thumbnail === 'string' && (p.thumbnail.startsWith('/api/images/') || p.thumbnail.startsWith('http'))
+                            ? p.thumbnail 
+                            : `/api/images/${p.thumbnail}`}
+                          alt={p.title}
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                      </>
+                    ) : (
+                      <>
+                        <div
+                          className="absolute inset-0"
+                          style={{
+                            background:
+                              idx % 4 === 0
+                                ? 'linear-gradient(135deg, rgba(120,58,180,0.55) 0%, rgba(29,185,84,0.25) 45%, rgba(0,120,255,0.35) 100%)'
+                                : idx % 4 === 1
+                                  ? 'linear-gradient(135deg, rgba(0,120,255,0.50) 0%, rgba(0,0,0,0.15) 60%, rgba(255,255,255,0.10) 100%)'
+                                  : idx % 4 === 2
+                                    ? 'linear-gradient(135deg, rgba(0,180,120,0.50) 0%, rgba(0,0,0,0.10) 55%, rgba(255,255,255,0.10) 100%)'
+                                    : 'linear-gradient(135deg, rgba(40,120,255,0.35) 0%, rgba(255,255,255,0.35) 55%, rgba(0,0,0,0.10) 100%)',
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-black/5" />
+                      </>
+                    )}
+                    <div className="absolute right-4 top-4 z-10 rounded-full bg-black/25 p-2 text-white opacity-0 backdrop-blur-md transition-opacity duration-200 group-hover:opacity-100">
+                      <ExternalIcon className="h-5 w-5" />
+                    </div>
+                    <span className="sr-only">{p.title}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          )
+        ) : (
+          <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2">
+            {filtered.map((p, idx) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => setSelected(p)}
+                className="group relative h-[230px] md:h-[250px] w-full overflow-hidden rounded-2xl text-left shadow-[0_12px_26px_rgba(0,0,0,0.14)] transition-transform duration-300 ease-in-out hover:scale-[1.01] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0D1E66]/60"
+                aria-haspopup="dialog"
+                aria-controls="project-modal"
+              >
+                {/* Thumbnail image if available */}
+                {p.thumbnail ? (
+                  <>
+                    <img
+                      src={p.thumbnail}
+                      alt={p.title}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  </>
+                ) : (
+                  <>
                     <div
                       className="absolute inset-0"
                       style={{
@@ -337,41 +469,8 @@ export default function Projects() {
                       }}
                     />
                     <div className="absolute inset-0 bg-black/5" />
-                    <div className="absolute right-4 top-4 z-10 rounded-full bg-black/25 p-2 text-white opacity-0 backdrop-blur-md transition-opacity duration-200 group-hover:opacity-100">
-                      <ExternalIcon className="h-5 w-5" />
-                    </div>
-                    <span className="sr-only">{p.title}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2">
-            {filtered.map((p, idx) => (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => setSelected(p)}
-                className="group relative h-[230px] md:h-[250px] w-full overflow-hidden rounded-2xl text-left shadow-[0_12px_26px_rgba(0,0,0,0.14)] transition-transform duration-300 ease-in-out hover:scale-[1.01] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0D1E66]/60"
-                aria-haspopup="dialog"
-                aria-controls="project-modal"
-              >
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background:
-                      idx % 4 === 0
-                        ? 'linear-gradient(135deg, rgba(120,58,180,0.55) 0%, rgba(29,185,84,0.25) 45%, rgba(0,120,255,0.35) 100%)'
-                        : idx % 4 === 1
-                          ? 'linear-gradient(135deg, rgba(0,120,255,0.50) 0%, rgba(0,0,0,0.15) 60%, rgba(255,255,255,0.10) 100%)'
-                          : idx % 4 === 2
-                            ? 'linear-gradient(135deg, rgba(0,180,120,0.50) 0%, rgba(0,0,0,0.10) 55%, rgba(255,255,255,0.10) 100%)'
-                            : 'linear-gradient(135deg, rgba(40,120,255,0.35) 0%, rgba(255,255,255,0.35) 55%, rgba(0,0,0,0.10) 100%)',
-                  }}
-                />
-
-                <div className="absolute inset-0 bg-black/5" />
+                  </>
+                )}
 
                 <div className="absolute right-4 top-4 z-10 rounded-full bg-black/25 p-2 text-white opacity-0 backdrop-blur-md transition-opacity duration-200 group-hover:opacity-100">
                   <ExternalIcon className="h-5 w-5" />
@@ -384,7 +483,7 @@ export default function Projects() {
         )}
       </div>
 
-      {/* Modal */}
+      {/* Modal with smooth GPU-accelerated animations */}
       {selected ? (
         <div
           id="project-modal"
@@ -392,17 +491,29 @@ export default function Projects() {
           aria-modal="true"
           aria-label={`${selected.title} details`}
           className="fixed inset-0 z-[60] flex items-center justify-center px-4 py-6"
+          style={{
+            animation: 'fadeIn 0.15s ease-out',
+            willChange: 'opacity'
+          }}
         >
           {/* Backdrop */}
           <button
             type="button"
-            className="absolute inset-0 bg-black/55"
+            className="absolute inset-0 bg-black/55 backdrop-blur-sm"
             aria-label="Close project details"
             onClick={() => setSelected(null)}
           />
 
           {/* Modal content */}
-          <div className="relative z-10 w-full max-w-6xl overflow-hidden rounded-3xl shadow-[0_24px_60px_rgba(0,0,0,0.35)]">
+          <div 
+            className="relative z-10 w-full max-w-6xl overflow-hidden rounded-3xl shadow-[0_24px_60px_rgba(0,0,0,0.35)]"
+            style={{
+              animation: 'slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+              willChange: 'transform, opacity',
+              backfaceVisibility: 'hidden',
+              WebkitFontSmoothing: 'antialiased'
+            }}
+          >
             <div className="grid grid-cols-1 md:grid-cols-2">
               {/* Left panel */}
               <div className="bg-white p-10 font-sans text-gray-900">
@@ -419,12 +530,113 @@ export default function Projects() {
                 </div>
               </div>
 
-              {/* Right panel (screenshots placeholders) */}
+              {/* Right panel (dynamic screenshots) */}
               <div className="bg-gradient-to-r from-[#1A5BCF] to-[#0D1E66] p-8">
                 <div className="grid grid-cols-2 gap-4">
-                  {Array.from({ length: 4 }).map((_, i) => (
+                  {selected.screenshot1 && (
+                    <div 
+                      className="aspect-[16/10] w-full rounded-lg overflow-hidden bg-white/10 ring-1 ring-white/15" 
+                      style={{ 
+                        animation: 'fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both',
+                        animationDelay: '0.05s',
+                        willChange: 'transform, opacity',
+                        backfaceVisibility: 'hidden'
+                      }}
+                    >
+                      <img
+                        src={typeof selected.screenshot1 === 'string' && (selected.screenshot1.startsWith('/api/images/') || selected.screenshot1.startsWith('http'))
+                          ? selected.screenshot1 
+                          : `/api/images/${selected.screenshot1}`}
+                        alt={`${selected.title} screenshot 1`}
+                        className="w-full h-full object-cover transition-transform duration-300 ease-out"
+                        style={{
+                          transform: 'translate3d(0, 0, 0)',
+                          willChange: 'transform'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.transform = 'translate3d(0, 0, 0) scale3d(1.05, 1.05, 1)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'translate3d(0, 0, 0) scale3d(1, 1, 1)'}
+                      />
+                    </div>
+                  )}
+                  {selected.screenshot2 && (
+                    <div 
+                      className="aspect-[16/10] w-full rounded-lg overflow-hidden bg-white/10 ring-1 ring-white/15" 
+                      style={{ 
+                        animation: 'fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both',
+                        animationDelay: '0.1s',
+                        willChange: 'transform, opacity',
+                        backfaceVisibility: 'hidden'
+                      }}
+                    >
+                      <img
+                        src={typeof selected.screenshot2 === 'string' && (selected.screenshot2.startsWith('/api/images/') || selected.screenshot2.startsWith('http'))
+                          ? selected.screenshot2 
+                          : `/api/images/${selected.screenshot2}`}
+                        alt={`${selected.title} screenshot 2`}
+                        className="w-full h-full object-cover transition-transform duration-300 ease-out"
+                        style={{
+                          transform: 'translate3d(0, 0, 0)',
+                          willChange: 'transform'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.transform = 'translate3d(0, 0, 0) scale3d(1.05, 1.05, 1)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'translate3d(0, 0, 0) scale3d(1, 1, 1)'}
+                      />
+                    </div>
+                  )}
+                  {selected.screenshot3 && (
+                    <div 
+                      className="aspect-[16/10] w-full rounded-lg overflow-hidden bg-white/10 ring-1 ring-white/15" 
+                      style={{ 
+                        animation: 'fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both',
+                        animationDelay: '0.15s',
+                        willChange: 'transform, opacity',
+                        backfaceVisibility: 'hidden'
+                      }}
+                    >
+                      <img
+                        src={typeof selected.screenshot3 === 'string' && (selected.screenshot3.startsWith('/api/images/') || selected.screenshot3.startsWith('http'))
+                          ? selected.screenshot3 
+                          : `/api/images/${selected.screenshot3}`}
+                        alt={`${selected.title} screenshot 3`}
+                        className="w-full h-full object-cover transition-transform duration-300 ease-out"
+                        style={{
+                          transform: 'translate3d(0, 0, 0)',
+                          willChange: 'transform'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.transform = 'translate3d(0, 0, 0) scale3d(1.05, 1.05, 1)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'translate3d(0, 0, 0) scale3d(1, 1, 1)'}
+                      />
+                    </div>
+                  )}
+                  {selected.screenshot4 && (
+                    <div 
+                      className="aspect-[16/10] w-full rounded-lg overflow-hidden bg-white/10 ring-1 ring-white/15" 
+                      style={{ 
+                        animation: 'fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both',
+                        animationDelay: '0.2s',
+                        willChange: 'transform, opacity',
+                        backfaceVisibility: 'hidden'
+                      }}
+                    >
+                      <img
+                        src={typeof selected.screenshot4 === 'string' && (selected.screenshot4.startsWith('/api/images/') || selected.screenshot4.startsWith('http'))
+                          ? selected.screenshot4 
+                          : `/api/images/${selected.screenshot4}`}
+                        alt={`${selected.title} screenshot 4`}
+                        className="w-full h-full object-cover transition-transform duration-300 ease-out"
+                        style={{
+                          transform: 'translate3d(0, 0, 0)',
+                          willChange: 'transform'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.transform = 'translate3d(0, 0, 0) scale3d(1.05, 1.05, 1)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'translate3d(0, 0, 0) scale3d(1, 1, 1)'}
+                      />
+                    </div>
+                  )}
+                  {/* Fill remaining slots with placeholders if needed */}
+                  {Array.from({ length: Math.max(0, 4 - [selected.screenshot1, selected.screenshot2, selected.screenshot3, selected.screenshot4].filter(Boolean).length) }).map((_, i) => (
                     <div
-                      key={i}
+                      key={`placeholder-${i}`}
                       className="aspect-[16/10] w-full rounded-lg bg-white/10 ring-1 ring-white/15"
                     />
                   ))}

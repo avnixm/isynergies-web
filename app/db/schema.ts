@@ -40,6 +40,16 @@ export const aboutUs = mysqlTable('about_us', {
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
 });
 
+// About Us Gallery Images (scrolling gallery list)
+export const aboutUsGalleryImages = mysqlTable('about_us_gallery_images', {
+  id: int('id').primaryKey().autoincrement(),
+  image: varchar('image', { length: 255 }).notNull(),
+  alt: varchar('alt', { length: 255 }).notNull().default('About Us gallery image'),
+  displayOrder: int('display_order').notNull().default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
+});
+
 // Board Members
 export const boardMembers = mysqlTable('board_members', {
   id: int('id').primaryKey().autoincrement(),
@@ -49,6 +59,13 @@ export const boardMembers = mysqlTable('board_members', {
   image: varchar('image', { length: 255 }).notNull(),
   displayOrder: int('display_order').notNull().default(0),
   createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
+});
+
+// Board of Directors Section Settings
+export const boardSettings = mysqlTable('board_settings', {
+  id: int('id').primaryKey().autoincrement(),
+  footerText: text('footer_text').notNull(),
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
 });
 
@@ -115,6 +132,7 @@ export const teamMembers = mysqlTable('team_members', {
 export const shopCategories = mysqlTable('shop_categories', {
   id: int('id').primaryKey().autoincrement(),
   name: varchar('name', { length: 255 }).notNull(),
+  text: varchar('text', { length: 255 }).notNull(), // Display text (can be different from name)
   image: varchar('image', { length: 255 }).notNull(),
   displayOrder: int('display_order').notNull().default(0),
   createdAt: timestamp('created_at').defaultNow(),
@@ -131,12 +149,35 @@ export const shopContent = mysqlTable('shop_content', {
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
 });
 
+// Hero Section (Main logos and content)
+export const heroSection = mysqlTable('hero_section', {
+  id: int('id').primaryKey().autoincrement(),
+  weMakeItLogo: varchar('we_make_it_logo', { length: 255 }),
+  isLogo: varchar('is_logo', { length: 255 }),
+  fullLogo: varchar('full_logo', { length: 255 }),
+  backgroundImage: varchar('background_image', { length: 255 }),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
+});
+
 // Hero Images (Film Strip)
 export const heroImages = mysqlTable('hero_images', {
   id: int('id').primaryKey().autoincrement(),
   image: varchar('image', { length: 255 }).notNull(),
   alt: varchar('alt', { length: 255 }).notNull(),
   displayOrder: int('display_order').notNull().default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
+});
+
+// Contact Messages (Inbox)
+export const contactMessages = mysqlTable('contact_messages', {
+  id: int('id').primaryKey().autoincrement(),
+  name: varchar('name', { length: 255 }).notNull(),
+  email: varchar('email', { length: 255 }).notNull(),
+  contactNo: varchar('contact_no', { length: 50 }).notNull(),
+  message: text('message').notNull(),
+  status: varchar('status', { length: 50 }).notNull().default('new'), // new, read, replied, archived
+  adminNotes: text('admin_notes'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
 });
