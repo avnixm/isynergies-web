@@ -346,7 +346,7 @@ export default function ServicesPage() {
                         <Pencil className="h-4 w-4 mr-1" />
                         Edit
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete(stat.id)} className="text-muted-foreground hover:text-destructive">
+                      <Button variant="outline" size="sm" onClick={() => handleDelete(stat.id)} className="border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600" type="button">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -413,7 +413,7 @@ export default function ServicesPage() {
                             <Pencil className="h-4 w-4 mr-1" />
                             Edit
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleTickerDelete(item.id)} className="text-muted-foreground hover:text-destructive">
+                          <Button variant="outline" size="sm" onClick={() => handleTickerDelete(item.id)} className="border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600" type="button">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -432,7 +432,7 @@ export default function ServicesPage() {
         onOpenChange={setIsStatDialogOpen}
         title={editingStat ? 'Edit Statistic' : 'Add New Statistic'}
       >
-        <div className="space-y-4">
+        <div className="space-y-4 mb-6">
           <div className="space-y-2">
             <Label htmlFor="dialog-label">Label</Label>
             <Input
@@ -475,7 +475,7 @@ export default function ServicesPage() {
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="justify-end">
           <Button
             variant="outline"
             onClick={handleCloseStatDialog}
@@ -498,7 +498,7 @@ export default function ServicesPage() {
         onOpenChange={setIsTickerDialogOpen}
         title={editingTicker ? 'Edit Ticker Item' : 'Add Ticker Item'}
       >
-        <div className="space-y-4">
+        <div className="space-y-4 mb-6">
           <div className="space-y-2">
             <Label htmlFor="dialog-tickerText">Text</Label>
             <Input
@@ -531,7 +531,7 @@ export default function ServicesPage() {
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="justify-end">
           <Button
             variant="outline"
             onClick={handleCloseTickerDialog}

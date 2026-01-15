@@ -398,11 +398,12 @@ export default function ProjectsPage() {
                           Edit
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={() => handleDelete(project.id)}
-                          className="text-muted-foreground hover:text-destructive"
+                          className="border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600"
                           aria-label={`Delete ${project.title}`}
+                          type="button"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
@@ -423,7 +424,7 @@ export default function ProjectsPage() {
         title={editingProject ? 'Edit Project' : 'Add New Project'}
         maxWidth="2xl"
       >
-        <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+        <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 mb-6">
           <div className="space-y-2">
             <Label htmlFor="dialog-title">Project Title</Label>
             <Input
@@ -537,7 +538,7 @@ export default function ProjectsPage() {
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="justify-end">
           <Button
             variant="outline"
             onClick={handleCloseDialog}

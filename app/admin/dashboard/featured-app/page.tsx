@@ -736,10 +736,11 @@ export default function FeaturedAppPage() {
                           Edit
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={() => handleDeleteCarouselImage(img)}
-                          className="text-muted-foreground hover:text-destructive"
+                          className="border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600"
+                          type="button"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
@@ -813,10 +814,11 @@ export default function FeaturedAppPage() {
                             <Pencil className="h-3 w-3" />
                           </Button>
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
                             onClick={() => handleDeleteFeature(feature)}
-                            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                            className="h-7 w-7 p-0 border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600"
+                            type="button"
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
@@ -837,7 +839,7 @@ export default function FeaturedAppPage() {
         onOpenChange={setIsFeatureDialogOpen}
         title={editingFeature ? 'Edit Feature' : 'Add Feature'}
       >
-        <div className="space-y-4">
+        <div className="space-y-4 mb-6">
           <div className="space-y-2">
             <Label htmlFor="feature-icon-upload">Icon Image</Label>
             <ImageUpload
@@ -869,7 +871,7 @@ export default function FeaturedAppPage() {
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="justify-end">
           <Button
             variant="outline"
             onClick={handleCloseFeatureDialog}
@@ -892,7 +894,7 @@ export default function FeaturedAppPage() {
         onOpenChange={setIsCarouselDialogOpen}
         title={editingCarouselImage ? 'Edit Carousel Image' : 'Add Carousel Image'}
       >
-        <div className="space-y-4">
+        <div className="space-y-4 mb-6">
           <div className="space-y-2">
             <Label htmlFor="carousel-image-upload">Image</Label>
             <ImageUpload
@@ -925,7 +927,7 @@ export default function FeaturedAppPage() {
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="justify-end">
           <Button
             variant="outline"
             onClick={handleCloseCarouselDialog}

@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Upload, Trash2, Image as ImageIcon } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/app/lib/utils';
 
@@ -77,11 +77,11 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
           <button
             type="button"
             onClick={() => onChange('')}
-            className="absolute top-2 right-2 p-1.5 rounded-full bg-background/80 backdrop-blur-sm text-muted-foreground hover:text-destructive hover:bg-background transition-colors shadow-sm border border-border/50 hover:border-destructive/50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="absolute top-2 right-2 p-1.5 rounded-lg bg-white border border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={disabled}
-            aria-label="Remove image"
+            aria-label="Delete image"
           >
-            <X className="h-4 w-4" />
+            <Trash2 className="h-4 w-4" />
           </button>
         </div>
       ) : (

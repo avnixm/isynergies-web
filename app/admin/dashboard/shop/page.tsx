@@ -318,7 +318,11 @@ export default function ShopPage() {
                 <CardTitle className="text-xl">Shop Categories</CardTitle>
                 <CardDescription>Manage product category panels</CardDescription>
               </div>
-              <Button onClick={handleOpenAddCategoryDialog} className="flex items-center gap-2">
+              <Button
+                type="button"
+                onClick={handleOpenAddCategoryDialog}
+                className="flex items-center gap-2"
+              >
                 <Plus className="h-4 w-4" />
                 Add Category
               </Button>
@@ -362,6 +366,7 @@ export default function ShopPage() {
                         </div>
                         <div className="flex gap-2">
                           <Button
+                            type="button"
                             variant="outline"
                             size="sm"
                             onClick={() => handleOpenEditCategoryDialog(category)}
@@ -372,10 +377,11 @@ export default function ShopPage() {
                             Edit
                           </Button>
                           <Button
-                            variant="ghost"
+                            type="button"
+                            variant="outline"
                             size="sm"
                             onClick={() => handleDeleteCategory(category.id)}
-                            className="text-muted-foreground hover:text-destructive"
+                            className="border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600"
                             aria-label={`Delete ${category.name}`}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -397,7 +403,7 @@ export default function ShopPage() {
         onOpenChange={setIsDialogOpen}
         title={editingCategory ? 'Edit Category' : 'Add Category'}
       >
-        <div className="space-y-4">
+        <div className="space-y-4 mb-6">
           <div className="space-y-2">
             <Label htmlFor="dialog-category-name">Category Name (Internal)</Label>
             <Input
@@ -441,7 +447,7 @@ export default function ShopPage() {
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="justify-end">
           <Button
             variant="outline"
             onClick={handleCloseCategoryDialog}

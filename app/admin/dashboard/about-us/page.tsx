@@ -322,11 +322,12 @@ export default function AboutUsPage() {
                           Edit
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={() => handleDeleteGalleryImage(gi.id)}
-                          className="text-muted-foreground hover:text-destructive"
+                          className="border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600"
                           aria-label={`Delete ${gi.alt}`}
+                          type="button"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
@@ -507,7 +508,7 @@ export default function AboutUsPage() {
         onOpenChange={setIsDialogOpen}
         title={editingGalleryImage ? 'Edit Gallery Image' : 'Add Gallery Image'}
       >
-        <div className="space-y-4">
+        <div className="space-y-4 mb-6">
           <div className="space-y-2">
             <Label htmlFor="dialog-gallery-image">Image</Label>
             <ImageUpload
@@ -539,7 +540,7 @@ export default function AboutUsPage() {
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="justify-end">
           <Button
             variant="outline"
             onClick={handleCloseGalleryDialog}

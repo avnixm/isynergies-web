@@ -233,7 +233,7 @@ export default function TeamPage() {
                         <Pencil className="h-3 w-3 mr-1" />
                         Edit
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete(member.id)} className="text-muted-foreground hover:text-destructive">
+                      <Button variant="outline" size="sm" onClick={() => handleDelete(member.id)} className="border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600" type="button">
                         <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
@@ -250,7 +250,7 @@ export default function TeamPage() {
         onOpenChange={setIsDialogOpen}
         title={editingMember ? 'Edit Team Member' : 'Add Team Member'}
       >
-        <div className="space-y-4">
+        <div className="space-y-4 mb-6">
           <div className="space-y-2">
             <Label>Photo</Label>
             <ImageUpload
@@ -300,7 +300,7 @@ export default function TeamPage() {
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="justify-end">
           <Button
             variant="outline"
             onClick={handleCloseDialog}

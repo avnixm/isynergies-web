@@ -340,10 +340,11 @@ export default function WhatWeDoPage() {
                         Edit
                       </Button>
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
                         onClick={() => handleDeleteImage(img.id)}
-                        className="text-muted-foreground hover:text-destructive"
+                        className="border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600"
+                        type="button"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
@@ -362,7 +363,7 @@ export default function WhatWeDoPage() {
         onOpenChange={setIsImageDialogOpen}
         title={editingImage ? 'Edit Image' : 'Add Image'}
       >
-        <div className="space-y-4">
+        <div className="space-y-4 mb-6">
           <div className="space-y-2">
             <Label htmlFor="image-upload">Image</Label>
             <ImageUpload
@@ -391,7 +392,7 @@ export default function WhatWeDoPage() {
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="justify-end">
           <Button
             variant="outline"
             onClick={handleCloseImageDialog}

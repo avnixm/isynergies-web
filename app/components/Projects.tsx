@@ -447,7 +447,9 @@ export default function Projects() {
                 {p.thumbnail ? (
                   <>
                     <img
-                      src={p.thumbnail}
+                      src={typeof p.thumbnail === 'string' && (p.thumbnail.startsWith('/api/images/') || p.thumbnail.startsWith('http'))
+                        ? p.thumbnail 
+                        : `/api/images/${p.thumbnail}`}
                       alt={p.title}
                       className="absolute inset-0 w-full h-full object-cover"
                     />
