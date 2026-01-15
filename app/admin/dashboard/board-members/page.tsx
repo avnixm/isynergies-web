@@ -11,7 +11,6 @@ import { ImageUpload } from '@/app/components/ui/image-upload';
 import { Dialog, DialogFooter } from '@/app/components/ui/dialog';
 import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
-import Image from 'next/image';
 import { User } from 'lucide-react';
 
 type BoardMember = {
@@ -279,50 +278,38 @@ export default function BoardMembersPage() {
               </div>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {members.map((member) => (
-                <Card key={member.id} className="overflow-hidden rounded-xl border border-border bg-white transition-shadow hover:shadow-md">
-                  <div className="relative h-64 w-full bg-gradient-to-br from-blue-50 to-indigo-50">
+                <Card key={member.id} className="overflow-hidden rounded-xl border border-border bg-white transition-shadow hover:shadow-md group">
+                  <div className="relative aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-200">
                     {member.image ? (
-                      <Image
+                      <img
                         src={typeof member.image === 'string' && (member.image.startsWith('/api/images/') || member.image.startsWith('http'))
                           ? member.image 
                           : `/api/images/${member.image}`}
                         alt={`${member.firstName} ${member.lastName}`}
-                        fill
-                        className="object-cover"
+                        className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="flex h-full items-center justify-center bg-muted">
-                        <User className="h-12 w-12 text-gray-800/40" />
+                      <div className="flex h-full w-full items-center justify-center bg-muted text-gray-800/60">
+                        <User className="h-8 w-8" />
                       </div>
                     )}
-                  </div>
-                  <CardContent className="p-4">
-                    <h3 className="text-lg font-semibold text-gray-800">
-                      {member.firstName} {member.lastName}
-                    </h3>
-                    <p className="mb-3 text-sm text-gray-800">{member.position}</p>
-                    <div className="mb-4 flex items-center justify-between text-xs text-gray-800">
-                      <span>Order: {member.displayOrder}</span>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                      <div className="w-full space-y-1">
+                        <p className="text-white font-semibold text-sm">{member.firstName} {member.lastName}</p>
+                        <p className="text-white/90 text-xs">{member.position}</p>
+                      </div>
                     </div>
+                  </div>
+                  <CardContent className="p-3">
                     <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleOpenEditDialog(member)}
-                        className="flex-1"
-                      >
-                        <Pencil className="h-4 w-4 mr-1" />
+                      <Button variant="outline" size="sm" onClick={() => handleOpenEditDialog(member)} className="flex-1">
+                        <Pencil className="h-3 w-3 mr-1" />
                         Edit
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(member.id)}
-                        className="text-muted-foreground hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
+                      <Button variant="ghost" size="sm" onClick={() => handleDelete(member.id)} className="text-muted-foreground hover:text-destructive">
+                        <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
                   </CardContent>

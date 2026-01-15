@@ -5,15 +5,6 @@ import Link from 'next/link';
 import { Users, Briefcase, UserCog, Wrench, Activity } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Button } from '@/app/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/app/components/ui/table';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -99,33 +90,6 @@ export default function AdminDashboard() {
     },
   ];
 
-  const recentActivity = [
-    {
-      type: 'Message',
-      entity: 'New contact form submission',
-      section: 'Messages',
-      time: '5 min ago',
-    },
-    {
-      type: 'Project',
-      entity: 'Updated “Digital Transformation Roadmap”',
-      section: 'Projects',
-      time: '1 hour ago',
-    },
-    {
-      type: 'Board Member',
-      entity: 'Added new board member',
-      section: 'Board of Directors',
-      time: 'Yesterday',
-    },
-    {
-      type: 'Service',
-      entity: 'Edited “Managed IT Services”',
-      section: 'Services',
-      time: '2 days ago',
-    },
-  ];
-
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -134,7 +98,7 @@ export default function AdminDashboard() {
           Overview
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          High-level view of your content and recent activity.
+          High-level view of your content.
         </p>
       </div>
 
@@ -166,32 +130,31 @@ export default function AdminDashboard() {
         })}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       {/* Quick Actions */}
-        <Card className="lg:col-span-2">
+      <Card>
         <CardHeader>
-            <CardTitle>Quick actions</CardTitle>
-            <CardDescription>
-              Jump into the sections you manage the most.
-            </CardDescription>
+          <CardTitle>Quick actions</CardTitle>
+          <CardDescription>
+            Jump into the sections you manage the most.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {quickActions.map((action) => {
               const Icon = action.icon;
               return (
                 <Link key={action.title} href={action.href}>
-                    <div className="flex items-start gap-3 rounded-xl border border-border bg-white/90 p-4 shadow-xs transition-all hover:-translate-y-0.5 hover:border-accent/70 hover:bg-accent/5">
-                      <div className="mt-1 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
-                        <Icon className="h-4 w-4" />
-                      </div>
+                  <div className="flex items-start gap-3 rounded-xl border border-border bg-white/90 p-4 shadow-xs transition-all hover:-translate-y-0.5 hover:border-accent/70 hover:bg-accent/5">
+                    <div className="mt-1 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
+                      <Icon className="h-4 w-4" />
+                    </div>
                     <div>
-                        <h3 className="text-sm font-semibold text-gray-800">
-                          {action.title}
-                        </h3>
-                        <p className="mt-1 text-xs text-gray-800">
-                          {action.description}
-                        </p>
+                      <h3 className="text-sm font-semibold text-gray-800">
+                        {action.title}
+                      </h3>
+                      <p className="mt-1 text-xs text-gray-800">
+                        {action.description}
+                      </p>
                     </div>
                   </div>
                 </Link>
@@ -200,46 +163,6 @@ export default function AdminDashboard() {
           </div>
         </CardContent>
       </Card>
-
-        {/* Recent Activity Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent activity</CardTitle>
-            <CardDescription>
-              Latest changes across messages, projects, and content.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Item</TableHead>
-                  <TableHead>Section</TableHead>
-                  <TableHead className="text-right">When</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentActivity.map((item) => (
-                  <TableRow key={`${item.type}-${item.time}`}>
-                    <TableCell className="font-medium">{item.type}</TableCell>
-                    <TableCell>{item.entity}</TableCell>
-                    <TableCell className="text-xs text-gray-800">
-                      {item.section}
-                    </TableCell>
-                    <TableCell className="text-right text-xs text-gray-800">
-                      {item.time}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-              <TableCaption>
-                Activity shown is from the last few days.
-              </TableCaption>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Info Card */}
       <Card className="border border-accent/20 bg-gradient-to-r from-blue-50/80 via-white to-indigo-50/80">

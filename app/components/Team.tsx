@@ -50,7 +50,6 @@ function EmployeeCard({ index, member }: { index: number; member: TeamMember }) 
           </div>
         ) : (
           <div className="flex items-center justify-center h-full">
-            <span className="text-6xl text-gray-300">👤</span>
           </div>
         )}
 
