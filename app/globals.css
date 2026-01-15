@@ -81,7 +81,7 @@ body {
   height: 100%;
   margin: 0;
   padding: 0;
-  background: var(--background);
+  background: linear-gradient(to bottom right, #0D1E66, #003C9D, #001A4F);
   color: var(--foreground);
   position: relative;
 }
@@ -92,6 +92,12 @@ body {
   overflow-x: hidden;
   max-width: 100vw;
   width: 100%;
+}
+
+/* Admin dashboard pages should have white background */
+[data-admin-dashboard],
+[data-admin-dashboard] > * {
+  background: white !important;
 }
 
 @keyframes scrollUp {

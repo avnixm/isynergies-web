@@ -91,11 +91,12 @@ export default function Hero({ navLinks }: HeroProps) {
   };
 
   // Background image - from database only; if none, use a muted gradient background
-  const bgImage = getImageUrl(heroSection?.backgroundImage ?? null) ;
+  const bgImage = getImageUrl(heroSection?.backgroundImage ?? null);
   // Other images - only from database (no fallbacks)
   const weMakeItImage = getImageUrl(heroSection?.weMakeItLogo ?? null);
   const isLogoImage = getImageUrl(heroSection?.isLogo ?? null);
   const fullLogoImage = getImageUrl(heroSection?.fullLogo ?? null);
+  const logoSrc = getImageUrl(siteSettings?.logoImage ?? null);
 
   // Use ticker items from database only (no hardcoded fallbacks)
   const tickerItems = heroTickerItems;
@@ -106,7 +107,7 @@ export default function Hero({ navLinks }: HeroProps) {
       <div className="absolute inset-0">
         {bgImage ? (
           <Image
-            src={bgImage}
+            src={bgImage as string}
             alt="iSynergies background"
             fill
             priority
@@ -121,46 +122,46 @@ export default function Hero({ navLinks }: HeroProps) {
       {/* Invisible anchor for home */}
       <div id="home" className="absolute top-0 h-0 w-0" aria-hidden />
 
-      {/* Glassmorphic floating navbar */}
-      <nav className="absolute left-1/2 top-6 z-20 w-[85%] max-w-4xl -translate-x-1/2">
-        <div className="navbar-dropdown flex items-center justify-between rounded-2xl bg-gray-800/90 backdrop-blur-xl px-6 py-2 shadow-2xl shadow-black/25 border border-gray-700/50">
-          <div className="flex items-center">
-            {siteSettings?.logoImage ? (
-              <div className="relative h-[34px] w-40 md:w-56">
-                <Image
-                  src={typeof siteSettings.logoImage === 'string' && (siteSettings.logoImage.startsWith('/api/images/') || siteSettings.logoImage.startsWith('http') || siteSettings.logoImage.startsWith('/'))
-                    ? siteSettings.logoImage 
-                    : `/api/images/${siteSettings.logoImage}`}
-                  alt="iSynergies Inc."
-                  fill
-                  className="object-contain object-left"
-                  sizes="224px"
-                  priority={false}
-                />
-              </div>
-            ) : (
-              <div className="h-[34px] w-40 md:w-56 rounded-lg bg-white/10 border border-white/20" />
-            )}
+      {/* Glassmorphic floating navbar - show and animate only after hero data is loaded */}
+      {!loading && (
+        <nav className="absolute left-1/2 top-6 z-20 w-[85%] max-w-4xl -translate-x-1/2">
+          <div className="navbar-dropdown flex items-center justify-between rounded-2xl bg-gray-800/90 backdrop-blur-xl px-6 py-2 shadow-2xl shadow-black/25 border border-gray-700/50">
+            <div className="flex items-center">
+              {logoSrc ? (
+                <div className="relative h-[34px] w-40 md:w-56">
+                  <Image
+                    src={logoSrc as string}
+                    alt="iSynergies Inc."
+                    fill
+                    className="object-contain object-left"
+                    sizes="224px"
+                    priority={false}
+                  />
+                </div>
+              ) : (
+                <div className="h-[34px] w-40 md:w-56 rounded-lg bg-white/10 border border-white/20" />
+              )}
+            </div>
+            <div className="hidden md:flex items-center gap-8 text-sm font-medium">
+              {navLinks.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className="text-white transition-colors hover:text-blue-300 scroll-smooth"
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
           </div>
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium">
-            {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="text-white transition-colors hover:text-blue-300 scroll-smooth"
-              >
-                {link.label}
-              </a>
-            ))}
-          </div>
-        </div>
-      </nav>
+        </nav>
+      )}
 
       {/* We make IT possible logo - Left side - only show if exists in database */}
       {weMakeItImage && (
         <div className="slide-right absolute left-8 md:left-11 top-[200px] -translate-y-1/2 z-20">
           <Image
-            src={weMakeItImage}
+            src={weMakeItImage as string}
             alt="We make IT possible"
             width={800}
             height={500}
@@ -174,7 +175,7 @@ export default function Hero({ navLinks }: HeroProps) {
       {isLogoImage && (
         <div className="fade-in absolute right-0 md:right-0 top-[100px] -translate-y-1/4 z-10">
           <Image
-            src={isLogoImage}
+            src={isLogoImage as string}
             alt="iSynergies iS logo"
             width={1200}
             height={1200}
@@ -186,14 +187,15 @@ export default function Hero({ navLinks }: HeroProps) {
 
       {/* Full iSynergies logo - Right side, below iS logo - only show if exists in database */}
       {fullLogoImage && (
-        <div className="fade-in absolute right-2 md:right-[-40px] top-[45%] -translate-y-1/3 z-20">
+        <div className="fade-in absolute right-2 md:right-[-40px] top-[45%] -translate-y-1/3 z-20 w-[600px] h-[300px] md:w-[700px] md:h-[350px]">
           <Image
-            src={fullLogoImage}
+            src={fullLogoImage as string}
             alt="iSynergies Inc. full logo"
             width={750}
             height={375}
-            className="w-[600px] h-[300px] md:w-[700px] md:h-[350px] object-contain"
+            className="w-full h-full object-contain"
             priority
+            unoptimized
           />
         </div>
       )}
@@ -202,7 +204,7 @@ export default function Hero({ navLinks }: HeroProps) {
       {tickerItems.length > 0 && (
         <div className="pointer-events-none absolute inset-0">
           <div className="pointer-events-auto absolute bottom-8 left-1/2 z-10 -translate-x-1/2 px-4">
-            <div className="flex items-center justify-center gap-4 rounded-2xl bg-gray-800/90 backdrop-blur-xl px-6 py-4 shadow-2xl shadow-black/25 border border-gray-700/50 w-fit">
+            <div className="flex items-center justify-center gap-4 rounded-2xl bg-gray-800/90 backdrop-blur-xl px-6 py-4 shadow-2xl shadow-black/25 border border-gray-700/50 w-fit ticker-slow-fade">
               {tickerItems.map((item, index) => {
               // Parse markdown-style links [text](url)
               const parseTextWithLinks = (text: string): ReactNode[] => {
@@ -252,4 +254,3 @@ export default function Hero({ navLinks }: HeroProps) {
     </div>
   );
 }
-
