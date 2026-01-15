@@ -107,7 +107,7 @@ export default function Hero({ navLinks }: HeroProps) {
 
       {/* Glassmorphic floating navbar */}
       <nav className="absolute left-1/2 top-6 z-20 w-[85%] max-w-4xl -translate-x-1/2">
-        <div className="flex items-center justify-between rounded-2xl bg-gray-800/90 backdrop-blur-xl px-6 py-2 shadow-2xl shadow-black/25 border border-gray-700/50">
+        <div className="navbar-dropdown flex items-center justify-between rounded-2xl bg-gray-800/90 backdrop-blur-xl px-6 py-2 shadow-2xl shadow-black/25 border border-gray-700/50">
           <div className="flex items-center">
             <Image
               src="/logos/isynergiesinclogo.png"
@@ -134,7 +134,7 @@ export default function Hero({ navLinks }: HeroProps) {
 
       {/* We make IT possible logo - Left side - only show if exists in database */}
       {weMakeItImage && (
-        <div className="absolute left-8 md:left-11 top-[200px] -translate-y-1/2 z-20">
+        <div className="slide-right absolute left-8 md:left-11 top-[200px] -translate-y-1/2 z-20">
           <Image
             src={weMakeItImage}
             alt="We make IT possible"
@@ -148,7 +148,7 @@ export default function Hero({ navLinks }: HeroProps) {
 
       {/* iS logo - Right side, large graphic - only show if exists in database */}
       {isLogoImage && (
-        <div className="absolute right-0 md:right-0 top-[100px] -translate-y-1/4 z-10">
+        <div className="fade-in absolute right-0 md:right-0 top-[100px] -translate-y-1/4 z-10">
           <Image
             src={isLogoImage}
             alt="iSynergies iS logo"
@@ -162,7 +162,7 @@ export default function Hero({ navLinks }: HeroProps) {
 
       {/* Full iSynergies logo - Right side, below iS logo - only show if exists in database */}
       {fullLogoImage && (
-        <div className="absolute right-2 md:right-[-40px] top-[45%] -translate-y-1/3 z-20">
+        <div className="fade-in absolute right-2 md:right-[-40px] top-[45%] -translate-y-1/3 z-20">
           <Image
             src={fullLogoImage}
             alt="iSynergies Inc. full logo"
