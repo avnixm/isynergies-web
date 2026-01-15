@@ -8,6 +8,8 @@ import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
+import { ImageUpload } from '@/app/components/ui/image-upload';
+import Image from 'next/image';
 
 type SiteSettings = {
   companyName: string;
@@ -17,6 +19,7 @@ type SiteSettings = {
   companyFacebook: string;
   companyTwitter: string;
   companyInstagram: string;
+  logoImage: string | null;
 };
 
 export default function SiteSettingsPage() {
@@ -28,6 +31,7 @@ export default function SiteSettingsPage() {
     companyFacebook: '',
     companyTwitter: '',
     companyInstagram: '',
+    logoImage: null,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -193,6 +197,38 @@ export default function SiteSettingsPage() {
                 onChange={(e) => setSettings({ ...settings, companyInstagram: e.target.value })}
                 placeholder="https://instagram.com/isynergies"
               />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Logo */}
+        <Card className="rounded-xl border border-border bg-white shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-xl">Company Logo</CardTitle>
+            <CardDescription>Upload your company logo displayed in the navbar and footer</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Logo Image</Label>
+              <ImageUpload
+                value={settings.logoImage || ''}
+                onChange={(url: string) => setSettings({ ...settings, logoImage: url })}
+              />
+              {settings.logoImage && (
+                <div className="relative h-16 w-48 rounded-md overflow-hidden border border-gray-200 bg-white">
+                  <Image
+                    src={typeof settings.logoImage === 'string' && (settings.logoImage.startsWith('/api/images/') || settings.logoImage.startsWith('http') || settings.logoImage.startsWith('/'))
+                      ? settings.logoImage 
+                      : `/api/images/${settings.logoImage}`}
+                    alt="Company Logo"
+                    fill
+                    className="object-contain p-2"
+                  />
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Logo displayed in navbar and footer. Recommended size: 200×60px PNG with transparent background.
+              </p>
             </div>
           </CardContent>
         </Card>

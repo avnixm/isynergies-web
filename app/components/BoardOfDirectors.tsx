@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import { Encode_Sans_Expanded } from 'next/font/google';
 import Loading from './ui/loading';
 
@@ -71,18 +70,10 @@ export default function BoardOfDirectors() {
         <p className="text-2xl md:text-3xl font-bold text-white text-center">Our Board of Directors</p>
       </div>
 
-      {/* iS gray logo in background */}
+      {/* Muted background shape instead of hardcoded logo */}
       <div className="absolute right-0 md:right-0 top-20 md:top-32 -translate-y-1/2 z-0 pointer-events-none">
-        <Image
-          src="/logos/iSgray.png"
-          alt="iSynergies iS gray logo"
-          width={800}
-          height={800}
-          className="w-[400px] h-[800px] md:w-[600px] md:h-[1000px] object-contain"
-          style={{
-            filter: 'brightness(0.08) contrast(1.4)',
-            WebkitFilter: 'brightness(0.08) contrast(1.4)',
-          }}
+        <div
+          className="w-[400px] h-[800px] md:w-[600px] md:h-[1000px] bg-gradient-to-b from-gray-300/30 via-gray-200/20 to-transparent rounded-l-full"
         />
       </div>
 

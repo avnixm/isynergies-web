@@ -1,23 +1,32 @@
 'use client';
 
-import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Loading from './ui/loading';
 
 type HexImageProps = {
-  src: string;
+  src: string | null;
   alt: string;
   className?: string;
   emphasized?: boolean;
 };
 
 function HexImage({ src, alt, className, emphasized }: HexImageProps) {
+  const getImageUrl = (imageId: string | null): string | null => {
+    if (!imageId) return null;
+    if (imageId.startsWith('/api/images/') || imageId.startsWith('http') || imageId.startsWith('/')) {
+      return imageId;
+    }
+    return `/api/images/${imageId}`;
+  };
+
+  const imageUrl = getImageUrl(src);
+
   return (
     <div className={['group relative', className ?? ''].join(' ')}>
       <div
         className={[
           'relative',
-          // sized down to match AboutUs scale
           'w-[140px] h-[140px]',
           'md:w-[170px] md:h-[170px]',
           'transition-transform duration-300 ease-in-out',
@@ -25,15 +34,23 @@ function HexImage({ src, alt, className, emphasized }: HexImageProps) {
           emphasized ? '' : '',
         ].join(' ')}
       >
-        {/* PNGs are already hexagonal, so render them directly (no extra shape/frame). */}
-        <Image
-          src={src}
-          alt={alt}
-          fill
-          className="object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.18)] transition-[filter] duration-300 ease-in-out group-hover:drop-shadow-[0_14px_24px_rgba(0,0,0,0.22)]"
-          sizes="(min-width: 768px) 170px, 140px"
-          priority={false}
-        />
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={alt}
+            fill
+            className="object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.18)] transition-[filter] duration-300 ease-in-out group-hover:drop-shadow-[0_14px_24px_rgba(0,0,0,0.22)]"
+            sizes="(min-width: 768px) 170px, 140px"
+            priority={false}
+          />
+        ) : (
+          <>
+            {/* Muted foreground container if no image */}
+            <div className="absolute inset-0 rounded-[32px] bg-white/10 border border-white/20 shadow-[0_10px_18px_rgba(0,0,0,0.25)]" />
+            <div className="absolute inset-[18%] rounded-[28px] bg-white/5" />
+            <div className="absolute inset-[34%] rounded-[22px] bg-white/10" />
+          </>
+        )}
       </div>
     </div>
   );
@@ -55,6 +72,17 @@ type TickerItem = {
 export default function Services() {
   const [statistics, setStatistics] = useState<Statistic[]>([]);
   const [tickerItems, setTickerItems] = useState<TickerItem[]>([]);
+  const [serviceIcons, setServiceIcons] = useState<{
+    icon1: string | null;
+    icon2: string | null;
+    icon3: string | null;
+    icon4: string | null;
+  }>({
+    icon1: null,
+    icon2: null,
+    icon3: null,
+    icon4: null,
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -92,6 +120,20 @@ export default function Services() {
             { id: 7, text: 'PRINTERS', displayOrder: 6 },
             { id: 8, text: 'LAPTOP', displayOrder: 7 },
           ]);
+        }
+
+        // Fetch service icons from services API
+        const servicesResponse = await fetch('/api/admin/services');
+        if (servicesResponse.ok) {
+          const servicesData = await servicesResponse.json();
+          // Sort by displayOrder and take first 4
+          const sortedServices = servicesData.sort((a: any, b: any) => a.displayOrder - b.displayOrder).slice(0, 4);
+          setServiceIcons({
+            icon1: sortedServices[0]?.icon || null,
+            icon2: sortedServices[1]?.icon || null,
+            icon3: sortedServices[2]?.icon || null,
+            icon4: sortedServices[3]?.icon || null,
+          });
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -152,25 +194,25 @@ export default function Services() {
                 <div className="grid grid-cols-3 grid-rows-2 place-items-center gap-x-[80px] md:gap-x-[88px] gap-y-8">
                   {/* top row */}
                   <HexImage
-                    src="/services/SALES.png"
+                    src={serviceIcons.icon1}
                     alt="Sales"
                     className="col-start-2 row-start-1"
                     emphasized
                   />
                   <HexImage
-                    src="/services/ANALYSIS.png"
-                    alt="Analysis Design"
+                    src={serviceIcons.icon2}
+                    alt="Analysis & Design"
                     className="col-start-3 row-start-1"
                   />
 
                   {/* bottom row (offset upward for honeycomb) */}
                   <HexImage
-                    src="/services/DEVELOPEMENT.png"
+                    src={serviceIcons.icon3}
                     alt="Development"
                     className="col-start-1 row-start-2 -mt-6 md:-mt-[170px] translate-x-[82px] md:translate-x-[100px]"
                   />
                   <HexImage
-                    src="/services/SUPPORT.png"
+                    src={serviceIcons.icon4}
                     alt="Support"
                     className="col-start-2 row-start-2 -mt-6 md:-mt-[165px] translate-x-[82px] md:translate-x-[100px]"
                   />

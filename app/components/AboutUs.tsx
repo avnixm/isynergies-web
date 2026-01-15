@@ -83,7 +83,7 @@ export default function AboutUs() {
         missionText: 'To provide Information Technology Solutions to clientele rendered by skilled and competent workforce.',
         visionTitle: 'Our Vision',
         visionText: 'A Trusted Partner of Every Businesses in Software and Hardware Technological Transformation.',
-        galleryImage: '/aboutusgallery.png',
+        galleryImage: '',
       });
     } finally {
       setLoading(false);
@@ -116,11 +116,18 @@ export default function AboutUs() {
 
   if (!content) return null;
 
-  const getImageSrc = (value: string | null | undefined, fallback: string) => {
-    if (!value || value.toString().trim() === '') return fallback;
-    const v = value.toString();
-    if (v.startsWith('/api/images/') || v.startsWith('http') || v.startsWith('/')) return v;
-    return `/api/images/${v}`;
+  const getImageSrc = (value: string | null | undefined, fallback?: string) => {
+    if (value && value.toString().trim() !== '') {
+      const v = value.toString();
+      if (v.startsWith('/api/images/') || v.startsWith('http') || v.startsWith('/')) return v;
+      return `/api/images/${v}`;
+    }
+    if (fallback && fallback.toString().trim() !== '') {
+      const v = fallback.toString();
+      if (v.startsWith('/api/images/') || v.startsWith('http') || v.startsWith('/')) return v;
+      return `/api/images/${v}`;
+    }
+    return '';
   };
 
   // If no gallery images are configured yet, fall back to the single galleryImage repeated.
@@ -129,12 +136,12 @@ export default function AboutUs() {
         .sort((a, b) => a.displayOrder - b.displayOrder)
         .map((g) => ({
         key: `db-${g.id}`,
-        src: getImageSrc(g.image, '/aboutusgallery.png'),
+        src: getImageSrc(g.image),
         alt: g.alt || 'About Us gallery image',
       }))
     : Array.from({ length: 6 }).map((_, i) => ({
         key: `fallback-${i}`,
-        src: getImageSrc(content.galleryImage, '/aboutusgallery.png'),
+        src: getImageSrc(content.galleryImage),
         alt: 'About Us gallery image',
       }));
 
@@ -206,14 +213,18 @@ export default function AboutUs() {
                       className="w-full"
                       style={{ height: tileHeight }}
                     >
-                      <Image
-                        src={item.src}
-                        alt={item.alt}
-                        width={600}
-                        height={600}
-                        className="w-full h-full object-cover"
-                        unoptimized
-                      />
+                      {item.src ? (
+                        <Image
+                          src={item.src}
+                          alt={item.alt}
+                          width={600}
+                          height={600}
+                          className="w-full h-full object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-300/40" />
+                      )}
                     </div>
                   ))}
                 </div>

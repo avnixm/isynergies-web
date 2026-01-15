@@ -11,6 +11,7 @@ type SiteSettings = {
   companyFacebook: string;
   companyTwitter: string;
   companyInstagram: string;
+  logoImage: string | null;
 };
 
 export default function Footer() {
@@ -22,6 +23,7 @@ export default function Footer() {
     companyFacebook: 'https://facebook.com/isynergiesinc',
     companyTwitter: '',
     companyInstagram: '',
+    logoImage: null,
   });
 
   useEffect(() => {
@@ -59,14 +61,20 @@ export default function Footer() {
           <div className="space-y-3 font-sans">
             {/* Logo */}
             <div className="relative h-10 md:h-12 w-48 md:w-56">
-              <Image
-                src="/logos/isynergiesinclogo.png"
-                alt="iSynergies Inc."
-                fill
-                className="object-contain object-left"
-                sizes="224px"
-                priority={false}
-              />
+              {settings.logoImage ? (
+                <Image
+                  src={typeof settings.logoImage === 'string' && (settings.logoImage.startsWith('/api/images/') || settings.logoImage.startsWith('http') || settings.logoImage.startsWith('/'))
+                    ? settings.logoImage 
+                    : `/api/images/${settings.logoImage}`}
+                  alt="iSynergies Inc."
+                  fill
+                  className="object-contain object-left"
+                  sizes="224px"
+                  priority={false}
+                />
+              ) : (
+                <div className="h-full w-full rounded-lg bg-white/10 border border-white/20" />
+              )}
             </div>
 
             {/* Contact information */}

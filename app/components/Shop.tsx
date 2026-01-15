@@ -25,14 +25,14 @@ export default function Shop() {
   const [content, setContent] = useState<ShopContent>({
     title: 'Shop',
     description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-    salesIcon: '/hexagons/SALES.png',
-    authorizedDealerImage: '/authorizeddealer.png',
+    salesIcon: '',
+    authorizedDealerImage: '',
   });
   const [categories, setCategories] = useState<ShopCategory[]>([
-    { id: 1, name: 'Laptops', text: 'LAPTOPS', image: '/shop/laptops.png', displayOrder: 0 },
-    { id: 2, name: 'Mobiles', text: 'MOBILES', image: '/shop/mobiles.png', displayOrder: 1 },
-    { id: 3, name: 'Printers', text: 'PRINTERS', image: '/shop/printers.png', displayOrder: 2 },
-    { id: 4, name: 'Hardware', text: 'HARDWARE', image: '/shop/hardware.png', displayOrder: 3 },
+    { id: 1, name: 'Laptops', text: 'LAPTOPS', image: '', displayOrder: 0 },
+    { id: 2, name: 'Mobiles', text: 'MOBILES', image: '', displayOrder: 1 },
+    { id: 3, name: 'Printers', text: 'PRINTERS', image: '', displayOrder: 2 },
+    { id: 4, name: 'Hardware', text: 'HARDWARE', image: '', displayOrder: 3 },
   ]);
   const [loading, setLoading] = useState(true);
 

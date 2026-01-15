@@ -17,6 +17,10 @@ type HeroTickerItem = {
   displayOrder: number;
 };
 
+type SiteSettings = {
+  logoImage: string | null;
+};
+
 type NavLink = {
   label: string;
   href: string;
@@ -29,6 +33,7 @@ type HeroProps = {
 export default function Hero({ navLinks }: HeroProps) {
   const [heroSection, setHeroSection] = useState<HeroSection | null>(null);
   const [heroTickerItems, setHeroTickerItems] = useState<HeroTickerItem[]>([]);
+  const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -59,6 +64,13 @@ export default function Hero({ navLinks }: HeroProps) {
           const errorText = await tickerRes.text();
           console.error('Failed to fetch hero ticker items:', tickerRes.status, tickerRes.statusText, errorText);
         }
+
+        // Fetch site settings for logo
+        const settingsRes = await fetch('/api/admin/site-settings');
+        if (settingsRes.ok) {
+          const settingsData = await settingsRes.json();
+          setSiteSettings({ logoImage: settingsData.logoImage || null });
+        }
       } catch (error) {
         console.error('Error fetching hero data:', error);
       } finally {
@@ -78,8 +90,8 @@ export default function Hero({ navLinks }: HeroProps) {
     return `/api/images/${value}`;
   };
 
-  // Background image - keep bluebg.png as fallback (always returns a string)
-  const bgImage = getImageUrl(heroSection?.backgroundImage ?? null, '/bluebg.png') || '/bluebg.png';
+  // Background image - from database only; if none, use a muted gradient background
+  const bgImage = getImageUrl(heroSection?.backgroundImage ?? null) ;
   // Other images - only from database (no fallbacks)
   const weMakeItImage = getImageUrl(heroSection?.weMakeItLogo ?? null);
   const isLogoImage = getImageUrl(heroSection?.isLogo ?? null);
@@ -90,16 +102,20 @@ export default function Hero({ navLinks }: HeroProps) {
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      {/* Background image - always show (uses bluebg.png as fallback) */}
+      {/* Background */}
       <div className="absolute inset-0">
-        <Image
-          src={bgImage}
-          alt="iSynergies background"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover"
-        />
+        {bgImage ? (
+          <Image
+            src={bgImage}
+            alt="iSynergies background"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0D1E66] via-[#003C9D] to-[#001A4F]" />
+        )}
       </div>
 
       {/* Invisible anchor for home */}
@@ -109,14 +125,22 @@ export default function Hero({ navLinks }: HeroProps) {
       <nav className="absolute left-1/2 top-6 z-20 w-[85%] max-w-4xl -translate-x-1/2">
         <div className="navbar-dropdown flex items-center justify-between rounded-2xl bg-gray-800/90 backdrop-blur-xl px-6 py-2 shadow-2xl shadow-black/25 border border-gray-700/50">
           <div className="flex items-center">
-            <Image
-              src="/logos/isynergiesinclogo.png"
-              alt="iSynergies Inc."
-              width={250}
-              height={34}
-              className="h-[34px] w-auto"
-              priority
-            />
+            {siteSettings?.logoImage ? (
+              <div className="relative h-[34px] w-40 md:w-56">
+                <Image
+                  src={typeof siteSettings.logoImage === 'string' && (siteSettings.logoImage.startsWith('/api/images/') || siteSettings.logoImage.startsWith('http') || siteSettings.logoImage.startsWith('/'))
+                    ? siteSettings.logoImage 
+                    : `/api/images/${siteSettings.logoImage}`}
+                  alt="iSynergies Inc."
+                  fill
+                  className="object-contain object-left"
+                  sizes="224px"
+                  priority={false}
+                />
+              </div>
+            ) : (
+              <div className="h-[34px] w-40 md:w-56 rounded-lg bg-white/10 border border-white/20" />
+            )}
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium">
             {navLinks.map((link) => (

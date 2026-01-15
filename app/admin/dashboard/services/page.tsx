@@ -10,7 +10,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app
 import { Dialog, DialogFooter } from '@/app/components/ui/dialog';
 import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
+import { ImageUpload } from '@/app/components/ui/image-upload';
+import { Textarea } from '@/app/components/ui/textarea';
 import { Info } from 'lucide-react';
+import Image from 'next/image';
 
 type Statistic = {
   id: number;
@@ -25,20 +28,33 @@ type TickerItem = {
   displayOrder: number;
 };
 
+type Service = {
+  id: number;
+  title: string;
+  description: string;
+  icon: string;
+  displayOrder: number;
+};
+
 export default function ServicesPage() {
   const toast = useToast();
   const { confirm } = useConfirm();
   const [statistics, setStatistics] = useState<Statistic[]>([]);
   const [tickerItems, setTickerItems] = useState<TickerItem[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [isStatDialogOpen, setIsStatDialogOpen] = useState(false);
   const [isTickerDialogOpen, setIsTickerDialogOpen] = useState(false);
+  const [isServiceDialogOpen, setIsServiceDialogOpen] = useState(false);
   const [editingStat, setEditingStat] = useState<Statistic | null>(null);
   const [editingTicker, setEditingTicker] = useState<TickerItem | null>(null);
+  const [editingService, setEditingService] = useState<Service | null>(null);
   const [orderError, setOrderError] = useState<string>('');
   const [tickerOrderError, setTickerOrderError] = useState<string>('');
+  const [serviceOrderError, setServiceOrderError] = useState<string>('');
   const [savingStat, setSavingStat] = useState(false);
   const [savingTicker, setSavingTicker] = useState(false);
+  const [savingService, setSavingService] = useState(false);
   const [formData, setFormData] = useState({
     label: '',
     value: '',
@@ -46,6 +62,10 @@ export default function ServicesPage() {
   });
   const [tickerFormData, setTickerFormData] = useState({
     text: '',
+    displayOrder: 0,
+  });
+  const [serviceFormData, setServiceFormData] = useState({
+    icon: '',
     displayOrder: 0,
   });
 
@@ -63,9 +83,17 @@ export default function ServicesPage() {
     return order;
   };
 
+  const serviceUsedOrders = services.filter(s => s.id !== editingService?.id).map(s => s.displayOrder);
+  const getNextAvailableServiceOrder = () => {
+    let order = 0;
+    while (serviceUsedOrders.includes(order)) { order++; }
+    return order;
+  };
+
   useEffect(() => {
     fetchStatistics();
     fetchTickerItems();
+    fetchServices();
   }, []);
 
   const fetchStatistics = async () => {
@@ -87,6 +115,16 @@ export default function ServicesPage() {
       setTickerItems(data);
     } catch (error) {
       console.error('Error fetching ticker items:', error);
+    }
+  };
+
+  const fetchServices = async () => {
+    try {
+      const response = await fetch('/api/admin/services');
+      const data = await response.json();
+      setServices(data);
+    } catch (error) {
+      console.error('Error fetching services:', error);
     }
   };
 
@@ -295,6 +333,119 @@ export default function ServicesPage() {
     }
   };
 
+  const handleOpenAddServiceDialog = () => {
+    setEditingService(null);
+    setServiceFormData({
+      icon: '',
+      displayOrder: getNextAvailableServiceOrder(),
+    });
+    setServiceOrderError('');
+    setIsServiceDialogOpen(true);
+  };
+
+  const handleOpenEditServiceDialog = (service: Service) => {
+    setEditingService(service);
+    setServiceFormData({
+      icon: service.icon,
+      displayOrder: service.displayOrder,
+    });
+    setServiceOrderError('');
+    setIsServiceDialogOpen(true);
+  };
+
+  const handleCloseServiceDialog = () => {
+    setIsServiceDialogOpen(false);
+    setEditingService(null);
+    setServiceFormData({
+      icon: '',
+      displayOrder: getNextAvailableServiceOrder(),
+    });
+    setServiceOrderError('');
+  };
+
+  const handleSaveService = async () => {
+    setServiceOrderError('');
+
+    if (serviceUsedOrders.includes(serviceFormData.displayOrder)) {
+      setServiceOrderError(`Order ${serviceFormData.displayOrder} is already taken. Next available: ${getNextAvailableServiceOrder()}`);
+      return;
+    }
+
+    // Check if icon is provided and is a valid string
+    const iconValue = serviceFormData.icon;
+    const hasIcon = iconValue && typeof iconValue === 'string' && iconValue.trim().length > 0;
+
+    if (!hasIcon) {
+      toast.error('Please upload an icon image before saving');
+      return;
+    }
+
+    setSavingService(true);
+    const token = localStorage.getItem('admin_token');
+
+    try {
+      const url = editingService ? `/api/admin/services/${editingService.id}` : '/api/admin/services';
+      const method = editingService ? 'PUT' : 'POST';
+
+      // Backend schema requires title & description; auto-fill them based on display order
+      const payload = {
+        title: editingService?.title || `Service Icon ${serviceFormData.displayOrder + 1}`,
+        description: editingService?.description || '',
+        icon: serviceFormData.icon,
+        displayOrder: serviceFormData.displayOrder,
+      };
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        toast.success(editingService ? 'Service updated successfully!' : 'Service added successfully!');
+        handleCloseServiceDialog();
+        fetchServices();
+      } else {
+        toast.error('Failed to save service');
+      }
+    } catch (error) {
+      console.error('Error saving service:', error);
+      toast.error('An error occurred while saving');
+    } finally {
+      setSavingService(false);
+    }
+  };
+
+  const handleServiceDelete = async (id: number) => {
+    const confirmed = await confirm(
+      'Are you sure you want to delete this service? This action cannot be undone.',
+      'Delete Service'
+    );
+    
+    if (!confirmed) return;
+
+    const token = localStorage.getItem('admin_token');
+    try {
+      const response = await fetch(`/api/admin/services/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      
+      if (response.ok) {
+        toast.success('Service deleted successfully!');
+        fetchServices();
+      } else {
+        toast.error('Failed to delete service');
+      }
+    } catch (error) {
+      console.error('Error deleting service:', error);
+      toast.error('An error occurred while deleting');
+    }
+  };
+
 
   if (loading) {
     return (
@@ -306,21 +457,96 @@ export default function ServicesPage() {
 
   return (
     <div className="space-y-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Services management</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage the statistics and ticker items in the Services section.
-          </p>
-        </div>
-        <Button onClick={handleOpenAddStatDialog} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Add Statistic
-        </Button>
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Services management</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Manage the service icons, statistics, and ticker items in the Services section.
+        </p>
       </div>
 
-      {/* Statistics Grid */}
-      <div>
+      {/* Service Icons Section */}
+      <div className="border-b pb-8">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight text-foreground">Service Icons</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Manage the images displayed in the hexagonal grid on the Services page.
+            </p>
+          </div>
+          <Button onClick={handleOpenAddServiceDialog} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Add Service Icon
+          </Button>
+        </div>
+
+        {/* Services Grid */}
+        <div>
+          {services.length === 0 ? (
+            <Card className="rounded-xl border border-border bg-white p-12 shadow-sm">
+              <div className="text-center">
+                <Plus className="mx-auto mb-4 h-12 w-12 text-gray-800" />
+                <h3 className="mb-1 text-lg font-medium text-gray-800">No service icons yet</h3>
+                <p className="text-sm text-gray-800">Get started by adding your first service icon</p>
+              </div>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {services.map((service) => (
+                <Card key={service.id} className="overflow-hidden rounded-xl border border-border bg-white transition-shadow hover:shadow-md">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      {service.icon && (
+                        <div className="relative h-20 w-20 flex-shrink-0 rounded-lg overflow-hidden border border-gray-200 bg-gradient-to-b from-blue-900 to-blue-950">
+                          <Image
+                            src={typeof service.icon === 'string' && (service.icon.startsWith('/api/images/') || service.icon.startsWith('http') || service.icon.startsWith('/'))
+                              ? service.icon 
+                              : `/api/images/${service.icon}`}
+                            alt={service.title}
+                            fill
+                            className="object-contain p-2"
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-1">{service.title}</h3>
+                        <p className="text-sm text-gray-600 mb-2 line-clamp-2">{service.description}</p>
+                        <div className="text-xs text-gray-500">Order: {service.displayOrder}</div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 mt-4">
+                      <Button variant="outline" size="sm" onClick={() => handleOpenEditServiceDialog(service)} className="flex-1">
+                        <Pencil className="h-4 w-4 mr-1" />
+                        Edit
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleServiceDelete(service.id)} className="border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600" type="button">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Statistics Section */}
+      <div className="border-b pb-8">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight text-foreground">Statistics</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Manage the statistics displayed in the &quot;By the Numbers&quot; section.
+            </p>
+          </div>
+          <Button onClick={handleOpenAddStatDialog} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Add Statistic
+          </Button>
+        </div>
+
+        {/* Statistics Grid */}
+        <div>
           {statistics.length === 0 ? (
             <Card className="rounded-xl border border-border bg-white p-12 shadow-sm">
               <div className="text-center">
@@ -355,23 +581,8 @@ export default function ServicesPage() {
               ))}
             </div>
           )}
+        </div>
       </div>
-
-      {/* Information Card */}
-      <Card className="rounded-xl border border-blue-200 bg-blue-50/90 shadow-sm">
-        <CardContent className="flex items-start gap-3 p-6">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100">
-            <Info className="h-5 w-5 text-blue-700" />
-          </div>
-          <div>
-            <h3 className="mb-1 text-lg font-semibold text-blue-900">Note</h3>
-            <p className="text-sm text-blue-800">
-              These statistics are displayed in the &quot;By the Numbers&quot; section on your Services page.
-              The hexagonal service icons and description text are managed separately through the website&apos;s design system.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Ticker Items Section */}
       <div className="border-t pt-8">
@@ -544,6 +755,76 @@ export default function ServicesPage() {
             disabled={savingTicker}
           >
             {savingTicker ? 'Saving...' : editingTicker ? 'Update' : 'Add'}
+          </Button>
+        </DialogFooter>
+      </Dialog>
+
+      {/* Service Dialog */}
+      <Dialog
+        open={isServiceDialogOpen}
+        onOpenChange={setIsServiceDialogOpen}
+        title={editingService ? 'Edit Service Icon' : 'Add Service Icon'}
+      >
+        <div className="space-y-4 mb-6">
+          <div className="space-y-2">
+            <Label>Icon Image</Label>
+            <ImageUpload
+              value={serviceFormData.icon || ''}
+              onChange={(url: string) => {
+                console.log('ImageUpload onChange called with:', url);
+                setServiceFormData({ ...serviceFormData, icon: url });
+              }}
+            />
+            {serviceFormData.icon && (
+              <div className="relative h-32 w-32 mx-auto rounded-md overflow-hidden border border-gray-200 bg-gradient-to-b from-blue-900 to-blue-950">
+                <Image
+                  src={typeof serviceFormData.icon === 'string' && (serviceFormData.icon.startsWith('/api/images/') || serviceFormData.icon.startsWith('http') || serviceFormData.icon.startsWith('/'))
+                    ? serviceFormData.icon 
+                    : `/api/images/${serviceFormData.icon}`}
+                  alt="Service Icon"
+                  fill
+                  className="object-contain p-2"
+                />
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Icon displayed in the hexagonal grid. Recommended size: 256×256 PNG with transparent background.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="dialog-serviceDisplayOrder">Display Order</Label>
+            <Input
+              id="dialog-serviceDisplayOrder"
+              type="number"
+              value={serviceFormData.displayOrder}
+              onChange={(e) => {
+                setServiceFormData({ ...serviceFormData, displayOrder: parseInt(e.target.value) || 0 });
+                setServiceOrderError('');
+              }}
+              placeholder="0"
+              className={serviceOrderError ? 'border-red-500' : ''}
+            />
+            {serviceOrderError && <p className="text-xs text-red-600">{serviceOrderError}</p>}
+            <p className="text-xs text-muted-foreground">
+              Used: {serviceUsedOrders.sort((a, b) => a - b).join(', ') || 'None'} | Next: {getNextAvailableServiceOrder()}
+            </p>
+          </div>
+        </div>
+
+        <DialogFooter className="justify-end">
+          <Button
+            variant="outline"
+            onClick={handleCloseServiceDialog}
+            disabled={savingService}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSaveService}
+            disabled={savingService}
+          >
+            {savingService ? 'Saving...' : editingService ? 'Update' : 'Add'}
           </Button>
         </DialogFooter>
       </Dialog>

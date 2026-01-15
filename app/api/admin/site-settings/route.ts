@@ -18,6 +18,7 @@ export async function GET() {
         companyFacebook: 'https://facebook.com/isynergies',
         companyTwitter: '',
         companyInstagram: '',
+        logoImage: null,
       });
     }
     

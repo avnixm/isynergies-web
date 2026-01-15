@@ -20,6 +20,7 @@ export const siteSettings = mysqlTable('site_settings', {
   companyFacebook: varchar('company_facebook', { length: 255 }),
   companyTwitter: varchar('company_twitter', { length: 255 }),
   companyInstagram: varchar('company_instagram', { length: 255 }),
+  logoImage: varchar('logo_image', { length: 255 }),
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
 });
 

@@ -33,15 +33,29 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
         body: formData,
       });
 
-      if (!response.ok) throw new Error('Upload failed');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Upload failed' }));
+        throw new Error(errorData.error || 'Upload failed');
+      }
 
       const data = await response.json();
+      console.log('Upload response:', data);
+      
       // Return the image ID (which is part of the URL path)
-      const imageId = data.id || data.url.split('/').pop();
+      const rawId = data.id ?? (data.url ? data.url.split('/').pop() : null);
+      const imageId = rawId != null ? String(rawId) : null;
+      
+      if (!imageId) {
+        console.error('No image ID found in response:', data);
+        throw new Error('No image ID returned from server');
+      }
+      
+      console.log('Setting image ID:', imageId);
       onChange(imageId);
     } catch (error) {
       console.error('Upload error:', error);
-      alert('Failed to upload image');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload image';
+      alert(`Upload failed: ${errorMessage}`);
     } finally {
       setUploading(false);
     }
@@ -50,7 +64,11 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp']
+      'image/png': ['.png'],
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/gif': ['.gif'],
+      'image/webp': ['.webp'],
+      'image/svg+xml': ['.svg'],
     },
     maxFiles: 1,
     disabled: disabled || uploading,
@@ -113,7 +131,7 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
                     <p className="text-sm text-gray-600">
                       <span className="font-medium text-blue-600">Click to upload</span> or drag and drop
                     </p>
-                    <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                    <p className="text-xs text-gray-500">PNG, JPG, JPEG, GIF, WEBP, SVG up to 10MB</p>
                   </>
                 )}
               </>
