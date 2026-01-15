@@ -176,6 +176,9 @@ export const contactMessages = mysqlTable('contact_messages', {
   email: varchar('email', { length: 255 }).notNull(),
   contactNo: varchar('contact_no', { length: 50 }).notNull(),
   message: text('message').notNull(),
+  // Optional link to a specific project inquiry
+  projectId: int('project_id'),
+  projectTitle: varchar('project_title', { length: 255 }),
   status: varchar('status', { length: 50 }).notNull().default('new'), // new, read, replied, archived
   adminNotes: text('admin_notes'),
   createdAt: timestamp('created_at').defaultNow(),

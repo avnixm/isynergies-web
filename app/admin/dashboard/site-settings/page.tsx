@@ -10,6 +10,7 @@ import { Textarea } from '@/app/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { ImageUpload } from '@/app/components/ui/image-upload';
 import Image from 'next/image';
+import { useToast } from '@/app/components/ui/toast';
 
 type SiteSettings = {
   companyName: string;
@@ -23,6 +24,7 @@ type SiteSettings = {
 };
 
 export default function SiteSettingsPage() {
+  const { success, error } = useToast();
   const [settings, setSettings] = useState<SiteSettings>({
     companyName: '',
     companyAddress: '',
@@ -35,7 +37,6 @@ export default function SiteSettingsPage() {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     fetchSettings();
@@ -45,7 +46,17 @@ export default function SiteSettingsPage() {
     try {
       const response = await fetch('/api/admin/site-settings');
       const data = await response.json();
-      setSettings(data);
+      // Normalize null values to empty strings for React inputs
+      setSettings({
+        companyName: data.companyName || '',
+        companyAddress: data.companyAddress || '',
+        companyPhone: data.companyPhone || '',
+        companyEmail: data.companyEmail || '',
+        companyFacebook: data.companyFacebook || '',
+        companyTwitter: data.companyTwitter || '',
+        companyInstagram: data.companyInstagram || '',
+        logoImage: data.logoImage || null,
+      });
     } catch (error) {
       console.error('Error fetching site settings:', error);
     } finally {
@@ -56,7 +67,6 @@ export default function SiteSettingsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    setMessage(null);
     const token = localStorage.getItem('admin_token');
 
     try {
@@ -70,14 +80,13 @@ export default function SiteSettingsPage() {
       });
 
       if (response.ok) {
-        setMessage({ type: 'success', text: 'Settings updated successfully.' });
-        setTimeout(() => setMessage(null), 3000);
+        success('Site settings updated successfully.');
       } else {
-        setMessage({ type: 'error', text: 'Failed to update settings.' });
+        error('Failed to update site settings.');
       }
-    } catch (error) {
-      console.error('Error saving settings:', error);
-      setMessage({ type: 'error', text: 'Error saving changes.' });
+    } catch (err) {
+      console.error('Error saving settings:', err);
+      error('An unexpected error occurred while saving.');
     } finally {
       setSaving(false);
     }
@@ -248,15 +257,6 @@ export default function SiteSettingsPage() {
               </>
             )}
           </Button>
-          {message && (
-            <p
-              className={`text-sm ${
-                message.type === 'success' ? 'text-green-600' : 'text-red-600'
-              }`}
-            >
-              {message.text}
-            </p>
-          )}
         </div>
       </form>
     </div>

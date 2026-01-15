@@ -6,7 +6,7 @@ import { contactMessages } from '@/app/db/schema';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, contactNo, message } = body;
+    const { name, email, contactNo, message, projectId, projectTitle } = body;
 
     if (!name || !email || !contactNo || !message) {
       return NextResponse.json(
@@ -20,6 +20,8 @@ export async function POST(request: Request) {
       email,
       contactNo,
       message,
+      projectId: projectId ?? null,
+      projectTitle: projectTitle ?? null,
       status: 'new',
     });
 

@@ -17,6 +17,8 @@ type ContactMessage = {
   email: string;
   contactNo: string;
   message: string;
+  projectId?: number | null;
+  projectTitle?: string | null;
   status: 'new' | 'read' | 'replied' | 'archived';
   adminNotes: string | null;
   createdAt: string;
@@ -37,19 +39,6 @@ const getInitials = (name: string) => {
     .join('')
     .toUpperCase()
     .slice(0, 2);
-};
-
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  
-  if (diffInSeconds < 60) return 'Just now';
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
-  
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
 };
 
 export default function MessagesPage() {
@@ -190,6 +179,8 @@ export default function MessagesPage() {
       // Show toast when saving notes (this is an explicit user action)
       await updateMessageStatus(selectedMessage.id, selectedMessage.status, adminNotes, true);
       setSavingNotes(false);
+      // Close the dialog after saving
+      handleCloseDialog();
     }
   };
 
@@ -355,6 +346,11 @@ export default function MessagesPage() {
                           </div>
                         </div>
                         
+                        {message.projectTitle && (
+                          <p className="text-xs font-medium text-[#0D1E66] mb-1">
+                            Project inquiry: {message.projectTitle}
+                          </p>
+                        )}
                         <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                           {message.message}
                         </p>
@@ -362,7 +358,16 @@ export default function MessagesPage() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <Clock className="h-3 w-3" />
-                            <span>{formatDate(message.createdAt)}</span>
+                            <span>
+                              {new Date(message.createdAt).toLocaleString('en-PH', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                timeZone: 'Asia/Manila',
+                              })}
+                            </span>
                           </div>
                           <span className={`
                             px-2 py-0.5 text-xs rounded-full border font-medium
@@ -415,6 +420,12 @@ export default function MessagesPage() {
                       {selectedMessage.contactNo}
                     </a>
                   </div>
+                  {selectedMessage.projectTitle && (
+                    <div className="flex items-center gap-2 text-sm text-[#0D1E66] font-medium">
+                      <MessageSquare className="h-4 w-4" />
+                      <span>Project inquiry: {selectedMessage.projectTitle}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -510,20 +521,7 @@ export default function MessagesPage() {
           </div>
         )}
 
-        <DialogFooter>
-          <Button
-            variant="ghost"
-            onClick={() => {
-              if (selectedMessage) {
-                handleDelete(selectedMessage.id);
-              }
-            }}
-            className="text-muted-foreground hover:text-destructive"
-            disabled={!selectedMessage}
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete
-          </Button>
+        <DialogFooter className="mt-4 flex w-full items-center justify-end gap-2">
           <Button
             variant="outline"
             onClick={handleCloseDialog}

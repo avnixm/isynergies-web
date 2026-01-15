@@ -35,16 +35,39 @@ export async function PUT(request: Request) {
 
   try {
     const body = await request.json();
+
+    // Only persist known fields; ignore timestamps and any extra keys
+    const {
+      companyName,
+      companyAddress,
+      companyPhone,
+      companyEmail,
+      companyFacebook,
+      companyTwitter,
+      companyInstagram,
+      logoImage,
+    } = body;
+
+    const payload = {
+      companyName,
+      companyAddress,
+      companyPhone,
+      companyEmail,
+      companyFacebook,
+      companyTwitter,
+      companyInstagram,
+      logoImage,
+    };
     
     // Check if settings exist
     const [existing] = await db.select().from(siteSettings).limit(1);
     
     if (existing) {
       // Update existing settings
-      await db.update(siteSettings).set(body).where(eq(siteSettings.id, existing.id));
+      await db.update(siteSettings).set(payload).where(eq(siteSettings.id, existing.id));
     } else {
       // Create new settings
-      await db.insert(siteSettings).values(body);
+      await db.insert(siteSettings).values(payload);
     }
     
     return NextResponse.json({ success: true, message: 'Settings updated successfully' });
