@@ -277,6 +277,146 @@ body {
   -webkit-clip-path: polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%);
 }
 
+@keyframes slideRightFromLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-500px);
+  }
+  60% {
+    opacity: 1;
+    transform: translateX(25px);
+  }
+  75% {
+    transform: translateX(-10px);
+  }
+  87% {
+    transform: translateX(5px);
+  }
+  95% {
+    transform: translateX(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes dropdown {
+  0% {
+    opacity: 0;
+    transform: translateY(-32px);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(8px);
+  }
+  80% {
+    transform: translateY(-3px);
+  }
+  95% {
+    transform: translateY(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.navbar-dropdown {
+  opacity: 0;
+  animation: dropdown 1.4s ease-out 1.2s forwards;
+}
+
+.fade-in {
+  opacity: 0;
+  animation: fadeIn 1.5s ease-out forwards;
+}
+
+@keyframes slideRight {
+  0% {
+    opacity: 0;
+    transform: translate3d(-1200px, 0, 0);
+  }
+  55% {
+    opacity: 1;
+    transform: translate3d(40px, 0, 0);
+  }
+  70% {
+    transform: translate3d(-18px, 0, 0);
+  }
+  82% {
+    transform: translate3d(10px, 0, 0);
+  }
+  92% {
+    transform: translate3d(-4px, 0, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.slide-right {
+  opacity: 0;
+  transform: translate3d(-1200px, 0, 0);
+  animation: slideRight 1.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+.slide-right-content {
+  opacity: 0;
+  transform: translateX(-500px);
+}
+
+.slide-right-content.animate {
+  animation: slideRightFromLeft 1.5s ease-out forwards;
+}
+
+@keyframes slideUpp {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUpContent {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-up-content {
+  opacity: 0;
+  transform: translateY(50px);
+}
+
+.slide-up-content.animate {
+  animation: slideUpContent 1.2s ease-out forwards;
+}
+
+.slide-up-container {
+  opacity: 0;
+  transform: translateY(100%);
+}
+
+.slide-up-container.animate {
+  animation: slideUpp 1.2s ease-out forwards;
+}
+
+.slide-up-container:not(.animate) .scroll-animation {
+  animation: none;
+}
+
 /* Modal animations - GPU accelerated for smooth performance */
 /* Toast Slide In Animation */
 @keyframes slideInRight {
