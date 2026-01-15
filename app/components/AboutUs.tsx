@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import Loading from './ui/loading';
 
@@ -29,6 +29,35 @@ export default function AboutUs() {
   const [content, setContent] = useState<AboutUsContent | null>(null);
   const [galleryImages, setGalleryImages] = useState<AboutUsGalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const sectionRef = useRef<HTMLElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isBoardSectionVisible, setIsBoardSectionVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+          }
+        });
+      },
+      {
+        threshold: 0.2, // Trigger when 20% of the section is visible
+      }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     fetchContent();
@@ -75,6 +104,7 @@ export default function AboutUs() {
   if (loading) {
     return (
       <section
+        ref={sectionRef}
         id="about"
         className="relative min-h-screen pb-5 flex items-center justify-center"
         style={{ backgroundColor: '#D7E1E4' }}
@@ -116,6 +146,7 @@ export default function AboutUs() {
 
   return (
       <section
+        ref={sectionRef}
         id="about"
         className="relative"
         style={{ backgroundColor: '#D7E1E4' }}
@@ -136,7 +167,7 @@ export default function AboutUs() {
             <div className="md:w-1/2 space-y-2 md:pr-8 relative z-10 font-sans py-5">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{content.title}</h2>
               
-              <div className="space-y-2 text-gray-900 text-xs leading-relaxed font-normal">
+              <div className={`slide-right-content space-y-2 text-gray-900 text-xs leading-relaxed font-normal ${isVisible ? 'animate' : ''}`}>
                 <p>{content.paragraph1}</p>
                 <p>{content.paragraph2}</p>
                 <p>{content.paragraph3}</p>
@@ -145,7 +176,7 @@ export default function AboutUs() {
               </div>
 
               {/* Mission and Vision Boxes */}
-              <div className="grid md:grid-cols-2 gap-3 mt-4">
+              <div className={`slide-up-content grid md:grid-cols-2 gap-3 mt-4 ${isVisible ? 'animate' : ''}`}>
                 <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                   <h3 className="text-base font-bold text-gray-900 mb-1">{content.missionTitle}</h3>
                   <p className="text-gray-900 text-[10px] leading-tight font-normal">
@@ -164,7 +195,7 @@ export default function AboutUs() {
 
             {/* Right Side - Auto-scrolling Image Gallery (multi-image, infinite) */}
             <div className="hidden md:block md:w-1/2 -mt-0">
-              <div className="relative h-[600px] w-full overflow-hidden shadow-lg">
+              <div className={`slide-up-container relative h-[600px] w-full overflow-hidden shadow-lg ${isVisible ? 'animate' : ''}`}>
                 <div
                   className="scroll-animation absolute top-0 left-0 w-full flex flex-col"
                   style={{ height: '200%', animationDuration: `${scrollSeconds}s` }}
