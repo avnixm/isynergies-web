@@ -6,14 +6,15 @@ import { eq } from 'drizzle-orm';
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
   try {
     const body = await request.json();
-    const id = parseInt(params.id);
+    const { id: idParam } = await params;
+    const id = parseInt(idParam);
 
     await db
       .update(tickerItems)
@@ -29,13 +30,14 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
   try {
-    const id = parseInt(params.id);
+    const { id: idParam } = await params;
+    const id = parseInt(idParam);
     await db.delete(tickerItems).where(eq(tickerItems.id, id));
     return NextResponse.json({ success: true });
   } catch (error) {

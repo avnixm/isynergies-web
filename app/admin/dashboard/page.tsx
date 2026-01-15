@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Users, Briefcase, UserCog, Wrench, Activity, Mail } from 'lucide-react';
+import { Users, Briefcase, UserCog, Wrench, Activity } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Button } from '@/app/components/ui/button';
 import {
@@ -129,36 +129,13 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
       <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-gray-800">
-            Overview
-          </h1>
-          <p className="mt-1 text-sm text-gray-800">
-            High-level view of your content and recent activity.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link href="/admin/dashboard/site-settings" className="hidden sm:inline-flex">
-            <Button
-              type="button"
-              variant="outline"
-              className="bg-background/80 backdrop-blur-sm"
-            >
-              <Wrench className="mr-2 h-4 w-4" />
-              Site settings
-            </Button>
-          </Link>
-          <Link href="/admin/dashboard/messages">
-            <Button
-              type="button"
-              className="bg-accent/90 text-accent-foreground hover:bg-accent"
-            >
-              <Mail className="mr-2 h-4 w-4" />
-              View messages
-            </Button>
-          </Link>
-        </div>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          Overview
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          High-level view of your content and recent activity.
+        </p>
       </div>
 
       {/* Stats Grid */}

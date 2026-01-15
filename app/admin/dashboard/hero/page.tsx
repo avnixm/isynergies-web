@@ -7,7 +7,8 @@ import { Button } from '@/app/components/ui/button';
 import { Label } from '@/app/components/ui/label';
 import { ImageUpload } from '@/app/components/ui/image-upload';
 import { Input } from '@/app/components/ui/input';
-import { Trash2 } from 'lucide-react';
+import { Dialog, DialogFooter } from '@/app/components/ui/dialog';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
 
@@ -19,10 +20,9 @@ type HeroSection = {
   backgroundImage: string | null;
 };
 
-type HeroImage = {
+type HeroTickerItem = {
   id: number;
-  image: string;
-  alt: string;
+  text: string;
   displayOrder: number;
 };
 
@@ -36,13 +36,20 @@ export default function HeroManagementPage() {
     fullLogo: null,
     backgroundImage: null,
   });
-  const [heroImages, setHeroImages] = useState<HeroImage[]>([]);
+  const [heroTickerItems, setHeroTickerItems] = useState<HeroTickerItem[]>([]);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // Dialog state management
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingTickerItem, setEditingTickerItem] = useState<HeroTickerItem | null>(null);
+  const [formText, setFormText] = useState('');
+  const [formDisplayOrder, setFormDisplayOrder] = useState(0);
+  const [savingTickerItem, setSavingTickerItem] = useState(false);
+
   useEffect(() => {
     fetchHeroSection();
-    fetchHeroImages();
+    fetchHeroTickerItems();
   }, []);
 
   const fetchHeroSection = async () => {
@@ -57,15 +64,15 @@ export default function HeroManagementPage() {
     }
   };
 
-  const fetchHeroImages = async () => {
+  const fetchHeroTickerItems = async () => {
     try {
-      const response = await fetch('/api/admin/hero-images');
+      const response = await fetch('/api/admin/hero-ticker');
       if (response.ok) {
         const data = await response.json();
-        setHeroImages(data);
+        setHeroTickerItems(data);
       }
     } catch (error) {
-      console.error('Error fetching hero images:', error);
+      console.error('Error fetching hero ticker items:', error);
     } finally {
       setLoading(false);
     }
@@ -93,75 +100,115 @@ export default function HeroManagementPage() {
     }
   };
 
-  const handleAddFilmImage = async () => {
-    const newOrder = heroImages.length > 0 
-      ? Math.max(...heroImages.map(img => img.displayOrder)) + 1 
+  const handleOpenAddDialog = () => {
+    const newOrder = heroTickerItems.length > 0 
+      ? Math.max(...heroTickerItems.map(item => item.displayOrder)) + 1 
       : 0;
+    
+    setEditingTickerItem(null);
+    setFormText('');
+    setFormDisplayOrder(newOrder);
+    setIsDialogOpen(true);
+  };
 
+  const handleOpenEditDialog = (item: HeroTickerItem) => {
+    setEditingTickerItem(item);
+    setFormText(item.text);
+    setFormDisplayOrder(item.displayOrder);
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setEditingTickerItem(null);
+    setFormText('');
+    setFormDisplayOrder(0);
+  };
+
+  const handleSaveTickerItem = async () => {
+    // Validation
+    if (!formText.trim()) {
+      toast.error('Please enter announcement text');
+      return;
+    }
+
+    setSavingTickerItem(true);
+    const token = localStorage.getItem('admin_token');
     try {
-      const response = await fetch('/api/admin/hero-images', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          image: '',
-          alt: `Film strip image ${newOrder + 1}`,
-          displayOrder: newOrder,
-        }),
-      });
+      if (editingTickerItem) {
+        // Update existing
+        const response = await fetch(`/api/admin/hero-ticker/${editingTickerItem.id}`, {
+          method: 'PUT',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            text: formText,
+            displayOrder: formDisplayOrder,
+          }),
+        });
 
-      if (response.ok) {
-        toast.success('Film strip image added successfully!');
-        fetchHeroImages();
+        if (response.ok) {
+          toast.success('Announcement text updated successfully!');
+          handleCloseDialog();
+          fetchHeroTickerItems();
+        } else {
+          toast.error('Failed to update announcement text');
+        }
       } else {
-        toast.error('Failed to add image');
+        // Create new
+        const response = await fetch('/api/admin/hero-ticker', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            text: formText,
+            displayOrder: formDisplayOrder,
+          }),
+        });
+
+        if (response.ok) {
+          toast.success('Announcement text added successfully!');
+          handleCloseDialog();
+          fetchHeroTickerItems();
+        } else {
+          toast.error('Failed to add announcement text');
+        }
       }
     } catch (error) {
-      console.error('Error adding film image:', error);
-      toast.error('An error occurred while adding');
+      console.error('Error saving announcement text:', error);
+      toast.error('An error occurred while saving');
+    } finally {
+      setSavingTickerItem(false);
     }
   };
 
-  const handleUpdateFilmImage = async (id: number, image: string, alt: string, displayOrder: number) => {
-    try {
-      const response = await fetch(`/api/admin/hero-images/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image, alt, displayOrder }),
-      });
-
-      if (response.ok) {
-        toast.success('Film strip image updated successfully!');
-        fetchHeroImages();
-      } else {
-        toast.error('Failed to update image');
-      }
-    } catch (error) {
-      console.error('Error updating film image:', error);
-      toast.error('An error occurred while updating');
-    }
-  };
-
-  const handleDeleteFilmImage = async (id: number) => {
+  const handleDeleteTickerItem = async (id: number) => {
     const confirmed = await confirm(
-      'Are you sure you want to delete this image? This action cannot be undone.',
-      'Delete Image'
+      'Are you sure you want to delete this announcement text? This action cannot be undone.',
+      'Delete Text'
     );
     
     if (!confirmed) return;
 
+    const token = localStorage.getItem('admin_token');
     try {
-      const response = await fetch(`/api/admin/hero-images/${id}`, {
+      const response = await fetch(`/api/admin/hero-ticker/${id}`, {
         method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
       });
 
       if (response.ok) {
-        toast.success('Image deleted successfully!');
-        fetchHeroImages();
+        toast.success('Announcement text deleted successfully!');
+        fetchHeroTickerItems();
       } else {
-        toast.error('Failed to delete image');
+        toast.error('Failed to delete announcement text');
       }
     } catch (error) {
-      console.error('Error deleting film image:', error);
+      console.error('Error deleting announcement text:', error);
       toast.error('An error occurred while deleting');
     }
   };
@@ -174,18 +221,19 @@ export default function HeroManagementPage() {
     );
   }
 
+
   return (
     <div className="space-y-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Hero section management</h1>
-        <p className="mt-1 text-sm text-gray-800">
-          Manage the hero section logos and film strip images.
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Hero section management</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Manage the hero section logos and announcement text bar.
         </p>
       </div>
 
       {/* Hero Section Logos */}
       <Card className="rounded-xl border border-border bg-white p-6 shadow-sm">
-        <h2 className="mb-6 text-lg font-medium text-gray-800">Hero section logos</h2>
+        <h2 className="mb-6 text-lg font-medium text-foreground">Hero section logos</h2>
         
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-2">
@@ -236,103 +284,137 @@ export default function HeroManagementPage() {
         </div>
       </Card>
 
-      {/* Film Strip Images */}
-      <Card className="rounded-xl border border-border bg-white p-6 shadow-sm">
-        <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-lg font-medium text-gray-800">Film strip images</h2>
-        <Button onClick={handleAddFilmImage}>Add Image</Button>
+      {/* Hero Ticker Items */}
+      <Card className="rounded-xl border border-border bg-white shadow-sm">
+        <div className="flex items-center justify-between p-6 border-b border-border">
+          <div>
+            <h2 className="text-lg font-medium text-foreground">Announcement Text Bar</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Add announcement texts that appear in the hero section
+            </p>
+          </div>
+          <Button onClick={handleOpenAddDialog} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Add Text
+          </Button>
         </div>
+        <div className="p-6">
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {heroImages.map((heroImage) => (
-            <Card key={heroImage.id} className="relative rounded-xl border border-border bg-white p-4 shadow-sm">
-              <div className="space-y-3">
-                <div>
-                  <Label>Image</Label>
-                  <ImageUpload
-                    value={heroImage.image}
-                    onChange={(imageId) =>
-                      handleUpdateFilmImage(
-                        heroImage.id,
-                        imageId,
-                        heroImage.alt,
-                        heroImage.displayOrder
-                      )
-                    }
-                  />
+        {heroTickerItems.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-sm text-muted-foreground">No announcement texts yet. Click "Add Text" to create one.</p>
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {heroTickerItems.map((item) => (
+              <Card
+                key={item.id}
+                className="group relative rounded-xl border border-border bg-white shadow-sm transition-all hover:shadow-md"
+              >
+                {/* Display Order Badge */}
+                <div className="absolute top-2 right-2 z-10">
+                  <span className="inline-flex items-center rounded-full bg-background/90 backdrop-blur-sm px-2 py-1 text-xs font-medium text-muted-foreground border border-border/50">
+                    Order: {item.displayOrder}
+                  </span>
                 </div>
 
-                <div>
-                  <Label htmlFor={`alt-${heroImage.id}`}>Alt Text</Label>
-                  <Input
-                    id={`alt-${heroImage.id}`}
-                    type="text"
-                    value={heroImage.alt}
-                    onChange={(e) => {
-                      const updated = heroImages.map((img) =>
-                        img.id === heroImage.id ? { ...img, alt: e.target.value } : img
-                      );
-                      setHeroImages(updated);
-                    }}
-                    onBlur={() =>
-                      handleUpdateFilmImage(
-                        heroImage.id,
-                        heroImage.image,
-                        heroImage.alt,
-                        heroImage.displayOrder
-                      )
-                    }
-                    className="mt-1"
-                  />
+                {/* Text Content */}
+                <div className="px-4 pt-4 pb-3">
+                  <p className="text-sm text-foreground line-clamp-3 pr-12">
+                    {item.text}
+                  </p>
+                  {item.text.includes('[') && item.text.includes('](') && (
+                    <p className="text-xs text-muted-foreground mt-1 italic">
+                      Contains link
+                    </p>
+                  )}
                 </div>
 
-                <div>
-                  <Label htmlFor={`order-${heroImage.id}`}>Display Order</Label>
-                  <Input
-                    id={`order-${heroImage.id}`}
-                    type="number"
-                    value={heroImage.displayOrder}
-                    onChange={(e) => {
-                      const updated = heroImages.map((img) =>
-                        img.id === heroImage.id
-                          ? { ...img, displayOrder: parseInt(e.target.value) }
-                          : img
-                      );
-                      setHeroImages(updated);
-                    }}
-                    onBlur={() =>
-                      handleUpdateFilmImage(
-                        heroImage.id,
-                        heroImage.image,
-                        heroImage.alt,
-                        heroImage.displayOrder
-                      )
-                    }
-                    className="mt-1"
-                  />
+                {/* Action Buttons */}
+                <div className="mt-3 flex gap-2 px-4 pb-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleOpenEditDialog(item)}
+                    className="flex-1"
+                  >
+                    <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDeleteTickerItem(item.id)}
+                    className="text-muted-foreground hover:text-destructive"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
                 </div>
-
-                <Button
-                  onClick={() => handleDeleteFilmImage(heroImage.id)}
-                  type="button"
-                  variant="destructive"
-                  size="icon"
-                  className="absolute right-3 top-3"
-                  aria-label="Delete film strip image"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </Card>
-          ))}
-        </div>
-
-        {heroImages.length === 0 && (
-          <p className="py-8 text-center text-sm text-gray-800">
-            No film strip images yet. Click &quot;Add Image&quot; to get started.
-          </p>
+              </Card>
+            ))}
+          </div>
         )}
+        </div>
       </Card>
+
+      {/* Add/Edit Dialog */}
+      <Dialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        title={editingTickerItem ? 'Edit Text' : 'Add Text'}
+      >
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="dialog-text">Announcement Text</Label>
+            <Input
+              id="dialog-text"
+              type="text"
+              value={formText}
+              onChange={(e) => setFormText(e.target.value)}
+              placeholder="e.g., Cash is now available [try now](https://example.com)"
+              required
+            />
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">
+                This text will appear in the hero section announcement bar
+              </p>
+              <p className="text-xs text-muted-foreground">
+                <strong>Add links:</strong> Use markdown syntax <code className="px-1 py-0.5 bg-muted rounded text-xs">[link text](https://url.com)</code>
+              </p>
+              <p className="text-xs text-muted-foreground italic">
+                Example: Cash is now available [try now](https://example.com)
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="dialog-order">Display Order</Label>
+            <Input
+              id="dialog-order"
+              type="number"
+              value={formDisplayOrder}
+              onChange={(e) => setFormDisplayOrder(parseInt(e.target.value) || 0)}
+              placeholder="0"
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={handleCloseDialog}
+            disabled={savingTickerItem}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSaveTickerItem}
+            disabled={savingTickerItem}
+          >
+            {savingTickerItem ? 'Saving...' : editingTickerItem ? 'Update' : 'Add'}
+          </Button>
+        </DialogFooter>
+      </Dialog>
     </div>
   );
 }

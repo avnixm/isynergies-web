@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import Loading from '@/app/components/ui/loading';
 import { Button } from '@/app/components/ui/button';
@@ -8,8 +9,9 @@ import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
 import { Select } from '@/app/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
+import { Card, CardContent } from '@/app/components/ui/card';
 import { ImageUpload } from '@/app/components/ui/image-upload';
+import { Dialog, DialogFooter } from '@/app/components/ui/dialog';
 import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
 
@@ -33,8 +35,11 @@ export default function ProjectsPage() {
   const { confirm } = useConfirm();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [orderError, setOrderError] = useState<string>('');
+  const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<'all' | 'desktop' | 'mobile' | 'tools'>('all');
   const [formData, setFormData] = useState({
     title: '',
     year: new Date().getFullYear().toString(),
@@ -51,7 +56,7 @@ export default function ProjectsPage() {
 
   // Get all used order numbers (excluding the one being edited)
   const usedOrders = projects
-    .filter(p => p.id !== editingId)
+    .filter(p => p.id !== editingProject?.id)
     .map(p => p.displayOrder);
 
   // Get next available order
@@ -79,46 +84,27 @@ export default function ProjectsPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleOpenAddDialog = () => {
+    setEditingProject(null);
+    setFormData({
+      title: '',
+      year: new Date().getFullYear().toString(),
+      subtitle: '',
+      description: '',
+      category: 'desktop',
+      thumbnail: '',
+      screenshot1: '',
+      screenshot2: '',
+      screenshot3: '',
+      screenshot4: '',
+      displayOrder: getNextAvailableOrder(),
+    });
     setOrderError('');
-
-    // Validate order number
-    if (usedOrders.includes(formData.displayOrder)) {
-      setOrderError(`Order ${formData.displayOrder} is already taken. Next available: ${getNextAvailableOrder()}`);
-      return;
-    }
-
-    const token = localStorage.getItem('admin_token');
-
-    try {
-      const url = editingId ? `/api/admin/projects/${editingId}` : '/api/admin/projects';
-      const method = editingId ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        toast.success(editingId ? 'Project updated successfully!' : 'Project added successfully!');
-        fetchProjects();
-        resetForm();
-      } else {
-        toast.error('Failed to save project');
-      }
-    } catch (error) {
-      console.error('Error saving project:', error);
-      toast.error('An error occurred while saving');
-    }
+    setIsDialogOpen(true);
   };
 
-  const handleEdit = (project: Project) => {
-    setEditingId(project.id);
+  const handleOpenEditDialog = (project: Project) => {
+    setEditingProject(project);
     setFormData({
       title: project.title,
       year: project.year,
@@ -132,6 +118,72 @@ export default function ProjectsPage() {
       screenshot4: project.screenshot4 || '',
       displayOrder: project.displayOrder,
     });
+    setOrderError('');
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setEditingProject(null);
+    setFormData({
+      title: '',
+      year: new Date().getFullYear().toString(),
+      subtitle: '',
+      description: '',
+      category: 'desktop',
+      thumbnail: '',
+      screenshot1: '',
+      screenshot2: '',
+      screenshot3: '',
+      screenshot4: '',
+      displayOrder: getNextAvailableOrder(),
+    });
+    setOrderError('');
+  };
+
+  const handleSave = async () => {
+    setOrderError('');
+
+    // Validate order number
+    if (usedOrders.includes(formData.displayOrder)) {
+      setOrderError(`Order ${formData.displayOrder} is already taken. Next available: ${getNextAvailableOrder()}`);
+      return;
+    }
+
+    if (!formData.title.trim() || !formData.subtitle.trim() || !formData.description.trim()) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    setSaving(true);
+    const token = localStorage.getItem('admin_token');
+
+    try {
+      const url = editingProject ? `/api/admin/projects/${editingProject.id}` : '/api/admin/projects';
+      const method = editingProject ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        toast.success(editingProject ? 'Project updated successfully!' : 'Project added successfully!');
+        handleCloseDialog();
+        fetchProjects();
+      } else {
+        toast.error('Failed to save project');
+      }
+    } catch (error) {
+      console.error('Error saving project:', error);
+      toast.error('An error occurred while saving');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async (id: number) => {
@@ -161,23 +213,6 @@ export default function ProjectsPage() {
     }
   };
 
-  const resetForm = () => {
-    setEditingId(null);
-    setOrderError('');
-    setFormData({
-      title: '',
-      year: new Date().getFullYear().toString(),
-      subtitle: '',
-      description: '',
-      category: 'desktop',
-      thumbnail: '',
-      screenshot1: '',
-      screenshot2: '',
-      screenshot3: '',
-      screenshot4: '',
-      displayOrder: getNextAvailableOrder(),
-    });
-  };
 
   if (loading) {
     return (
@@ -189,195 +224,335 @@ export default function ProjectsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Projects</h1>
-        <p className="mt-1 text-sm text-gray-800">
-          Manage your portfolio and project showcase.
-        </p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Projects</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Manage your portfolio and project showcase.
+          </p>
+        </div>
+        <Button onClick={handleOpenAddDialog} className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Add Project
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Form */}
-        <div className="lg:col-span-1">
-          <Card className="sticky top-6 max-h-[calc(100vh-100px)] overflow-y-auto rounded-xl border border-border bg-white shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-xl">
-                {editingId ? 'Edit Project' : 'Add New Project'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Project Title</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="eCompacct"
-                    required
-                  />
-                </div>
+      {/* Tabs */}
+      <div className="border-b border-border">
+        <nav className="flex gap-1" aria-label="Project categories">
+          {(['all', 'desktop', 'mobile', 'tools'] as const).map((tab) => {
+            const tabLabels: Record<typeof tab, string> = {
+              all: 'All Projects',
+              desktop: 'Desktop/Web',
+              mobile: 'Mobile',
+              tools: 'Tools',
+            };
+            const count = tab === 'all' 
+              ? projects.length 
+              : projects.filter(p => p.category === tab).length;
+            
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`
+                  relative px-4 py-2 text-sm font-medium transition-colors
+                  border-b-2 -mb-[1px]
+                  ${activeTab === tab
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+                  }
+                `}
+              >
+                {tabLabels[tab]}
+                {count > 0 && (
+                  <span className={`
+                    ml-2 px-2 py-0.5 text-xs rounded-full
+                    ${activeTab === tab
+                      ? 'bg-primary/10 text-primary'
+                      : 'bg-muted text-muted-foreground'
+                    }
+                  `}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="year">Year</Label>
-                    <Input
-                      id="year"
-                      value={formData.year}
-                      onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                      placeholder="2026"
-                      required
-                    />
-                  </div>
+      {/* Filtered Projects List */}
+      <div>
+        {(() => {
+          const filteredProjects = activeTab === 'all'
+            ? projects
+            : projects.filter(p => p.category === activeTab);
 
-                  <div className="space-y-2">
-                    <Label htmlFor="category">Category</Label>
-                    <Select
-                      id="category"
-                      value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    >
-                      <option value="desktop">Desktop</option>
-                      <option value="mobile">Mobile</option>
-                      <option value="tools">Tools</option>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="subtitle">Subtitle</Label>
-                  <Input
-                    id="subtitle"
-                    value={formData.subtitle}
-                    onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-                    placeholder="Lorem ipsum dolor sit amet"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="min-h-[100px]"
-                    placeholder="Project description..."
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Thumbnail</Label>
-                  <ImageUpload
-                    value={formData.thumbnail}
-                    onChange={(url) => setFormData({ ...formData, thumbnail: url })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Screenshots</Label>
-                  <div className="space-y-3">
-                    <ImageUpload
-                      value={formData.screenshot1}
-                      onChange={(url) => setFormData({ ...formData, screenshot1: url })}
-                    />
-                    <ImageUpload
-                      value={formData.screenshot2}
-                      onChange={(url) => setFormData({ ...formData, screenshot2: url })}
-                    />
-                    <ImageUpload
-                      value={formData.screenshot3}
-                      onChange={(url) => setFormData({ ...formData, screenshot3: url })}
-                    />
-                    <ImageUpload
-                      value={formData.screenshot4}
-                      onChange={(url) => setFormData({ ...formData, screenshot4: url })}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="displayOrder">Display Order</Label>
-                  <Input
-                    id="displayOrder"
-                    type="number"
-                    value={formData.displayOrder}
-                    onChange={(e) => {
-                      setFormData({ ...formData, displayOrder: parseInt(e.target.value) });
-                      setOrderError('');
-                    }}
-                    className={orderError ? 'border-red-500' : ''}
-                  />
-                  {orderError && (
-                    <p className="text-xs text-red-600">{orderError}</p>
-                  )}
-                  <p className="text-xs text-gray-800">
-                    Used orders: {usedOrders.sort((a, b) => a - b).join(', ') || 'None'}
-                    <br />
-                    Next available: {getNextAvailableOrder()}
+          if (filteredProjects.length === 0) {
+            return (
+              <Card className="rounded-xl border border-border bg-white p-12 shadow-sm">
+                <div className="text-center">
+                  <Plus className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+                  <h3 className="mb-1 text-lg font-medium text-foreground">
+                    {activeTab === 'all' ? 'No projects yet' : `No ${activeTab} projects yet`}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {activeTab === 'all' 
+                      ? 'Get started by adding your first project'
+                      : `Get started by adding a ${activeTab} project`
+                    }
                   </p>
                 </div>
+              </Card>
+            );
+          }
 
-                <div className="flex gap-2 pt-4">
-                  <Button type="submit" className="flex-1">
-                    {editingId ? 'Update' : 'Add'}
-                  </Button>
-                  {editingId && (
-                    <Button type="button" variant="outline" onClick={resetForm}>
-                      Cancel
-                    </Button>
-                  )}
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
+          return (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredProjects.map((project) => {
+                const getImageUrl = (imageId: string | null) => {
+                  if (!imageId) return null;
+                  if (imageId.startsWith('/api/images/') || imageId.startsWith('http') || imageId.startsWith('/')) {
+                    return imageId;
+                  }
+                  return `/api/images/${imageId}`;
+                };
 
-        {/* List */}
-        <div className="lg:col-span-2">
-          {projects.length === 0 ? (
-            <Card className="rounded-xl border border-border bg-white p-12 shadow-sm">
-              <div className="text-center">
-                <Plus className="mx-auto mb-4 h-12 w-12 text-gray-800" />
-                <h3 className="mb-1 text-lg font-medium text-gray-800">No projects yet</h3>
-                <p className="text-sm text-gray-800">Get started by adding your first project</p>
-              </div>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 gap-4">
-              {projects.map((project) => (
-                <Card key={project.id} className="rounded-xl border border-border bg-white transition-shadow hover:shadow-md">
-                  <CardContent className="p-6">
-                    <div className="flex gap-4">
-                      <div className="flex-1">
-                        <div className="mb-2 flex items-start justify-between">
-                          <div>
-                            <h3 className="text-xl font-semibold text-gray-800">{project.title}</h3>
-                            <p className="text-sm text-gray-800">{project.subtitle}</p>
+                const thumbnailUrl = getImageUrl(project.thumbnail);
+                const categoryColors: Record<string, { bg: string; text: string; border: string }> = {
+                  desktop: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+                  mobile: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
+                  tools: { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
+                };
+                const categoryColor = categoryColors[project.category] || categoryColors.desktop;
+
+                return (
+                  <Card key={project.id} className="group overflow-hidden rounded-xl border border-border bg-white transition-all hover:shadow-lg hover:scale-[1.02]">
+                    {/* Thumbnail */}
+                    <div className="relative aspect-video w-full bg-gradient-to-br from-muted/50 to-muted overflow-hidden">
+                      {thumbnailUrl ? (
+                        <Image
+                          src={thumbnailUrl}
+                          alt={project.title}
+                          fill
+                          className="object-cover transition-transform duration-300 group-hover:scale-105"
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center bg-muted/30">
+                          <div className="text-center">
+                            <div className="mx-auto mb-2 h-12 w-12 rounded-lg bg-muted flex items-center justify-center">
+                              <span className="text-2xl">📁</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">No thumbnail</p>
                           </div>
-                          <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">{project.category}</span>
                         </div>
-                        <p className="mb-2 text-sm text-gray-800">{project.year}</p>
-                        <p className="mb-3 line-clamp-2 text-sm text-gray-800">{project.description}</p>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" onClick={() => handleEdit(project)}>
-                            <Pencil className="h-4 w-4 mr-1" />
-                            Edit
-                          </Button>
-                          <Button variant="destructive" size="sm" onClick={() => handleDelete(project.id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                      )}
+                      {/* Category Badge */}
+                      <div className="absolute top-3 left-3">
+                        <span className={`
+                          inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium border
+                          ${categoryColor.bg} ${categoryColor.text} ${categoryColor.border}
+                        `}>
+                          {project.category === 'desktop' ? 'Desktop/Web' : project.category.charAt(0).toUpperCase() + project.category.slice(1)}
+                        </span>
+                      </div>
+                      {/* Display Order Badge */}
+                      <div className="absolute top-3 right-3">
+                        <span className="inline-flex items-center rounded-full bg-background/90 backdrop-blur-sm px-2 py-1 text-xs font-medium text-muted-foreground border border-border/50">
+                          Order: {project.displayOrder}
+                        </span>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
+
+                    {/* Content */}
+                    <CardContent className="p-4">
+                      <div className="mb-2">
+                        <h3 className="text-lg font-semibold text-foreground mb-1 line-clamp-1">
+                          {project.title}
+                        </h3>
+                        <p className="text-sm text-muted-foreground mb-2 line-clamp-1">
+                          {project.subtitle}
+                        </p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
+                          <span>{project.year}</span>
+                          <span>•</span>
+                          <span className="capitalize">{project.category}</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                          {project.description}
+                        </p>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex gap-2 pt-2 border-t border-border">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleOpenEditDialog(project)}
+                          className="flex-1"
+                          aria-label={`Edit ${project.title}`}
+                        >
+                          <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                          Edit
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(project.id)}
+                          className="text-muted-foreground hover:text-destructive"
+                          aria-label={`Delete ${project.title}`}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
-          )}
-        </div>
+          );
+        })()}
       </div>
+
+      {/* Add/Edit Dialog */}
+      <Dialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        title={editingProject ? 'Edit Project' : 'Add New Project'}
+        maxWidth="2xl"
+      >
+        <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+          <div className="space-y-2">
+            <Label htmlFor="dialog-title">Project Title</Label>
+            <Input
+              id="dialog-title"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              placeholder="eCompacct"
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="dialog-year">Year</Label>
+              <Input
+                id="dialog-year"
+                value={formData.year}
+                onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                placeholder="2026"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="dialog-category">Category</Label>
+              <Select
+                id="dialog-category"
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              >
+                <option value="desktop">Desktop</option>
+                <option value="mobile">Mobile</option>
+                <option value="tools">Tools</option>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="dialog-subtitle">Subtitle</Label>
+            <Input
+              id="dialog-subtitle"
+              value={formData.subtitle}
+              onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
+              placeholder="Lorem ipsum dolor sit amet"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="dialog-description">Description</Label>
+            <Textarea
+              id="dialog-description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="min-h-[100px]"
+              placeholder="Project description..."
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Thumbnail</Label>
+            <ImageUpload
+              value={formData.thumbnail}
+              onChange={(url) => setFormData({ ...formData, thumbnail: url })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Screenshots</Label>
+            <div className="space-y-3">
+              <ImageUpload
+                value={formData.screenshot1}
+                onChange={(url) => setFormData({ ...formData, screenshot1: url })}
+              />
+              <ImageUpload
+                value={formData.screenshot2}
+                onChange={(url) => setFormData({ ...formData, screenshot2: url })}
+              />
+              <ImageUpload
+                value={formData.screenshot3}
+                onChange={(url) => setFormData({ ...formData, screenshot3: url })}
+              />
+              <ImageUpload
+                value={formData.screenshot4}
+                onChange={(url) => setFormData({ ...formData, screenshot4: url })}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="dialog-displayOrder">Display Order</Label>
+            <Input
+              id="dialog-displayOrder"
+              type="number"
+              value={formData.displayOrder}
+              onChange={(e) => {
+                setFormData({ ...formData, displayOrder: parseInt(e.target.value) || 0 });
+                setOrderError('');
+              }}
+              className={orderError ? 'border-red-500' : ''}
+            />
+            {orderError && (
+              <p className="text-xs text-red-600">{orderError}</p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Used orders: {usedOrders.sort((a, b) => a - b).join(', ') || 'None'}
+              <br />
+              Next available: {getNextAvailableOrder()}
+            </p>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={handleCloseDialog}
+            disabled={saving}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? 'Saving...' : editingProject ? 'Update' : 'Add'}
+          </Button>
+        </DialogFooter>
+      </Dialog>
     </div>
   );
 }

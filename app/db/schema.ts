@@ -159,11 +159,10 @@ export const heroSection = mysqlTable('hero_section', {
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
 });
 
-// Hero Images (Film Strip)
-export const heroImages = mysqlTable('hero_images', {
+// Hero Ticker Items (Text scrolling ticker)
+export const heroTickerItems = mysqlTable('hero_ticker_items', {
   id: int('id').primaryKey().autoincrement(),
-  image: varchar('image', { length: 255 }).notNull(),
-  alt: varchar('alt', { length: 255 }).notNull(),
+  text: varchar('text', { length: 500 }).notNull(),
   displayOrder: int('display_order').notNull().default(0),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
@@ -190,4 +189,64 @@ export const images = mysqlTable('images', {
   size: int('size').notNull(),
   data: longtext('data').notNull(), // Base64 encoded image data
   createdAt: timestamp('created_at').defaultNow(),
+});
+
+// What We Do Section - Main Content
+export const whatWeDo = mysqlTable('what_we_do', {
+  id: int('id').primaryKey().autoincrement(),
+  mainText: text('main_text').notNull(),
+  tagline: text('tagline').notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
+});
+
+// What We Do Images (images for the carousel)
+export const whatWeDoImages = mysqlTable('what_we_do_images', {
+  id: int('id').primaryKey().autoincrement(),
+  image: varchar('image', { length: 255 }).notNull(),
+  alt: varchar('alt', { length: 255 }).notNull().default('What we do image'),
+  displayOrder: int('display_order').notNull().default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
+});
+
+// Featured App Section - Main Configuration
+export const featuredApp = mysqlTable('featured_app', {
+  id: int('id').primaryKey().autoincrement(),
+  headerImage: varchar('header_image', { length: 255 }), // Kept for backward compatibility
+  itemType: varchar('item_type', { length: 50 }).default('app'), // 'app' or 'website'
+  downloadText: varchar('download_text', { length: 255 }),
+  appStoreImage: varchar('app_store_image', { length: 255 }),
+  googlePlayImage: varchar('google_play_image', { length: 255 }),
+  appGalleryImage: varchar('app_gallery_image', { length: 255 }),
+  visitText: varchar('visit_text', { length: 255 }),
+  websiteUrl: varchar('website_url', { length: 500 }), // URL for website hyperlink
+  logoImage: varchar('logo_image', { length: 255 }),
+  // New banner customization fields
+  gradientFrom: varchar('gradient_from', { length: 50 }).default('#2563eb'),
+  gradientTo: varchar('gradient_to', { length: 50 }).default('#1e40af'),
+  gradientDirection: varchar('gradient_direction', { length: 20 }).default('to-r'),
+  appLogo: varchar('app_logo', { length: 255 }),
+  bannerHeight: varchar('banner_height', { length: 20 }).default('h-64'),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
+});
+
+// Featured App Carousel Images
+export const featuredAppCarouselImages = mysqlTable('featured_app_carousel_images', {
+  id: int('id').primaryKey().autoincrement(),
+  image: varchar('image', { length: 255 }).notNull(),
+  alt: varchar('alt', { length: 255 }).notNull().default('Featured app carousel image'),
+  displayOrder: int('display_order').notNull().default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
+});
+
+// Featured App Features (for banner feature icons)
+export const featuredAppFeatures = mysqlTable('featured_app_features', {
+  id: int('id').primaryKey().autoincrement(),
+  featuredAppId: int('featured_app_id').notNull(),
+  iconImage: varchar('icon_image', { length: 255 }).notNull(),
+  label: varchar('label', { length: 100 }).notNull(),
+  displayOrder: int('display_order').notNull().default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
 });

@@ -8,6 +8,7 @@ import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { ImageUpload } from '@/app/components/ui/image-upload';
+import { Dialog, DialogFooter } from '@/app/components/ui/dialog';
 import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
 import Image from 'next/image';
@@ -28,9 +29,11 @@ export default function BoardMembersPage() {
   const [members, setMembers] = useState<BoardMember[]>([]);
   const [footerText, setFooterText] = useState('');
   const [loading, setLoading] = useState(true);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingMember, setEditingMember] = useState<BoardMember | null>(null);
   const [orderError, setOrderError] = useState<string>('');
   const [savingFooter, setSavingFooter] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -39,7 +42,7 @@ export default function BoardMembersPage() {
     displayOrder: 0,
   });
 
-  const usedOrders = members.filter(m => m.id !== editingId).map(m => m.displayOrder);
+  const usedOrders = members.filter(m => m.id !== editingMember?.id).map(m => m.displayOrder);
   const getNextAvailableOrder = () => {
     let order = 0;
     while (usedOrders.includes(order)) { order++; }
@@ -101,8 +104,46 @@ export default function BoardMembersPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleOpenAddDialog = () => {
+    setEditingMember(null);
+    setFormData({
+      firstName: '',
+      lastName: '',
+      position: '',
+      image: '',
+      displayOrder: getNextAvailableOrder(),
+    });
+    setOrderError('');
+    setIsDialogOpen(true);
+  };
+
+  const handleOpenEditDialog = (member: BoardMember) => {
+    setEditingMember(member);
+    setFormData({
+      firstName: member.firstName,
+      lastName: member.lastName,
+      position: member.position,
+      image: member.image,
+      displayOrder: member.displayOrder,
+    });
+    setOrderError('');
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setEditingMember(null);
+    setFormData({
+      firstName: '',
+      lastName: '',
+      position: '',
+      image: '',
+      displayOrder: getNextAvailableOrder(),
+    });
+    setOrderError('');
+  };
+
+  const handleSave = async () => {
     setOrderError('');
 
     if (usedOrders.includes(formData.displayOrder)) {
@@ -110,13 +151,19 @@ export default function BoardMembersPage() {
       return;
     }
 
+    if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.position.trim()) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    setSaving(true);
     const token = localStorage.getItem('admin_token');
 
     try {
-      const url = editingId
-        ? `/api/admin/board-members/${editingId}`
+      const url = editingMember
+        ? `/api/admin/board-members/${editingMember.id}`
         : '/api/admin/board-members';
-      const method = editingId ? 'PUT' : 'POST';
+      const method = editingMember ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
         method,
@@ -128,27 +175,18 @@ export default function BoardMembersPage() {
       });
 
       if (response.ok) {
-        toast.success(editingId ? 'Board member updated successfully!' : 'Board member added successfully!');
+        toast.success(editingMember ? 'Board member updated successfully!' : 'Board member added successfully!');
+        handleCloseDialog();
         fetchMembers();
-        resetForm();
       } else {
         toast.error('Failed to save board member');
       }
     } catch (error) {
       console.error('Error saving board member:', error);
       toast.error('An error occurred while saving');
+    } finally {
+      setSaving(false);
     }
-  };
-
-  const handleEdit = (member: BoardMember) => {
-    setEditingId(member.id);
-    setFormData({
-      firstName: member.firstName,
-      lastName: member.lastName,
-      position: member.position,
-      image: member.image,
-      displayOrder: member.displayOrder,
-    });
   };
 
   const handleDelete = async (id: number) => {
@@ -178,17 +216,6 @@ export default function BoardMembersPage() {
     }
   };
 
-  const resetForm = () => {
-    setEditingId(null);
-    setOrderError('');
-    setFormData({
-      firstName: '',
-      lastName: '',
-      position: '',
-      image: '',
-      displayOrder: getNextAvailableOrder(),
-    });
-  };
 
   if (loading) {
     return (
@@ -200,11 +227,17 @@ export default function BoardMembersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Board of Directors</h1>
-        <p className="mt-1 text-sm text-gray-800">
-          Manage your board members and their information.
-        </p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Board of Directors</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Manage your board members and their information.
+          </p>
+        </div>
+        <Button onClick={handleOpenAddDialog} className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Add Board Member
+        </Button>
       </div>
 
       {/* Footer Text Setting */}
@@ -233,101 +266,8 @@ export default function BoardMembersPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Form */}
-        <div className="lg:col-span-1">
-          <Card className="sticky top-6 rounded-xl border border-border bg-white shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-xl">
-                {editingId ? 'Edit Member' : 'Add New Member'}
-              </CardTitle>
-              <CardDescription>
-                {editingId ? 'Update board member information' : 'Add a new board member to your team'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="image">Photo</Label>
-                  <ImageUpload
-                    value={formData.image}
-                    onChange={(url) => setFormData({ ...formData, image: url })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input
-                    id="firstName"
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    placeholder="Enter first name"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    placeholder="Enter last name"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="position">Position</Label>
-                  <Input
-                    id="position"
-                    value={formData.position}
-                    onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                    placeholder="e.g., President"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="displayOrder">Display Order</Label>
-                  <Input
-                    id="displayOrder"
-                    type="number"
-                    value={formData.displayOrder}
-                    onChange={(e) => {
-                      setFormData({ ...formData, displayOrder: parseInt(e.target.value) });
-                      setOrderError('');
-                    }}
-                    placeholder="0"
-                    className={orderError ? 'border-red-500' : ''}
-                  />
-                  {orderError && <p className="text-xs text-red-600">{orderError}</p>}
-                  <p className="text-xs text-gray-800">
-                    Used: {usedOrders.sort((a, b) => a - b).join(', ') || 'None'} | Next: {getNextAvailableOrder()}
-                  </p>
-                </div>
-
-                <div className="flex gap-2 pt-4">
-                  <Button type="submit" className="flex-1">
-                    {editingId ? 'Update Member' : 'Add Member'}
-                  </Button>
-                  {editingId && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={resetForm}
-                    >
-                      Cancel
-                    </Button>
-                  )}
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Grid */}
-        <div className="lg:col-span-2">
+      {/* Grid */}
+      <div>
           {members.length === 0 ? (
             <Card className="rounded-xl border border-border bg-white p-12 shadow-sm">
               <div className="text-center">
@@ -370,16 +310,17 @@ export default function BoardMembersPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleEdit(member)}
+                        onClick={() => handleOpenEditDialog(member)}
                         className="flex-1"
                       >
                         <Pencil className="h-4 w-4 mr-1" />
                         Edit
                       </Button>
                       <Button
-                        variant="destructive"
+                        variant="ghost"
                         size="sm"
                         onClick={() => handleDelete(member.id)}
+                        className="text-muted-foreground hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -389,8 +330,92 @@ export default function BoardMembersPage() {
               ))}
             </div>
           )}
-        </div>
       </div>
+
+      {/* Add/Edit Dialog */}
+      <Dialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        title={editingMember ? 'Edit Board Member' : 'Add Board Member'}
+      >
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="dialog-image">Photo</Label>
+            <ImageUpload
+              value={formData.image}
+              onChange={(url) => setFormData({ ...formData, image: url })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="dialog-firstName">First Name</Label>
+            <Input
+              id="dialog-firstName"
+              value={formData.firstName}
+              onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+              placeholder="Enter first name"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="dialog-lastName">Last Name</Label>
+            <Input
+              id="dialog-lastName"
+              value={formData.lastName}
+              onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+              placeholder="Enter last name"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="dialog-position">Position</Label>
+            <Input
+              id="dialog-position"
+              value={formData.position}
+              onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+              placeholder="e.g., President"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="dialog-displayOrder">Display Order</Label>
+            <Input
+              id="dialog-displayOrder"
+              type="number"
+              value={formData.displayOrder}
+              onChange={(e) => {
+                setFormData({ ...formData, displayOrder: parseInt(e.target.value) || 0 });
+                setOrderError('');
+              }}
+              placeholder="0"
+              className={orderError ? 'border-red-500' : ''}
+            />
+            {orderError && <p className="text-xs text-red-600">{orderError}</p>}
+            <p className="text-xs text-muted-foreground">
+              Used: {usedOrders.sort((a, b) => a - b).join(', ') || 'None'} | Next: {getNextAvailableOrder()}
+            </p>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={handleCloseDialog}
+            disabled={saving}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? 'Saving...' : editingMember ? 'Update' : 'Add'}
+          </Button>
+        </DialogFooter>
+      </Dialog>
     </div>
   );
 }

@@ -66,7 +66,7 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
   return (
     <div className="space-y-4">
       {value ? (
-        <div className="relative w-full h-64 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+        <div className="relative w-full h-64 rounded-lg overflow-hidden border border-border bg-muted/30">
           <Image
             src={displayUrl}
             alt="Upload"
@@ -77,8 +77,9 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
           <button
             type="button"
             onClick={() => onChange('')}
-            className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition shadow-lg"
+            className="absolute top-2 right-2 p-1.5 rounded-full bg-background/80 backdrop-blur-sm text-muted-foreground hover:text-destructive hover:bg-background transition-colors shadow-sm border border-border/50 hover:border-destructive/50 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={disabled}
+            aria-label="Remove image"
           >
             <X className="h-4 w-4" />
           </button>

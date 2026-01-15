@@ -11,9 +11,11 @@ const navLinks = [
 
 import Hero from './components/Hero';
 import AboutUs from './components/AboutUs';
+import WhatWeDo from './components/WhatWeDo';
 import BoardOfDirectors from './components/BoardOfDirectors';
 import Services from './components/Services';
 import Projects from './components/Projects';
+import FeaturedApp from './components/FeaturedApp';
 import Team from './components/Team';
 import Shop from './components/Shop';
 import Contact from './components/Contact';
@@ -23,12 +25,15 @@ import { ToastProvider } from './components/ui/toast';
 export default function Home() {
   return (
     <ToastProvider>
-      <div className="relative text-white">
+      <div className="relative text-white overflow-x-hidden max-w-full">
       {/* Hero Section */}
       <Hero navLinks={navLinks} />
       
       {/* About Us Section */}
       <AboutUs />
+      
+      {/* What We Do Section */}
+      <WhatWeDo />
       
       {/* Board of Directors Section */}
       <BoardOfDirectors />
@@ -38,6 +43,9 @@ export default function Home() {
 
       {/* Projects Section */}
       <Projects />
+
+      {/* Featured App Section */}
+      <FeaturedApp />
 
       {/* Our Team Section */}
       <Team />

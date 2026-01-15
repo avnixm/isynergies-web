@@ -70,13 +70,13 @@ export default function AdminLayout({
   return (
     <ToastProvider>
       <ConfirmDialogProvider>
-        <div className="flex h-screen bg-white text-gray-800">
+        <div className="flex h-screen bg-white text-gray-800 overflow-hidden max-w-full" data-admin-dashboard>
           <Sidebar pathname={pathname} user={user} onLogout={handleLogout} />
 
-          <div className="flex flex-1 flex-col overflow-hidden">
+          <div className="flex flex-1 flex-col overflow-hidden min-w-0 h-screen">
             <Header user={user} />
-            <main className="flex-1 overflow-y-auto bg-white">
-              <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 md:px-8 md:py-8">
+            <main className="flex-1 overflow-y-auto overflow-x-hidden bg-muted/40 min-w-0">
+              <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 md:px-8 md:py-8 w-full min-w-0">
           {children}
         </div>
       </main>

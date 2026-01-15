@@ -4,9 +4,9 @@ import Link from "next/link"
 import Image from "next/image"
 import {
   LayoutDashboard,
-  Mail,
   Film,
   FileText,
+  Briefcase,
   Users,
   Wrench,
   FolderKanban,
@@ -15,6 +15,7 @@ import {
   Settings,
   LogOut,
   User as UserIcon,
+  Smartphone,
 } from "lucide-react"
 
 import { Button } from "@/app/components/ui/button"
@@ -28,9 +29,9 @@ type SidebarProps = {
 
 const navItems = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/dashboard/messages", label: "Messages", icon: Mail },
   { href: "/admin/dashboard/hero", label: "Hero Section", icon: Film },
   { href: "/admin/dashboard/about-us", label: "About Us", icon: FileText },
+  { href: "/admin/dashboard/what-we-do", label: "What We Do", icon: Briefcase },
   {
     href: "/admin/dashboard/board-members",
     label: "Board of Directors",
@@ -38,6 +39,7 @@ const navItems = [
   },
   { href: "/admin/dashboard/services", label: "Services", icon: Wrench },
   { href: "/admin/dashboard/projects", label: "Projects", icon: FolderKanban },
+  { href: "/admin/dashboard/featured-app", label: "Featured App", icon: Smartphone },
   { href: "/admin/dashboard/team", label: "Team Members", icon: Users2 },
   { href: "/admin/dashboard/shop", label: "Shop", icon: ShoppingCart },
   {
@@ -49,9 +51,9 @@ const navItems = [
 
 export function Sidebar({ pathname, user, onLogout }: SidebarProps) {
   return (
-    <aside className="hidden md:flex w-64 bg-white text-gray-800 flex-col border-r border-border">
+    <aside className="hidden md:flex w-64 h-full bg-white text-gray-800 flex-col border-r border-border overflow-hidden flex-shrink-0">
       {/* Logo */}
-      <div className="p-6 border-b border-border">
+      <div className="p-6 border-b border-border flex-shrink-0">
         <div className="relative h-12 w-full">
           <Image
             src="/logos/isynergiesinclogo.png"
@@ -64,7 +66,7 @@ export function Sidebar({ pathname, user, onLogout }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto overflow-x-hidden min-h-0">
         {navItems.map((item) => {
           const Icon = item.icon
           const isActive = pathname === item.href
@@ -93,7 +95,7 @@ export function Sidebar({ pathname, user, onLogout }: SidebarProps) {
       </nav>
 
       {/* User Section */}
-      <div className="p-4 border-t border-border space-y-3">
+      <div className="p-4 border-t border-border space-y-3 flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
             <UserIcon className="h-4 w-4 text-gray-800" />

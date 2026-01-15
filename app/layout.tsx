@@ -20,8 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth">
-      <body className={`${encodeSansExpanded.className} antialiased`}>
+    <html lang="en" className="scroll-smooth overflow-x-hidden h-full">
+      <body className={`${encodeSansExpanded.className} antialiased overflow-x-hidden h-full m-0 p-0`}>
         <FontLoader />
         {children}
       </body>
