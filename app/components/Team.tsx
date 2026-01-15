@@ -55,7 +55,7 @@ function EmployeeCard({ index, member }: { index: number; member: TeamMember }) 
 
         {/* hover overlay (like Board members) */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0D1E66] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 rounded-[24px] z-10">
-          <div className={`${encodeSansExpanded.className} text-white text-[24px] font-bold leading-tight mb-0.5`}>{member.name}</div>
+          <div className={`${encodeSansExpanded.className} text-white text-[20px] font-bold leading-tight mb-0.5`}>{member.name}</div>
           <div className="text-white text-[10px] font-normal uppercase">{member.position}</div>
         </div>
       </div>
