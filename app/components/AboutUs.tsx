@@ -196,35 +196,35 @@ export default function AboutUs() {
 
             {/* Right Side - Auto-scrolling Image Gallery (multi-image, infinite) */}
             {baseGallery.length > 0 && (
-              <div className="hidden md:block md:w-1/2 -mt-0">
-                <div className={`slide-up-container relative h-[600px] w-full overflow-hidden shadow-lg ${isVisible ? 'animate' : ''}`}>
-                  <div
-                    className="scroll-animation absolute top-0 left-0 w-full flex flex-col"
-                    style={{ height: '200%', animationDuration: `${scrollSeconds}s` }}
-                  >
-                    {tiledGallery.map((item, idx) => (
-                      <div
-                        key={`${item.key}-${idx}`}
-                        className="w-full"
-                        style={{ height: tileHeight }}
-                      >
-                        {item.src ? (
-                          <Image
-                            src={item.src}
-                            alt={item.alt}
-                            width={600}
-                            height={600}
-                            className="w-full h-full object-cover"
-                            unoptimized
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gray-300/40" />
-                        )}
-                      </div>
-                    ))}
-                  </div>
+            <div className="hidden md:block md:w-1/2 -mt-0">
+              <div className={`slide-up-container relative h-[600px] w-full overflow-hidden shadow-lg ${isVisible ? 'animate' : ''}`}>
+                <div
+                  className="scroll-animation absolute top-0 left-0 w-full flex flex-col"
+                  style={{ height: '200%', animationDuration: `${scrollSeconds}s` }}
+                >
+                  {tiledGallery.map((item, idx) => (
+                    <div
+                      key={`${item.key}-${idx}`}
+                      className="w-full"
+                      style={{ height: tileHeight }}
+                    >
+                      {item.src ? (
+                        <Image
+                          src={item.src}
+                          alt={item.alt}
+                          width={600}
+                          height={600}
+                          className="w-full h-full object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-300/40" />
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
+            </div>
             )}
           </div>
         </div>

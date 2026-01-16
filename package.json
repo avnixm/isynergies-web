@@ -11,6 +11,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
+    "db:setup": "tsx scripts/setup-database.ts",
+    "db:setup:prod": "tsx scripts/setup-database-prod.ts",
     "create-admin": "tsx scripts/create-admin.ts",
     "create-featured-app-tables": "tsx scripts/create-featured-app-tables.ts",
     "cleanup-unused-tables": "tsx scripts/cleanup-unused-tables.ts"

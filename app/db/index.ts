@@ -10,6 +10,9 @@ const connection = mysql.createPool({
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'isynergies',
   timezone: '+00:00', // Tell mysql2 to treat returned timestamps as UTC
+  ssl: process.env.DB_SSL === 'true' ? {
+    rejectUnauthorized: false, // For cloud databases with self-signed certificates
+  } : undefined,
 });
 
 // Create the Drizzle instance

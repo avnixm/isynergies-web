@@ -11,5 +11,8 @@ export default defineConfig({
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'isynergies',
+    ssl: process.env.DB_SSL === 'true' ? {
+      rejectUnauthorized: false, // For cloud databases with self-signed certificates
+    } : undefined,
   },
 });
