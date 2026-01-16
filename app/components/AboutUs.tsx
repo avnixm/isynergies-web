@@ -43,7 +43,7 @@ export default function AboutUs() {
         });
       },
       {
-        threshold: 0.2, // Trigger when 20% of the section is visible
+        threshold: 0.2, // rigger when 20% of the section is visible
       }
     );
 
