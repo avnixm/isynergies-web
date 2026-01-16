@@ -132,6 +132,8 @@ export default function Shop() {
                     className="object-contain"
                     sizes="180px"
                     priority={false}
+                    unoptimized
+                    quality={100}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -154,6 +156,8 @@ export default function Shop() {
                     className="object-contain"
                     sizes="(min-width: 1024px) 520px, 100vw"
                     priority={false}
+                    unoptimized
+                    quality={100}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gray-300/20 rounded-lg">

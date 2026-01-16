@@ -168,7 +168,9 @@ export default function ShopPage() {
         handleCloseCategoryDialog();
         await fetchShopData();
       } else {
-        toast.error('Failed to save category');
+        const errorData = await response.json().catch(() => ({ error: 'Failed to save category' }));
+        toast.error(errorData.error || 'Failed to save category');
+        console.error('Failed to save category:', response.status, errorData);
       }
     } catch (error) {
       console.error('Error saving category:', error);

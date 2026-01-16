@@ -37,6 +37,7 @@ export default function CategoryStrip({ name, text, image, className = '' }: Cat
             className="object-cover object-center transition-all duration-300 group-hover:brightness-110"
             sizes="(min-width: 1024px) 12vw, 12vw"
             priority={false}
+            unoptimized
             style={{
               objectFit: 'cover',
               objectPosition: 'center',

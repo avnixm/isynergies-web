@@ -136,6 +136,7 @@ export default function Hero({ navLinks }: HeroProps) {
                     className="object-contain object-left"
                     sizes="224px"
                     priority={false}
+                    unoptimized
                   />
                 </div>
               ) : (
@@ -167,6 +168,7 @@ export default function Hero({ navLinks }: HeroProps) {
             height={500}
             className="w-[480px] h-[292px] md:w-[580px] md:h-[355px] object-contain"
             priority
+            unoptimized
           />
         </div>
       )}
@@ -181,6 +183,7 @@ export default function Hero({ navLinks }: HeroProps) {
             height={1200}
             className="w-[500px] h-[500px] md:w-[750px] md:h-[750px] opacity-90 object-contain"
             priority
+            unoptimized
           />
         </div>
       )}

@@ -42,6 +42,7 @@ function HexImage({ src, alt, className, emphasized }: HexImageProps) {
             className="object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.18)] transition-[filter] duration-300 ease-in-out group-hover:drop-shadow-[0_14px_24px_rgba(0,0,0,0.22)]"
             sizes="(min-width: 768px) 170px, 140px"
             priority={false}
+            unoptimized
           />
         ) : (
           <>
