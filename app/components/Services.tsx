@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import Loading from './ui/loading';
 
@@ -84,6 +84,33 @@ export default function Services() {
     icon4: null,
   });
   const [loading, setLoading] = useState(true);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+          }
+        });
+      },
+      {
+        threshold: 0.2,
+      }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -146,7 +173,7 @@ export default function Services() {
   }, []);
 
   return (
-    <section id="services" className="relative bg-[#0D1E66] text-white">
+    <section id="services" ref={sectionRef} className="relative bg-[#0D1E66] text-white">
       <div className="relative min-h-screen overflow-hidden">
         {/* subtle hex background pattern */}
         <div
@@ -163,7 +190,9 @@ export default function Services() {
           {/* Top area: left copy + right hex cluster */}
           <div className="grid w-full items-center gap-10 md:grid-cols-2">
             {/* Left copy */}
-            <div className="space-y-2 pr-4 md:pr-8 font-sans -mt-[50px]">
+            <div className={`space-y-2 pr-4 md:pr-8 font-sans -mt-[50px] slide-right-content ${
+              isVisible ? 'animate' : 'opacity-0'
+            }`}>
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
                 Our Services
               </h2>
@@ -193,29 +222,47 @@ export default function Services() {
               <div className="w-full max-w-[760px]">
                 <div className="grid grid-cols-3 grid-rows-2 place-items-center gap-x-[80px] md:gap-x-[88px] gap-y-8">
                   {/* top row */}
-                  <HexImage
-                    src={serviceIcons.icon1}
-                    alt="Sales"
-                    className="col-start-2 row-start-1"
-                    emphasized
-                  />
-                  <HexImage
-                    src={serviceIcons.icon2}
-                    alt="Analysis & Design"
-                    className="col-start-3 row-start-1"
-                  />
+                  <div className={`col-start-2 row-start-1 slide-down-slow ${
+                    isVisible ? 'animate' : 'opacity-0'
+                  }`}>
+                    <HexImage
+                      src={serviceIcons.icon1}
+                      alt="Sales"
+                      className=""
+                      emphasized
+                    />
+                  </div>
+                  <div className={`col-start-3 row-start-1 slide-down-slow ${
+                    isVisible ? 'animate' : 'opacity-0'
+                  }`}
+                  style={{ animationDelay: isVisible ? '0.2s' : '0s' }}>
+                    <HexImage
+                      src={serviceIcons.icon2}
+                      alt="Analysis & Design"
+                      className=""
+                    />
+                  </div>
 
                   {/* bottom row (offset upward for honeycomb) */}
-                  <HexImage
-                    src={serviceIcons.icon3}
-                    alt="Development"
-                    className="col-start-1 row-start-2 -mt-6 md:-mt-[170px] translate-x-[82px] md:translate-x-[100px]"
-                  />
-                  <HexImage
-                    src={serviceIcons.icon4}
-                    alt="Support"
-                    className="col-start-2 row-start-2 -mt-6 md:-mt-[165px] translate-x-[82px] md:translate-x-[100px]"
-                  />
+                  <div className={`col-start-1 row-start-2 -mt-6 md:-mt-[170px] translate-x-[82px] md:translate-x-[100px] slide-up-slow ${
+                    isVisible ? 'animate' : 'opacity-0'
+                  }`}>
+                    <HexImage
+                      src={serviceIcons.icon3}
+                      alt="Development"
+                      className=""
+                    />
+                  </div>
+                  <div className={`col-start-2 row-start-2 -mt-6 md:-mt-[165px] translate-x-[82px] md:translate-x-[100px] slide-up-slow ${
+                    isVisible ? 'animate' : 'opacity-0'
+                  }`}
+                  style={{ animationDelay: isVisible ? '0.2s' : '0s' }}>
+                    <HexImage
+                      src={serviceIcons.icon4}
+                      alt="Support"
+                      className=""
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -249,7 +296,9 @@ export default function Services() {
           </div>
 
           {/* By the Numbers (kept compact so it stays visible) */}
-          <div className="pt-8 md:pt-8">
+          <div className={`pt-8 md:pt-8 slide-up-content ${
+            isVisible ? 'animate' : 'opacity-0'
+          }`}>
             <div className="text-center font-sans">
               <h3 className="text-2xl md:text-3xl font-bold">
                 By the Numbers
