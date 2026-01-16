@@ -56,7 +56,7 @@ export default function Home() {
       {/* Contact Section */}
       <Contact />
 
-      {/* Footer */}
+      {/* Foote */}
       <Footer />
       </div>
     </ToastProvider>
