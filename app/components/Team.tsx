@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Encode_Sans_Expanded } from 'next/font/google';
 import Loading from './ui/loading';
 
@@ -66,6 +66,33 @@ function EmployeeCard({ index, member }: { index: number; member: TeamMember }) 
 export default function Team() {
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+          }
+        });
+      },
+      {
+        threshold: 0.2,
+      }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const fetchTeamMembers = async () => {
@@ -97,7 +124,7 @@ export default function Team() {
 
   if (loading) {
     return (
-      <section className="relative bg-[#D7E1E4] py-16 flex justify-center items-center min-h-screen">
+      <section ref={sectionRef} className="relative bg-[#D7E1E4] py-16 flex justify-center items-center min-h-screen">
         <Loading message="Loading team members" size="lg" />
       </section>
     );
@@ -108,7 +135,7 @@ export default function Team() {
   let cursor = 0;
 
   return (
-    <section className="relative bg-[#D7E1E4] py-16">
+    <section ref={sectionRef} className="relative bg-[#D7E1E4] py-16">
       {/* subtle watermark */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute right-[-120px] top-[-120px] h-[520px] w-[520px] rounded-full bg-black/5" />
@@ -150,10 +177,15 @@ export default function Team() {
               );
             });
 
+            // Determine animation based on row index: 0 = slide-left, 1 = slide-right, 2 = slide-left
+            const animationClass = rowIdx === 1 ? 'slide-right-row' : 'slide-left-row';
+            
             return (
               <div
                 key={rowIdx}
-                className="grid w-fit mx-auto gap-6"
+                className={`grid w-fit mx-auto gap-6 ${animationClass} ${
+                  isVisible ? 'animate' : 'opacity-0'
+                }`}
                 style={{ gridTemplateColumns: `repeat(${row.count}, minmax(0, 1fr))` }}
               >
                 {items}
