@@ -77,7 +77,27 @@ export default function Projects() {
   const [inquiryMessage, setInquiryMessage] = useState('');
   const [inquirySubmitting, setInquirySubmitting] = useState(false);
   const [inquiryError, setInquiryError] = useState<string | null>(null);
+  const [inquiryPhoneError, setInquiryPhoneError] = useState('');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  // Validate phone number: exactly 11 digits starting with "09"
+  const validateInquiryPhone = (phone: string): boolean => {
+    const digitsOnly = phone.replace(/\D/g, '');
+    if (digitsOnly.length === 0) {
+      setInquiryPhoneError('');
+      return false;
+    }
+    if (digitsOnly.length !== 11) {
+      setInquiryPhoneError('Phone number must be exactly 11 digits');
+      return false;
+    }
+    if (!digitsOnly.startsWith('09')) {
+      setInquiryPhoneError('Phone number must start with 09');
+      return false;
+    }
+    setInquiryPhoneError('');
+    return true;
+  };
   
   // Fallback data
   const fallbackProjects: Project[] = useMemo(
@@ -221,6 +241,7 @@ export default function Projects() {
     setInquiryMessage('');
     setInquirySubmitting(false);
     setInquiryError(null);
+    setInquiryPhoneError('');
   };
 
   const handleCloseModal = () => {
@@ -231,6 +252,13 @@ export default function Projects() {
   const handleInquirySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selected) return;
+
+    // Validate phone number before submission
+    const digitsOnly = inquiryContactNo.replace(/\D/g, '');
+    if (!validateInquiryPhone(inquiryContactNo) || digitsOnly.length !== 11) {
+      setInquiryError('Please enter a valid phone number (11 digits starting with 09)');
+      return;
+    }
 
     setInquirySubmitting(true);
     setInquiryError(null);
@@ -698,7 +726,11 @@ export default function Projects() {
                             type="text"
                             required
                             value={inquiryName}
-                            onChange={(e) => setInquiryName(e.target.value)}
+                            onChange={(e) => {
+                              // Only allow letters, spaces, hyphens, and apostrophes
+                              const filtered = e.target.value.replace(/[^a-zA-Z\s'-]/g, '');
+                              setInquiryName(filtered);
+                            }}
                             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#0D1E66] focus:outline-none focus:ring-2 focus:ring-[#0D1E66]/30"
                             placeholder="Your full name"
                           />
@@ -726,10 +758,24 @@ export default function Projects() {
                           type="tel"
                           required
                           value={inquiryContactNo}
-                          onChange={(e) => setInquiryContactNo(e.target.value)}
-                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#0D1E66] focus:outline-none focus:ring-2 focus:ring-[#0D1E66]/30"
-                          placeholder="+63 900 000 0000"
+                          onChange={(e) => {
+                            // Only allow digits
+                            const filtered = e.target.value.replace(/\D/g, '');
+                            setInquiryContactNo(filtered);
+                            validateInquiryPhone(filtered);
+                          }}
+                          maxLength={11}
+                          className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D1E66]/30 ${
+                            inquiryPhoneError ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-[#0D1E66]'
+                          }`}
+                          placeholder="09XXXXXXXXX"
                         />
+                        {inquiryPhoneError && (
+                          <p className="text-xs text-red-600 mt-1">{inquiryPhoneError}</p>
+                        )}
+                        {!inquiryPhoneError && inquiryContactNo && (
+                          <p className="text-xs text-gray-500 mt-1">Format: 11 digits starting with 09</p>
+                        )}
                       </div>
 
                       <div className="space-y-1.5">

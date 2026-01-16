@@ -27,6 +27,26 @@ export default function Contact() {
     companyFacebook: 'https://facebook.com/isynergies',
   });
   const [submitting, setSubmitting] = useState(false);
+  const [phoneError, setPhoneError] = useState('');
+
+  // Validate phone number: exactly 11 digits starting with "09"
+  const validatePhone = (phone: string): boolean => {
+    const digitsOnly = phone.replace(/\D/g, '');
+    if (digitsOnly.length === 0) {
+      setPhoneError('');
+      return false;
+    }
+    if (digitsOnly.length !== 11) {
+      setPhoneError('Phone number must be exactly 11 digits');
+      return false;
+    }
+    if (!digitsOnly.startsWith('09')) {
+      setPhoneError('Phone number must start with 09');
+      return false;
+    }
+    setPhoneError('');
+    return true;
+  };
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -46,6 +66,14 @@ export default function Contact() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate phone number before submission
+    const digitsOnly = formData.contactNo.replace(/\D/g, '');
+    if (!validatePhone(formData.contactNo) || digitsOnly.length !== 11) {
+      toast.error('Please enter a valid phone number (11 digits starting with 09)');
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -75,9 +103,22 @@ export default function Contact() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    let value = e.target.value;
+    
+    // Filter phone number to only allow digits
+    if (e.target.name === 'contactNo') {
+      value = value.replace(/\D/g, ''); // Remove all non-digits
+      validatePhone(value);
+    }
+    
+    // Filter name to only allow letters, spaces, hyphens, and apostrophes
+    if (e.target.name === 'name') {
+      value = value.replace(/[^a-zA-Z\s'-]/g, ''); // Only allow letters, spaces, hyphens, apostrophes
+    }
+    
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [e.target.name]: value,
     });
   };
 
@@ -241,10 +282,19 @@ export default function Contact() {
                     name="contactNo"
                     value={formData.contactNo}
                     onChange={handleChange}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A0D1A] focus:border-transparent text-gray-900 font-sans text-sm"
-                    placeholder="Contact No."
+                    maxLength={11}
+                    className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A0D1A] focus:border-transparent text-gray-900 font-sans text-sm ${
+                      phoneError ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="09XXXXXXXXX"
                     required
                   />
+                  {phoneError && (
+                    <p className="text-xs text-red-600 mt-1">{phoneError}</p>
+                  )}
+                  {!phoneError && formData.contactNo && (
+                    <p className="text-xs text-gray-500 mt-1">Format: 11 digits starting with 09</p>
+                  )}
                 </div>
               </div>
 

@@ -15,6 +15,21 @@ export async function POST(request: Request) {
       );
     }
 
+    // Validate phone number: exactly 11 digits starting with "09"
+    const digitsOnly = contactNo.replace(/\D/g, '');
+    if (digitsOnly.length !== 11) {
+      return NextResponse.json(
+        { error: 'Phone number must be exactly 11 digits' },
+        { status: 400 }
+      );
+    }
+    if (!digitsOnly.startsWith('09')) {
+      return NextResponse.json(
+        { error: 'Phone number must start with 09' },
+        { status: 400 }
+      );
+    }
+
     await db.insert(contactMessages).values({
       name,
       email,
