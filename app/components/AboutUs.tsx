@@ -15,7 +15,6 @@ type AboutUsContent = {
   missionText: string;
   visionTitle: string;
   visionText: string;
-  galleryImage: string;
 };
 
 type AboutUsGalleryImage = {
@@ -83,7 +82,6 @@ export default function AboutUs() {
         missionText: 'To provide Information Technology Solutions to clientele rendered by skilled and competent workforce.',
         visionTitle: 'Our Vision',
         visionText: 'A Trusted Partner of Every Businesses in Software and Hardware Technological Transformation.',
-        galleryImage: '',
       });
     } finally {
       setLoading(false);
@@ -130,7 +128,7 @@ export default function AboutUs() {
     return '';
   };
 
-  // If no gallery images are configured yet, fall back to the single galleryImage repeated.
+  // Get gallery images from database, sorted by display order
   const baseGallery = galleryImages.length
     ? [...galleryImages]
         .sort((a, b) => a.displayOrder - b.displayOrder)
@@ -139,11 +137,7 @@ export default function AboutUs() {
         src: getImageSrc(g.image),
         alt: g.alt || 'About Us gallery image',
       }))
-    : Array.from({ length: 6 }).map((_, i) => ({
-        key: `fallback-${i}`,
-        src: getImageSrc(content.galleryImage),
-        alt: 'About Us gallery image',
-      }));
+    : [];
 
   // Sort by order (displayOrder) and duplicate for seamless loop.
   const orderedGallery = [...baseGallery]; // baseGallery is already derived from ordered data below
@@ -201,35 +195,37 @@ export default function AboutUs() {
             </div>
 
             {/* Right Side - Auto-scrolling Image Gallery (multi-image, infinite) */}
-            <div className="hidden md:block md:w-1/2 -mt-0">
-              <div className={`slide-up-container relative h-[600px] w-full overflow-hidden shadow-lg ${isVisible ? 'animate' : ''}`}>
-                <div
-                  className="scroll-animation absolute top-0 left-0 w-full flex flex-col"
-                  style={{ height: '200%', animationDuration: `${scrollSeconds}s` }}
-                >
-                  {tiledGallery.map((item, idx) => (
-                    <div
-                      key={`${item.key}-${idx}`}
-                      className="w-full"
-                      style={{ height: tileHeight }}
-                    >
-                      {item.src ? (
-                        <Image
-                          src={item.src}
-                          alt={item.alt}
-                          width={600}
-                          height={600}
-                          className="w-full h-full object-cover"
-                          unoptimized
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gray-300/40" />
-                      )}
-                    </div>
-                  ))}
+            {baseGallery.length > 0 && (
+              <div className="hidden md:block md:w-1/2 -mt-0">
+                <div className={`slide-up-container relative h-[600px] w-full overflow-hidden shadow-lg ${isVisible ? 'animate' : ''}`}>
+                  <div
+                    className="scroll-animation absolute top-0 left-0 w-full flex flex-col"
+                    style={{ height: '200%', animationDuration: `${scrollSeconds}s` }}
+                  >
+                    {tiledGallery.map((item, idx) => (
+                      <div
+                        key={`${item.key}-${idx}`}
+                        className="w-full"
+                        style={{ height: tileHeight }}
+                      >
+                        {item.src ? (
+                          <Image
+                            src={item.src}
+                            alt={item.alt}
+                            width={600}
+                            height={600}
+                            className="w-full h-full object-cover"
+                            unoptimized
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-300/40" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </section>

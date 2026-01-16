@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Loading from './ui/loading';
 
 type ProjectCategory = 'desktop' | 'mobile' | 'tools';
@@ -43,33 +43,14 @@ function ExternalIcon({ className }: { className?: string }) {
 export default function Projects() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const sectionRef = useRef<HTMLElement | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setIsVisible(true);
-          }
-        });
-      },
-      {
-        threshold: 0.2,
-      }
-    );
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
-    return () => {
-      if (sectionRef.current) {
-        observer.unobserve(sectionRef.current);
-      }
-    };
-  }, []);
+  const [showInquiryForm, setShowInquiryForm] = useState(false);
+  const [inquiryName, setInquiryName] = useState('');
+  const [inquiryEmail, setInquiryEmail] = useState('');
+  const [inquiryContactNo, setInquiryContactNo] = useState('');
+  const [inquiryMessage, setInquiryMessage] = useState('');
+  const [inquirySubmitting, setInquirySubmitting] = useState(false);
+  const [inquiryError, setInquiryError] = useState<string | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   
   // Fallback data
   const fallbackProjects: Project[] = useMemo(
@@ -205,6 +186,63 @@ export default function Projects() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [selected]);
 
+  const resetInquiryState = () => {
+    setShowInquiryForm(false);
+    setInquiryName('');
+    setInquiryEmail('');
+    setInquiryContactNo('');
+    setInquiryMessage('');
+    setInquirySubmitting(false);
+    setInquiryError(null);
+  };
+
+  const handleCloseModal = () => {
+    resetInquiryState();
+    setSelected(null);
+  };
+
+  const handleInquirySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selected) return;
+
+    setInquirySubmitting(true);
+    setInquiryError(null);
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: inquiryName,
+          email: inquiryEmail,
+          contactNo: inquiryContactNo,
+          // Include project context in the stored message as well
+          message: `Project inquiry about: ${selected.title}\n\n${inquiryMessage}`,
+          projectId: Number.isNaN(Number(selected.id)) ? null : Number(selected.id),
+          projectTitle: selected.title,
+        }),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const errorText = data?.error || 'Failed to send inquiry. Please try again.';
+        setInquiryError(errorText);
+      } else {
+        // Close the project modal and show a dedicated success popup
+        handleCloseModal();
+        setShowSuccessModal(true);
+      }
+    } catch (err) {
+      console.error('Error sending project inquiry:', err);
+      setInquiryError('An unexpected error occurred. Please try again later.');
+    } finally {
+      setInquirySubmitting(false);
+    }
+  };
+
   useEffect(() => {
     if (!selected) return;
     const prev = document.body.style.overflow;
@@ -222,22 +260,15 @@ export default function Projects() {
   }, [view]);
 
   return (
-    <section id="projects" ref={sectionRef} className="relative bg-[#D7E1E4] py-16">
+    <section id="projects" className="relative bg-[#D7E1E4] py-16">
       <div className="container mx-auto max-w-7xl px-4 md:px-8 lg:px-16">
         <div className="text-center font-sans">
-          <h2 className={`text-4xl md:text-5xl font-bold text-gray-900 slide-down-slow ${
-            isVisible ? 'animate' : 'opacity-0'
-          }`}>
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900">
             {headerTitle}
           </h2>
 
           {/* view toggle (like the reference) */}
-          <div className={`mt-4 flex items-center justify-center gap-3 slide-down-slow ${
-            isVisible ? 'animate' : 'opacity-0'
-          }`}
-          style={{
-            animationDelay: isVisible ? '0.3s' : '0s',
-          }}>
+          <div className="mt-4 flex items-center justify-center gap-3">
             <button
               type="button"
               onClick={() => setView('all')}
@@ -363,20 +394,9 @@ export default function Projects() {
               }
             >
               {/* Row 1 */}
-              <div className={`projects-marquee-row marquee-row-1 ${
-                isVisible ? 'animate' : 'opacity-0'
-              }`}
-              style={{
-                animationDelay: isVisible ? '0.5s' : '0s',
-              }}>
+              <div className="projects-marquee-row">
               {/* Top row starts ahead by ~half a card */}
-              <div 
-                className="projects-marquee-track -ml-[480px] sm:-ml-[570px] md:-ml-[660px]"
-                style={{
-                  animationPlayState: isVisible ? 'running' : 'paused',
-                  animationDelay: isVisible ? '6.5s' : '0s',
-                }}
-              >
+              <div className="projects-marquee-track -ml-[480px] sm:-ml-[570px] md:-ml-[660px]">
                 {marqueeRow1.map((p, idx) => (
                   <button
                     key={`r1-${p.id}-${idx}`}
@@ -426,19 +446,8 @@ export default function Projects() {
             </div>
 
             {/* Row 2 (ahead) */}
-            <div className={`projects-marquee-row mt-5 marquee-row-2 ${
-              isVisible ? 'animate' : 'opacity-0'
-            }`}
-            style={{
-              animationDelay: isVisible ? '0.7s' : '0s',
-            }}>
-              <div 
-                className="projects-marquee-track"
-                style={{
-                  animationPlayState: isVisible ? 'running' : 'paused',
-                  animationDelay: isVisible ? '6.7s' : '0s',
-                }}
-              >
+            <div className="projects-marquee-row mt-5">
+              <div className="projects-marquee-track">
                 {marqueeRow2.map((p, idx) => (
                   <button
                     key={`r2-${p.id}-${idx}`}
@@ -559,7 +568,7 @@ export default function Projects() {
             type="button"
             className="absolute inset-0 bg-black/55 backdrop-blur-sm"
             aria-label="Close project details"
-            onClick={() => setSelected(null)}
+            onClick={handleCloseModal}
           />
 
           {/* Modal content */}
@@ -575,17 +584,131 @@ export default function Projects() {
             <div className="grid grid-cols-1 md:grid-cols-2">
               {/* Left panel */}
               <div className="bg-white p-10 font-sans text-gray-900">
+                {!showInquiryForm ? (
+                  <>
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
                 <div className="text-4xl font-bold">{selected.title}</div>
                 <div className="mt-2 text-sm text-gray-700">
                   {selected.subtitle}
                 </div>
                 <div className="text-sm text-gray-700">{selected.year}</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          resetInquiryState();
+                          setShowInquiryForm(true);
+                        }}
+                        className="inline-flex items-center rounded-full bg-[#0D1E66] px-4 py-2 text-sm font-medium text-white shadow-md hover:bg-[#0b174d] transition-colors"
+                      >
+                        Inquire
+                      </button>
+                    </div>
 
                 <div className="mt-10 space-y-6 text-sm leading-relaxed text-gray-800">
                   {selected.description.split('\n\n').map((para, i) => (
                     <p key={i}>{para}</p>
                   ))}
                 </div>
+                  </>
+                ) : (
+                  <div className="space-y-6">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="text-xs font-semibold uppercase tracking-wide text-[#0D1E66]">
+                          Project Inquiry
+                        </div>
+                        <div className="mt-1 text-xl font-semibold text-gray-900">
+                          {selected.title}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          Please fill out the form below and we&apos;ll reach out about this project.
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowInquiryForm(false)}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                      >
+                        <span className="text-sm leading-none">←</span>
+                        <span>Back to details</span>
+                      </button>
+                    </div>
+
+                    <form onSubmit={handleInquirySubmit} className="space-y-4">
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div className="space-y-1.5">
+                          <label className="block text-xs font-semibold uppercase tracking-wide text-gray-600">
+                            Name
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={inquiryName}
+                            onChange={(e) => setInquiryName(e.target.value)}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#0D1E66] focus:outline-none focus:ring-2 focus:ring-[#0D1E66]/30"
+                            placeholder="Your full name"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="block text-xs font-semibold uppercase tracking-wide text-gray-600">
+                            Email
+                          </label>
+                          <input
+                            type="email"
+                            required
+                            value={inquiryEmail}
+                            onChange={(e) => setInquiryEmail(e.target.value)}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#0D1E66] focus:outline-none focus:ring-2 focus:ring-[#0D1E66]/30"
+                            placeholder="you@example.com"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-semibold uppercase tracking-wide text-gray-600">
+                          Contact Number
+                        </label>
+                        <input
+                          type="tel"
+                          required
+                          value={inquiryContactNo}
+                          onChange={(e) => setInquiryContactNo(e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#0D1E66] focus:outline-none focus:ring-2 focus:ring-[#0D1E66]/30"
+                          placeholder="+63 900 000 0000"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-semibold uppercase tracking-wide text-gray-600">
+                          Message
+                        </label>
+                        <textarea
+                          required
+                          value={inquiryMessage}
+                          onChange={(e) => setInquiryMessage(e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm min-h-[100px] resize-y focus:border-[#0D1E66] focus:outline-none focus:ring-2 focus:ring-[#0D1E66]/30"
+                          placeholder="Tell us more about your needs or questions regarding this project..."
+                        />
+                      </div>
+
+                      {inquiryError && (
+                        <p className="text-sm text-red-600">{inquiryError}</p>
+                      )}
+
+                      <div className="mt-4 flex justify-end">
+                        <button
+                          type="submit"
+                          disabled={inquirySubmitting}
+                          className="inline-flex items-center rounded-full bg-[#0D1E66] px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-[#0b174d] disabled:cursor-not-allowed disabled:opacity-70 transition-colors"
+                        >
+                          {inquirySubmitting ? 'Sending...' : 'Send Inquiry'}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
               </div>
 
               {/* Right panel (dynamic screenshots) */}
@@ -706,7 +829,7 @@ export default function Projects() {
             <button
               type="button"
               className="absolute right-4 top-4 rounded-full bg-black/30 p-2 text-white backdrop-blur-md transition-colors hover:bg-black/45 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
-              onClick={() => setSelected(null)}
+              onClick={handleCloseModal}
               aria-label="Close"
             >
               <svg
@@ -726,6 +849,77 @@ export default function Projects() {
           </div>
         </div>
       ) : null}
+
+      {/* Success modal popup for inquiries */}
+      {showSuccessModal && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center px-4 py-6"
+          aria-modal="true"
+          role="dialog"
+          aria-label="Inquiry sent successfully"
+          style={{
+            animation: 'fadeIn 0.18s ease-out',
+            willChange: 'opacity',
+          }}
+        >
+          {/* Backdrop */}
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/55 backdrop-blur-sm"
+            onClick={() => setShowSuccessModal(false)}
+            aria-label="Close success message"
+          />
+
+          {/* Modal content */}
+          <div
+            className="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+            style={{
+              animation: 'slideUp 0.26s cubic-bezier(0.16, 1, 0.3, 1)',
+              willChange: 'transform, opacity',
+              backfaceVisibility: 'hidden',
+              WebkitFontSmoothing: 'antialiased',
+            }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-lg font-semibold text-gray-900">Inquiry sent</h3>
+              <button
+                type="button"
+                onClick={() => setShowSuccessModal(false)}
+                className="rounded-full p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                aria-label="Close"
+              >
+                <svg
+                  className="h-4 w-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M18 6L6 18" />
+                  <path d="M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <p className="text-sm text-gray-700">
+              Your inquiry has been sent successfully. Our team will get back to you as soon as possible.
+            </p>
+            <div className="mt-4 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowSuccessModal(false)}
+                className="inline-flex items-center rounded-full bg-[#0D1E66] px-4 py-2 text-sm font-medium text-white shadow-md hover:bg-[#0b174d] transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
+
+

@@ -496,24 +496,26 @@ export default function MessagesPage() {
               <div className="flex flex-col gap-2 text-xs text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <Clock className="h-3.5 w-3.5" />
-                  <span>Received: {new Date(selectedMessage.createdAt).toLocaleString('en-US', { 
+                  <span>Received: {new Date(selectedMessage.createdAt).toLocaleString('en-PH', { 
                     month: 'long', 
                     day: 'numeric', 
                     year: 'numeric',
                     hour: '2-digit',
-                    minute: '2-digit'
+                    minute: '2-digit',
+                    timeZone: 'Asia/Manila'
                   })}</span>
                 </div>
                 {selectedMessage.updatedAt !== selectedMessage.createdAt && (
                   <div className="flex items-center gap-2">
                     <Clock className="h-3.5 w-3.5" />
-                    <span>Last Updated: {new Date(selectedMessage.updatedAt).toLocaleString('en-US', { 
-                      month: 'long', 
-                      day: 'numeric', 
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}</span>
+                  <span>Last Updated: {new Date(selectedMessage.updatedAt).toLocaleString('en-PH', { 
+                    month: 'long', 
+                    day: 'numeric', 
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    timeZone: 'Asia/Manila'
+                  })}</span>
                   </div>
                 )}
               </div>

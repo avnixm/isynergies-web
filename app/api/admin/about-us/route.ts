@@ -22,7 +22,6 @@ export async function GET() {
         missionText: 'To provide Information Technology Solutions to clientele rendered by skilled and competent workforce.',
         visionTitle: 'Our Vision',
         visionText: 'A Trusted Partner of Every Businesses in Software and Hardware Technological Transformation.',
-        galleryImage: '/aboutusgallery.png',
       });
     }
 
@@ -58,7 +57,6 @@ export async function PUT(request: Request) {
       missionText: body?.missionText ?? '',
       visionTitle: body?.visionTitle ?? '',
       visionText: body?.visionText ?? '',
-      galleryImage: body?.galleryImage ?? null,
     };
 
     // Check if content exists

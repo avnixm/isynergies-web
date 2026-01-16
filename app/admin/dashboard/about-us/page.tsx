@@ -25,7 +25,6 @@ type AboutUsContent = {
   missionText: string;
   visionTitle: string;
   visionText: string;
-  galleryImage: string;
 };
 
 type AboutUsGalleryImage = {
@@ -52,7 +51,6 @@ export default function AboutUsPage() {
     missionText: '',
     visionTitle: '',
     visionText: '',
-    galleryImage: '',
   });
   const [galleryImages, setGalleryImages] = useState<AboutUsGalleryImage[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -342,21 +340,6 @@ export default function AboutUsPage() {
       </Card>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-
-        {/* Gallery Image */}
-        <Card className="rounded-xl border border-border bg-white shadow-sm">
-          <CardHeader>
-            <CardTitle>Gallery Image</CardTitle>
-            <CardDescription>Upload the scrolling carousel image for the About Us section</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ImageUpload
-              value={formData.galleryImage}
-              onChange={(url) => setFormData({ ...formData, galleryImage: url })}
-            />
-          </CardContent>
-        </Card>
-
         {/* Main Content */}
         <Card className="rounded-xl border border-border bg-white shadow-sm">
           <CardHeader>

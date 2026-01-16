@@ -9,6 +9,7 @@ const connection = mysql.createPool({
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'isynergies',
+  timezone: '+00:00', // Tell mysql2 to treat returned timestamps as UTC
 });
 
 // Create the Drizzle instance
