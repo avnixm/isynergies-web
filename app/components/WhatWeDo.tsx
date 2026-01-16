@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import Loading from './ui/loading';
 
@@ -20,6 +20,33 @@ export default function WhatWeDo() {
   const [content, setContent] = useState<WhatWeDoContent | null>(null);
   const [images, setImages] = useState<WhatWeDoImage[]>([]);
   const [loading, setLoading] = useState(true);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+          }
+        });
+      },
+      {
+        threshold: 0.2,
+      }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -73,7 +100,11 @@ export default function WhatWeDo() {
 
   if (loading) {
     return (
-      <section id="what-we-do" className="relative bg-[#D7E1E4] py-16">
+      <section
+        id="what-we-do"
+        ref={sectionRef}
+        className="relative bg-[#D7E1E4] py-16"
+      >
         <Loading message="Loading What We Do section" />
       </section>
     );
@@ -88,13 +119,20 @@ export default function WhatWeDo() {
   };
 
   return (
-    <section id="what-we-do" className="relative bg-[#D7E1E4]">
+    <section
+      id="what-we-do"
+      ref={sectionRef}
+      className="relative bg-[#D7E1E4]"
+    >
       {/* Header Banner */}
       <div
-        className="w-full h-[60px] z-10 flex items-center px-4 md:px-8 lg:px-16"
+        className={`w-full h-[60px] z-10 flex items-center px-4 md:px-8 lg:px-16 ${
+          isVisible ? 'animate-fadeIn-slow' : 'opacity-0'
+        }`}
         style={{
           background:
             'linear-gradient(to right, #1e3a8a 0%, rgba(30, 58, 138, 0.95) 60%, rgba(30, 58, 138, 0.4) 80%, transparent 100%)',
+          animationDelay: isVisible ? '0.25s' : '0s',
         }}
       >
         <h2 className="text-2xl md:text-3xl font-bold text-white">What we do</h2>
@@ -102,7 +140,12 @@ export default function WhatWeDo() {
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16 relative z-10 pb-16 pt-8">
         {/* Images Carousel */}
-        <div className="mb-8">
+        <div
+          className={`mb-8 slide-left-bouncy ${isVisible ? 'animate' : ''}`}
+          style={{
+            animationDelay: isVisible ? '1.5s' : '0s',
+          }}
+        >
           <div className="what-we-do-carousel-scrollbar">
             <div className="flex overflow-x-auto gap-4 pb-2">
               {images.length > 0 ? (
@@ -143,8 +186,15 @@ export default function WhatWeDo() {
 
         {/* Bottom Text Section */}
         {content && (
-          <div className="md:p-3 space-y-4 text-center">
-            <div 
+          <div
+            className={`md:p-3 space-y-4 text-center ${
+              isVisible ? 'animate-fadeIn-slow' : 'opacity-0'
+            }`}
+            style={{
+              animationDelay: isVisible ? '0.8s' : '0s',
+            }}
+          >
+            <div
               className="text-gray-900 text-xs leading-relaxed font-normal max-w-4xl mx-auto"
               dangerouslySetInnerHTML={{ __html: content.mainText }}
             />
