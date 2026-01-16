@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Encode_Sans_Expanded } from 'next/font/google';
 import Loading from './ui/loading';
 
@@ -22,6 +22,33 @@ export default function BoardOfDirectors() {
   const [boardMembers, setBoardMembers] = useState<BoardMember[]>([]);
   const [footerText, setFooterText] = useState("iSynergies Inc.'s elected Board of Directors for the year 2025 - 2026");
   const [loading, setLoading] = useState(true);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+          }
+        });
+      },
+      {
+        threshold: 0.2,
+      }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     fetchBoardMembers();
@@ -57,14 +84,18 @@ export default function BoardOfDirectors() {
   return (
     <section
       id="board-of-directors"
+      ref={sectionRef}
       className="relative bg-[#D7E1E4]"
     >
       {/* Red gradient bar header (moved from About Us so sections never overlap) */}
       <div
-        className="w-full h-[60px] z-10 flex items-center justify-center px-4 md:px-8 lg:px-16 mb-10"
+        className={`w-full h-[60px] z-10 flex items-center justify-center px-4 md:px-8 lg:px-16 mb-10 dropdown-smooth ${
+          isVisible ? 'animate' : ''
+        }`}
         style={{
           background:
             'linear-gradient(to right, #800000 0%, rgba(128, 0, 0, 0.95) 60%, rgba(128, 0, 0, 0.4) 80%, transparent 100%)',
+          animationDelay: isVisible ? '0.3s' : '0s',
         }}
       >
         <p className="text-2xl md:text-3xl font-bold text-white text-center">Our Board of Directors</p>
@@ -91,7 +122,14 @@ export default function BoardOfDirectors() {
           />
 
           {/* Board Members Grid */}
-          <div className="flex justify-center relative z-10 pt-10">
+          <div
+            className={`flex justify-center relative z-10 pt-10 slide-left-bouncy ${
+              isVisible ? 'animate' : 'opacity-0'
+            }`}
+            style={{
+              animationDelay: isVisible ? '0.5s' : '0s',
+            }}
+          >
             {loading ? (
               <div className="flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-700"></div>
@@ -147,7 +185,14 @@ export default function BoardOfDirectors() {
 
 
           {/* Footer text */}
-          <p className="text-center text-gray-700 text-sm font-sans pb-5">
+          <p
+            className={`text-center text-gray-700 text-sm font-sans pb-5 slide-up-content ${
+              isVisible ? 'animate' : 'opacity-0'
+            }`}
+            style={{
+              animationDelay: isVisible ? '0.2s' : '0s',
+            }}
+          >
             {footerText}
           </p>
         </div>
