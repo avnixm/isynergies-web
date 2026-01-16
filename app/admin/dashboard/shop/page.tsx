@@ -12,6 +12,7 @@ import { ImageUpload } from '@/app/components/ui/image-upload';
 import { Dialog, DialogFooter } from '@/app/components/ui/dialog';
 import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
+import { HtmlTips } from '@/app/components/ui/html-tips';
 import Image from 'next/image';
 
 type ShopContent = {
@@ -237,6 +238,7 @@ export default function ShopPage() {
             <CardDescription>Main shop section text and images</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            <HtmlTips />
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="title">Title</Label>
@@ -404,6 +406,7 @@ export default function ShopPage() {
         title={editingCategory ? 'Edit Category' : 'Add Category'}
       >
         <div className="space-y-4 mb-6">
+          <HtmlTips />
           <div className="space-y-2">
             <Label htmlFor="dialog-category-name">Category Name (Internal)</Label>
             <Input

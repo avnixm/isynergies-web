@@ -74,7 +74,8 @@ export default function BoardOfDirectors() {
       const response = await fetch('/api/admin/board-settings');
       if (response.ok) {
         const data = await response.json();
-        setFooterText(data.footerText);
+        console.log('Board settings fetched:', data);
+        setFooterText(data.footerText || '');
       }
     } catch (error) {
       console.error('Error fetching board settings:', error);
@@ -192,9 +193,8 @@ export default function BoardOfDirectors() {
             style={{
               animationDelay: isVisible ? '0.2s' : '0s',
             }}
-          >
-            {footerText}
-          </p>
+            dangerouslySetInnerHTML={{ __html: footerText || '' }}
+          />
         </div>
       </div>
     </section>

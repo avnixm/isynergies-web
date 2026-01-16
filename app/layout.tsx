@@ -21,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth overflow-x-hidden h-full">
-      <body className={`${encodeSansExpanded.className} antialiased overflow-x-hidden h-full m-0 p-0`}>
+      <body className={`${encodeSansExpanded.className} antialiased overflow-x-hidden m-0 p-0`}>
         <FontLoader />
         {children}
       </body>

@@ -16,6 +16,7 @@ export default function CategoryStrip({ name, text, image, className = '' }: Cat
       style={{
         width: 'calc((52% - 9px) / 4)',
         minWidth: '150px',
+        maxWidth: '100%',
         height: '100%',
         flexShrink: 0,
       }}

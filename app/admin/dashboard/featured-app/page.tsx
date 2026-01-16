@@ -11,6 +11,7 @@ import { ImageUpload } from '@/app/components/ui/image-upload';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
+import { HtmlTips } from '@/app/components/ui/html-tips';
 import Image from 'next/image';
 
 type FeaturedAppContent = {
@@ -895,6 +896,7 @@ export default function FeaturedAppPage() {
         title={editingCarouselImage ? 'Edit Carousel Image' : 'Add Carousel Image'}
       >
         <div className="space-y-4 mb-6">
+          <HtmlTips />
           <div className="space-y-2">
             <Label htmlFor="carousel-image-upload">Image</Label>
             <ImageUpload

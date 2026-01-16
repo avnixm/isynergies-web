@@ -6,11 +6,13 @@ import Loading from '@/app/components/ui/loading';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
+import { Textarea } from '@/app/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { ImageUpload } from '@/app/components/ui/image-upload';
 import { Dialog, DialogFooter } from '@/app/components/ui/dialog';
 import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
+import { HtmlTips } from '@/app/components/ui/html-tips';
 import { User } from 'lucide-react';
 
 type BoardMember = {
@@ -249,13 +251,15 @@ export default function BoardMembersPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
+            <HtmlTips />
             <div className="space-y-2">
               <Label htmlFor="footerText">Footer Text</Label>
-              <Input
+              <Textarea
                 id="footerText"
                 value={footerText}
                 onChange={(e) => setFooterText(e.target.value)}
                 placeholder="iSynergies Inc.'s elected Board of Directors for the year 2025 - 2026"
+                className="min-h-[80px]"
               />
             </div>
             <Button onClick={handleSaveFooterText} disabled={savingFooter}>

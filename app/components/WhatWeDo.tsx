@@ -198,9 +198,7 @@ export default function WhatWeDo() {
               className="text-gray-900 text-xs leading-relaxed font-normal max-w-4xl mx-auto"
               dangerouslySetInnerHTML={{ __html: content.mainText }}
             />
-            <p className="text-gray-900 text-xs leading-relaxed font-normal mt-4">
-              {content.tagline}
-            </p>
+            <p className="text-gray-900 text-xs leading-relaxed font-normal mt-4" dangerouslySetInnerHTML={{ __html: content.tagline }} />
           </div>
         )}
       </div>

@@ -14,6 +14,7 @@ import { ImageUpload } from '@/app/components/ui/image-upload';
 import { Dialog, DialogFooter } from '@/app/components/ui/dialog';
 import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
+import { HtmlTips } from '@/app/components/ui/html-tips';
 
 type Project = {
   id: number;
@@ -425,6 +426,7 @@ export default function ProjectsPage() {
         maxWidth="2xl"
       >
         <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 mb-6">
+          <HtmlTips />
           <div className="space-y-2">
             <Label htmlFor="dialog-title">Project Title</Label>
             <Input

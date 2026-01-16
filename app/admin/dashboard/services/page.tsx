@@ -13,6 +13,7 @@ import { useConfirm } from '@/app/components/ui/confirm-dialog';
 import { ImageUpload } from '@/app/components/ui/image-upload';
 import { Textarea } from '@/app/components/ui/textarea';
 import { Info } from 'lucide-react';
+import { HtmlTips } from '@/app/components/ui/html-tips';
 import Image from 'next/image';
 
 type Statistic = {
@@ -766,6 +767,7 @@ export default function ServicesPage() {
         title={editingService ? 'Edit Service Icon' : 'Add Service Icon'}
       >
         <div className="space-y-4 mb-6">
+          <HtmlTips />
           <div className="space-y-2">
             <Label>Icon Image</Label>
             <ImageUpload

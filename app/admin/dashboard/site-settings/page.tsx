@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app
 import { ImageUpload } from '@/app/components/ui/image-upload';
 import Image from 'next/image';
 import { useToast } from '@/app/components/ui/toast';
+import { HtmlTips } from '@/app/components/ui/html-tips';
 
 type SiteSettings = {
   companyName: string;
@@ -117,6 +118,7 @@ export default function SiteSettingsPage() {
             <CardDescription>Basic company details displayed on the website</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <HtmlTips />
             <div className="space-y-2">
               <Label htmlFor="companyName">Company Name</Label>
               <Input

@@ -13,6 +13,7 @@ import { ImageUpload } from '@/app/components/ui/image-upload';
 import { Dialog, DialogFooter } from '@/app/components/ui/dialog';
 import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
+import { HtmlTips } from '@/app/components/ui/html-tips';
 
 type AboutUsContent = {
   title: string;
@@ -347,6 +348,7 @@ export default function AboutUsPage() {
             <CardDescription>Edit the title and main text paragraphs</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <HtmlTips />
             <div className="space-y-2">
               <Label htmlFor="title">Section Title</Label>
               <Input
@@ -392,18 +394,15 @@ export default function AboutUsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="paragraph4">Paragraph 4 (can include HTML for bold text)</Label>
+              <Label htmlFor="paragraph4">Paragraph 4</Label>
               <Textarea
                 id="paragraph4"
                 value={formData.paragraph4}
                 onChange={(e) => setFormData({ ...formData, paragraph4: e.target.value })}
                 className="min-h-[100px]"
-                placeholder="Fourth paragraph... Use <strong>text</strong> for bold"
+                placeholder="Fourth paragraph..."
                 required
               />
-              <p className="text-xs text-gray-800">
-                Tip: Use &lt;strong&gt;text&lt;/strong&gt; to make text bold
-              </p>
             </div>
 
             <div className="space-y-2">

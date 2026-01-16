@@ -82,7 +82,8 @@ export default function Shop() {
   return (
     <section
       id="shop"
-      className="relative bg-gradient-to-b from-[#0A1D5B] via-[#0D1E66] to-[#05113A] text-white overflow-hidden"
+      className="relative bg-gradient-to-b from-[#0A1D5B] via-[#0D1E66] to-[#05113A] text-white"
+      style={{ overflowX: 'hidden', overflowY: 'visible', minHeight: '700px', width: '100%', maxWidth: '100vw' }}
     >
       {/* subtle watermark */}
       <div className="pointer-events-none absolute inset-0 opacity-[0.18] z-0">
@@ -92,7 +93,7 @@ export default function Shop() {
       </div>
 
       {/* Fixed rigid layout: 48% left, 52% right */}
-      <div className="relative w-full flex items-stretch z-10" style={{ minHeight: '700px', height: '700px' }}>
+      <div className="relative w-full flex items-stretch z-10 overflow-x-hidden" style={{ minHeight: '700px', height: '700px', maxWidth: '100vw' }}>
         {/* Left Panel (~48%) */}
         <div className="relative w-[48%] bg-gradient-to-b from-[#122C7E] via-[#0D1E66] to-[#081239] flex flex-col" style={{ height: '100%' }}>
           <div className="p-8 md:p-10 flex flex-col h-full justify-between">
@@ -115,9 +116,7 @@ export default function Shop() {
               </div>
 
               {/* Paragraph description */}
-              <p className="max-w-xl text-xs md:text-sm leading-relaxed text-white/85 font-sans">
-                {content.description}
-              </p>
+              <p className="max-w-xl text-xs md:text-sm leading-relaxed text-white/85 font-sans" dangerouslySetInnerHTML={{ __html: content.description }} />
             </div>
 
             {/* Middle Section: Sales hexagon - centered with even spacing */}
@@ -167,7 +166,7 @@ export default function Shop() {
         </div>
 
         {/* Right Panel (~52%) - 4 vertical strips with custom images and text - Full height */}
-        <div className="relative w-[52%] flex gap-3" style={{ height: '100%' }}>
+        <div className="relative w-[52%] flex gap-3 overflow-x-hidden" style={{ height: '100%', maxWidth: '100%' }}>
           {categories.length > 0 ? (
             categories.map((c) => (
               <CategoryStrip

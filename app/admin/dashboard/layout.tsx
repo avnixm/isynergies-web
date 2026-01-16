@@ -20,6 +20,11 @@ export default function AdminLayout({
 
   useEffect(() => {
     checkAuth();
+    // Prevent body scrolling in admin dashboard
+    document.body.classList.add('admin-dashboard-active');
+    return () => {
+      document.body.classList.remove('admin-dashboard-active');
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -70,12 +75,12 @@ export default function AdminLayout({
   return (
     <ToastProvider>
       <ConfirmDialogProvider>
-        <div className="flex h-screen bg-white text-gray-800 overflow-hidden max-w-full" data-admin-dashboard>
+        <div className="flex h-screen bg-white text-gray-800 overflow-hidden max-w-full" data-admin-dashboard style={{ height: '100vh', overflow: 'hidden' }}>
           <Sidebar pathname={pathname} user={user} onLogout={handleLogout} />
 
-          <div className="flex flex-1 flex-col overflow-hidden min-w-0 h-screen">
+          <div className="flex flex-1 flex-col overflow-hidden min-w-0 h-screen" style={{ height: '100vh', overflow: 'hidden' }}>
             <Header user={user} />
-            <main className="flex-1 overflow-y-auto overflow-x-hidden bg-muted/40 min-w-0">
+            <main className="flex-1 overflow-y-auto overflow-x-hidden bg-muted/40 min-w-0" style={{ overflowY: 'auto', overflowX: 'hidden' }}>
               <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 md:px-8 md:py-8 w-full min-w-0">
           {children}
         </div>

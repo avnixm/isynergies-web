@@ -11,6 +11,7 @@ import { Dialog, DialogFooter } from '@/app/components/ui/dialog';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
+import { HtmlTips } from '@/app/components/ui/html-tips';
 
 type HeroSection = {
   id: number;
@@ -365,6 +366,7 @@ export default function HeroManagementPage() {
         title={editingTickerItem ? 'Edit Text' : 'Add Text'}
       >
         <div className="space-y-4 mb-6">
+          <HtmlTips />
           <div className="space-y-2">
             <Label htmlFor="dialog-text">Announcement Text</Label>
             <Input

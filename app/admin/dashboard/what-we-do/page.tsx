@@ -12,6 +12,7 @@ import { ImageUpload } from '@/app/components/ui/image-upload';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
+import { HtmlTips } from '@/app/components/ui/html-tips';
 import Image from 'next/image';
 
 type WhatWeDoContent = {
@@ -233,6 +234,7 @@ export default function WhatWeDoPage() {
           </div>
         </div>
         <div className="p-6 space-y-6">
+          <HtmlTips />
           <div className="space-y-2">
             <Label htmlFor="mainText" className="text-sm font-medium">
               Main Description Text
@@ -245,9 +247,6 @@ export default function WhatWeDoPage() {
               rows={6}
               className="resize-none font-mono text-sm"
             />
-            <p className="text-xs text-muted-foreground">
-              You can use HTML tags like <code>&lt;strong&gt;</code>, <code>&lt;em&gt;</code>, <code>&lt;br&gt;</code> for formatting. This is the main block of text displayed below the images.
-            </p>
           </div>
           
           <div className="space-y-2">

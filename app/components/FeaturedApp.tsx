@@ -154,7 +154,7 @@ export default function FeaturedApp() {
   const useCustomBanner = content && (content.appLogo || content.gradientFrom || content.gradientTo);
 
   return (
-    <section id="featured-app" className="relative bg-white">
+    <section id="featured-app" className="relative bg-white" style={{ backgroundColor: '#ffffff', overflow: 'hidden' }}>
       {/* Block 1: Customizable Banner or Fallback to Header Image */}
       {useCustomBanner ? (
         <div
@@ -215,7 +215,7 @@ export default function FeaturedApp() {
 
       {/* Block 2: Horizontal Carousel */}
       {carouselImages.length > 0 && (
-        <div className="w-full py-4">
+        <div className="w-full py-4 overflow-x-hidden">
           <div className="flex overflow-x-auto gap-4 scrollbar-hide" style={{ paddingLeft: '10px' }}>
             {carouselImages.map((img, index) => {
               const imageUrl = getImageUrl(img.image);
@@ -260,9 +260,7 @@ export default function FeaturedApp() {
                 /* App Mode: Download Badges */
                 <>
                   {content.downloadText && (
-                    <p className="text-white text-sm md:text-base font-medium whitespace-nowrap">
-                      {content.downloadText}
-                    </p>
+                    <p className="text-white text-sm md:text-base font-medium whitespace-nowrap" dangerouslySetInnerHTML={{ __html: content.downloadText }} />
                   )}
                   {content.appStoreImage && (
                     <div className="flex-shrink-0">
@@ -296,9 +294,7 @@ export default function FeaturedApp() {
                 /* Website Mode: Visit Link */
                 <>
                   {content.visitText && (
-                    <p className="text-white text-sm md:text-base font-medium whitespace-nowrap">
-                      {content.visitText}
-                    </p>
+                    <p className="text-white text-sm md:text-base font-medium whitespace-nowrap" dangerouslySetInnerHTML={{ __html: content.visitText }} />
                   )}
                   {content.websiteUrl && (
                     <a

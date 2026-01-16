@@ -169,27 +169,23 @@ export default function AboutUs() {
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{content.title}</h2>
               
               <div className={`slide-right-content space-y-2 text-gray-900 text-xs leading-relaxed font-normal ${isVisible ? 'animate' : ''}`}>
-                <p>{content.paragraph1}</p>
-                <p>{content.paragraph2}</p>
-                <p>{content.paragraph3}</p>
+                <p dangerouslySetInnerHTML={{ __html: content.paragraph1 }} />
+                <p dangerouslySetInnerHTML={{ __html: content.paragraph2 }} />
+                <p dangerouslySetInnerHTML={{ __html: content.paragraph3 }} />
                 <p dangerouslySetInnerHTML={{ __html: content.paragraph4 }} />
-                <p>{content.paragraph5}</p>
+                <p dangerouslySetInnerHTML={{ __html: content.paragraph5 }} />
               </div>
 
               {/* Mission and Vision Boxes */}
               <div className={`slide-up-content grid md:grid-cols-2 gap-3 mt-4 ${isVisible ? 'animate' : ''}`}>
                 <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                   <h3 className="text-base font-bold text-gray-900 mb-1">{content.missionTitle}</h3>
-                  <p className="text-gray-900 text-[10px] leading-tight font-normal">
-                    {content.missionText}
-                  </p>
+                  <p className="text-gray-900 text-[10px] leading-tight font-normal" dangerouslySetInnerHTML={{ __html: content.missionText }} />
                 </div>
                 
                 <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                   <h3 className="text-base font-bold text-gray-900 mb-1">{content.visionTitle}</h3>
-                  <p className="text-gray-900 text-[10px] leading-tight font-normal">
-                    {content.visionText}
-                  </p>
+                  <p className="text-gray-900 text-[10px] leading-tight font-normal" dangerouslySetInnerHTML={{ __html: content.visionText }} />
                 </div>
               </div>
             </div>

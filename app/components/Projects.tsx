@@ -662,11 +662,7 @@ export default function Projects() {
                       </button>
                     </div>
 
-                <div className="mt-10 space-y-6 text-sm leading-relaxed text-gray-800">
-                  {selected.description.split('\n\n').map((para, i) => (
-                    <p key={i}>{para}</p>
-                  ))}
-                </div>
+                <div className="mt-10 space-y-6 text-sm leading-relaxed text-gray-800" dangerouslySetInnerHTML={{ __html: selected.description }} />
                   </>
                 ) : (
                   <div className="space-y-6">

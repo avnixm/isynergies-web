@@ -25,7 +25,7 @@ import { ToastProvider } from './components/ui/toast';
 export default function Home() {
   return (
     <ToastProvider>
-      <div className="relative text-white overflow-x-hidden max-w-full">
+      <div className="relative text-white overflow-x-hidden max-w-full overscroll-none">
       {/* Hero Section */}
       <Hero navLinks={navLinks} />
       
@@ -56,7 +56,7 @@ export default function Home() {
       {/* Contact Section */}
       <Contact />
 
-      {/* Foote */}
+      {/* Footer */}
       <Footer />
       </div>
     </ToastProvider>
