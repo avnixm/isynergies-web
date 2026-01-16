@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Loading from './ui/loading';
 import CategoryStrip from './CategoryStrip';
 
@@ -35,6 +35,33 @@ export default function Shop() {
     { id: 4, name: 'Hardware', text: 'HARDWARE', image: '', displayOrder: 3 },
   ]);
   const [loading, setLoading] = useState(true);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+          }
+        });
+      },
+      {
+        threshold: 0.2,
+      }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const fetchShopData = async () => {
@@ -72,6 +99,7 @@ export default function Shop() {
     return (
       <section
         id="shop"
+        ref={sectionRef}
         className="relative bg-gradient-to-b from-[#0A1D5B] via-[#0D1E66] to-[#05113A] text-white overflow-hidden min-h-[700px] flex items-center justify-center"
       >
         <Loading message="Loading shop content..." />
@@ -82,8 +110,10 @@ export default function Shop() {
   return (
     <section
       id="shop"
-      className="relative bg-gradient-to-b from-[#0A1D5B] via-[#0D1E66] to-[#05113A] text-white"
-      style={{ overflowX: 'hidden', overflowY: 'visible', minHeight: '700px', width: '100%', maxWidth: '100vw' }}
+      ref={sectionRef}
+      className={`relative bg-gradient-to-b from-[#0A1D5B] via-[#0D1E66] to-[#05113A] text-white overflow-hidden ${
+        isVisible ? 'animate-fadeIn-slow' : 'opacity-0'
+      }`}
     >
       {/* subtle watermark */}
       <div className="pointer-events-none absolute inset-0 opacity-[0.18] z-0">
@@ -93,7 +123,7 @@ export default function Shop() {
       </div>
 
       {/* Fixed rigid layout: 48% left, 52% right */}
-      <div className="relative w-full flex items-stretch z-10 overflow-x-hidden" style={{ minHeight: '700px', height: '700px', maxWidth: '100vw' }}>
+      <div className="relative w-full flex items-stretch z-10" style={{ minHeight: '700px', height: '700px' }}>
         {/* Left Panel (~48%) */}
         <div className="relative w-[48%] bg-gradient-to-b from-[#122C7E] via-[#0D1E66] to-[#081239] flex flex-col" style={{ height: '100%' }}>
           <div className="p-8 md:p-10 flex flex-col h-full justify-between">
@@ -101,7 +131,9 @@ export default function Shop() {
             <div className="flex flex-col">
               {/* Header with title and button */}
               <div className="flex items-start justify-between gap-6 mb-6">
-                <h2 className="font-sans text-4xl md:text-5xl font-bold tracking-tight text-white">
+                <h2 className={`font-sans text-4xl md:text-5xl font-bold tracking-tight text-white slide-right-content ${
+                  isVisible ? 'animate' : 'opacity-0'
+                }`}>
                   {content.title}
                 </h2>
 
@@ -116,7 +148,14 @@ export default function Shop() {
               </div>
 
               {/* Paragraph description */}
-              <p className="max-w-xl text-xs md:text-sm leading-relaxed text-white/85 font-sans" dangerouslySetInnerHTML={{ __html: content.description }} />
+              <p className={`max-w-xl text-xs md:text-sm leading-relaxed text-white/85 font-sans slide-right-content ${
+                isVisible ? 'animate' : 'opacity-0'
+              }`}
+              style={{
+                animationDelay: isVisible ? '0.2s' : '0s',
+              }}>
+                {content.description}
+              </p>
             </div>
 
             {/* Middle Section: Sales hexagon - centered with even spacing */}
@@ -132,8 +171,6 @@ export default function Shop() {
                     className="object-contain"
                     sizes="180px"
                     priority={false}
-                    unoptimized
-                    quality={100}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -156,8 +193,6 @@ export default function Shop() {
                     className="object-contain"
                     sizes="(min-width: 1024px) 520px, 100vw"
                     priority={false}
-                    unoptimized
-                    quality={100}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gray-300/20 rounded-lg">
@@ -170,16 +205,29 @@ export default function Shop() {
         </div>
 
         {/* Right Panel (~52%) - 4 vertical strips with custom images and text - Full height */}
-        <div className="relative w-[52%] flex gap-3 overflow-x-hidden" style={{ height: '100%', maxWidth: '100%' }}>
+        <div className="relative w-[52%] flex gap-3" style={{ height: '100%' }}>
           {categories.length > 0 ? (
-            categories.map((c) => (
-              <CategoryStrip
-                key={c.id}
-                name={c.name}
-                text={c.text || c.name.toUpperCase()}
-                image={c.image || null}
-              />
-            ))
+            categories.map((c, index) => {
+              // 1st and 3rd strips (index 0 and 2) = slide-down, 2nd and 4th (index 1 and 3) = slide-up
+              const animationClass = index % 2 === 0 ? 'slide-down-slow' : 'slide-up-slow';
+              return (
+                <div
+                  key={c.id}
+                  className={`${animationClass} ${
+                    isVisible ? 'animate' : 'opacity-0'
+                  }`}
+                  style={{
+                    animationDelay: isVisible ? `${0.3 + index * 0.1}s` : '0s',
+                  }}
+                >
+                  <CategoryStrip
+                    name={c.name}
+                    text={c.text || c.name.toUpperCase()}
+                    image={c.image || null}
+                  />
+                </div>
+              );
+            })
           ) : (
             <div className="w-full h-full flex items-center justify-center text-white/50">
               <p>No categories available</p>
