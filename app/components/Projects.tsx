@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import Loading from './ui/loading';
 
 type ProjectCategory = 'desktop' | 'mobile' | 'tools';
@@ -43,6 +43,33 @@ function ExternalIcon({ className }: { className?: string }) {
 export default function Projects() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+          }
+        });
+      },
+      {
+        threshold: 0.2,
+      }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
+      }
+    };
+  }, []);
   const [showInquiryForm, setShowInquiryForm] = useState(false);
   const [inquiryName, setInquiryName] = useState('');
   const [inquiryEmail, setInquiryEmail] = useState('');
@@ -260,15 +287,22 @@ export default function Projects() {
   }, [view]);
 
   return (
-    <section id="projects" className="relative bg-[#D7E1E4] py-16">
+    <section id="projects" ref={sectionRef} className="relative bg-[#D7E1E4] py-16">
       <div className="container mx-auto max-w-7xl px-4 md:px-8 lg:px-16">
         <div className="text-center font-sans">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900">
+          <h2 className={`text-4xl md:text-5xl font-bold text-gray-900 slide-down-slow ${
+            isVisible ? 'animate' : 'opacity-0'
+          }`}>
             {headerTitle}
           </h2>
 
           {/* view toggle (like the reference) */}
-          <div className="mt-4 flex items-center justify-center gap-3">
+          <div className={`mt-4 flex items-center justify-center gap-3 slide-down-slow ${
+            isVisible ? 'animate' : 'opacity-0'
+          }`}
+          style={{
+            animationDelay: isVisible ? '0.3s' : '0s',
+          }}>
             <button
               type="button"
               onClick={() => setView('all')}
@@ -394,9 +428,20 @@ export default function Projects() {
               }
             >
               {/* Row 1 */}
-              <div className="projects-marquee-row">
+              <div className={`projects-marquee-row marquee-row-1 ${
+                isVisible ? 'animate' : 'opacity-0'
+              }`}
+              style={{
+                animationDelay: isVisible ? '0.5s' : '0s',
+              }}>
               {/* Top row starts ahead by ~half a card */}
-              <div className="projects-marquee-track -ml-[480px] sm:-ml-[570px] md:-ml-[660px]">
+              <div 
+                className="projects-marquee-track -ml-[480px] sm:-ml-[570px] md:-ml-[660px]"
+                style={{
+                  animationPlayState: isVisible ? 'running' : 'paused',
+                  animationDelay: isVisible ? '6.5s' : '0s',
+                }}
+              >
                 {marqueeRow1.map((p, idx) => (
                   <button
                     key={`r1-${p.id}-${idx}`}
@@ -446,8 +491,19 @@ export default function Projects() {
             </div>
 
             {/* Row 2 (ahead) */}
-            <div className="projects-marquee-row mt-5">
-              <div className="projects-marquee-track">
+            <div className={`projects-marquee-row mt-5 marquee-row-2 ${
+              isVisible ? 'animate' : 'opacity-0'
+            }`}
+            style={{
+              animationDelay: isVisible ? '0.7s' : '0s',
+            }}>
+              <div 
+                className="projects-marquee-track"
+                style={{
+                  animationPlayState: isVisible ? 'running' : 'paused',
+                  animationDelay: isVisible ? '6.7s' : '0s',
+                }}
+              >
                 {marqueeRow2.map((p, idx) => (
                   <button
                     key={`r2-${p.id}-${idx}`}
