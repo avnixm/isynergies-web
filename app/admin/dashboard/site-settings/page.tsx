@@ -38,26 +38,6 @@ export default function SiteSettingsPage() {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [phoneError, setPhoneError] = useState('');
-
-  // Validate phone number: exactly 11 digits starting with "09"
-  const validatePhone = (phone: string): boolean => {
-    const digitsOnly = phone.replace(/\D/g, '');
-    if (digitsOnly.length === 0) {
-      setPhoneError('');
-      return false;
-    }
-    if (digitsOnly.length !== 11) {
-      setPhoneError('Phone number must be exactly 11 digits');
-      return false;
-    }
-    if (!digitsOnly.startsWith('09')) {
-      setPhoneError('Phone number must start with 09');
-      return false;
-    }
-    setPhoneError('');
-    return true;
-  };
 
   useEffect(() => {
     fetchSettings();
@@ -87,16 +67,6 @@ export default function SiteSettingsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate phone number before submission (only if provided)
-    if (settings.companyPhone.trim()) {
-      const digitsOnly = settings.companyPhone.replace(/\D/g, '');
-      if (!validatePhone(settings.companyPhone) || digitsOnly.length !== 11) {
-        error('Please enter a valid phone number (11 digits starting with 09)');
-        return;
-      }
-    }
-
     setSaving(true);
     const token = localStorage.getItem('admin_token');
 
@@ -179,22 +149,10 @@ export default function SiteSettingsPage() {
                   id="companyPhone"
                   type="tel"
                   value={settings.companyPhone}
-                  onChange={(e) => {
-                    // Only allow digits
-                    const filtered = e.target.value.replace(/\D/g, '');
-                    setSettings({ ...settings, companyPhone: filtered });
-                    validatePhone(filtered);
-                  }}
-                  maxLength={11}
-                  placeholder="09XXXXXXXXX"
-                  className={phoneError ? 'border-red-500' : ''}
+                  onChange={(e) => setSettings({ ...settings, companyPhone: e.target.value })}
+                  placeholder="+63 123 456 7890"
+                  required
                 />
-                {phoneError && (
-                  <p className="text-xs text-red-600">{phoneError}</p>
-                )}
-                {!phoneError && settings.companyPhone && (
-                  <p className="text-xs text-muted-foreground">Format: 11 digits starting with 09</p>
-                )}
               </div>
 
               <div className="space-y-2">
