@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import Loading from './ui/loading';
 import { Star } from 'lucide-react';
@@ -41,6 +41,33 @@ export default function FeaturedApp() {
   const [carouselImages, setCarouselImages] = useState<FeaturedAppCarouselImage[]>([]);
   const [features, setFeatures] = useState<FeaturedAppFeature[]>([]);
   const [loading, setLoading] = useState(true);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+          }
+        });
+      },
+      {
+        threshold: 0.2,
+      }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -121,7 +148,7 @@ export default function FeaturedApp() {
 
   if (loading) {
     return (
-      <section id="featured-app" className="relative bg-white py-16">
+      <section id="featured-app" ref={sectionRef} className="relative bg-white py-16">
         <Loading message="Loading Featured App section" />
       </section>
     );
@@ -154,7 +181,7 @@ export default function FeaturedApp() {
   const useCustomBanner = content && (content.appLogo || content.gradientFrom || content.gradientTo);
 
   return (
-    <section id="featured-app" className="relative bg-white" style={{ backgroundColor: '#ffffff', overflow: 'hidden' }}>
+    <section id="featured-app" ref={sectionRef} className="relative bg-white">
       {/* Block 1: Customizable Banner or Fallback to Header Image */}
       {useCustomBanner ? (
         <div
@@ -164,7 +191,14 @@ export default function FeaturedApp() {
           }}
         >
           {/* Featured Badge - Top Right */}
-          <div className="absolute top-4 right-4 z-10">
+          <div 
+            className={`absolute top-4 right-4 z-10 ${
+              isVisible ? 'animate-fadeIn-slow' : 'opacity-0'
+            }`}
+            style={{
+              animationDelay: isVisible ? '0.3s' : '0s',
+            }}
+          >
             <div className="flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-sm px-4 py-2 border border-white/30">
               <Star className="h-4 w-4 text-white fill-white" />
               <span className="text-white text-sm font-semibold">Featured</span>
@@ -173,7 +207,14 @@ export default function FeaturedApp() {
 
           {/* App Logo - Left Side (Vertically Centered) */}
           {content.appLogo && (
-            <div className="absolute left-8 top-1/2 -translate-y-1/2 z-10">
+            <div 
+              className={`absolute left-8 top-1/2 -translate-y-1/2 z-10 ${
+                isVisible ? 'animate-fadeIn-slow' : 'opacity-0'
+              }`}
+              style={{
+                animationDelay: isVisible ? '0.3s' : '0s',
+              }}
+            >
               <img
                 src={getImageUrl(content.appLogo)}
                 alt="App Logo"
@@ -184,7 +225,14 @@ export default function FeaturedApp() {
 
           {/* Feature Icons - Bottom Right */}
           {features.length > 0 && (
-            <div className="absolute bottom-[-5px] right-18 z-10 hidden md:flex items-center gap-6 max-w-md justify-end">
+            <div 
+              className={`absolute bottom-[-5px] right-18 z-10 hidden md:flex items-center gap-6 max-w-md justify-end ${
+                isVisible ? 'animate-fadeIn-slow' : 'opacity-0'
+              }`}
+              style={{
+                animationDelay: isVisible ? '0.3s' : '0s',
+              }}
+            >
               {features.map((feature) => {
                 const iconUrl = getImageUrl(feature.iconImage);
                 return (
@@ -215,8 +263,16 @@ export default function FeaturedApp() {
 
       {/* Block 2: Horizontal Carousel */}
       {carouselImages.length > 0 && (
-        <div className="w-full py-4 overflow-x-hidden">
-          <div className="flex overflow-x-auto gap-4 scrollbar-hide" style={{ paddingLeft: '10px' }}>
+        <div className="w-full py-4">
+          <div 
+            className={`flex overflow-x-auto gap-4 scrollbar-hide slide-left-row ${
+              isVisible ? 'animate' : 'opacity-0'
+            }`} 
+            style={{ 
+              paddingLeft: '10px',
+              animationDelay: isVisible ? '0.3s' : '0s',
+            }}
+          >
             {carouselImages.map((img, index) => {
               const imageUrl = getImageUrl(img.image);
               const isFirst = index === 0;
@@ -260,7 +316,9 @@ export default function FeaturedApp() {
                 /* App Mode: Download Badges */
                 <>
                   {content.downloadText && (
-                    <p className="text-white text-sm md:text-base font-medium whitespace-nowrap" dangerouslySetInnerHTML={{ __html: content.downloadText }} />
+                    <p className="text-white text-sm md:text-base font-medium whitespace-nowrap">
+                      {content.downloadText}
+                    </p>
                   )}
                   {content.appStoreImage && (
                     <div className="flex-shrink-0">
@@ -294,7 +352,9 @@ export default function FeaturedApp() {
                 /* Website Mode: Visit Link */
                 <>
                   {content.visitText && (
-                    <p className="text-white text-sm md:text-base font-medium whitespace-nowrap" dangerouslySetInnerHTML={{ __html: content.visitText }} />
+                    <p className="text-white text-sm md:text-base font-medium whitespace-nowrap">
+                      {content.visitText}
+                    </p>
                   )}
                   {content.websiteUrl && (
                     <a
