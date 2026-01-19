@@ -502,13 +502,9 @@ body:not(.admin-dashboard-active) {
   30% {
     transform: translate3d(0, 0, 0);
   }
-  80% {
-    opacity: 1;
-    transform: translate3d(40px, 0, 0);
-  }
   100% {
     opacity: 1;
-    transform: translate3d(40px, 0, 0);
+    transform: translate3d(0, 0, 0);
   }
 }
 
@@ -533,13 +529,9 @@ body:not(.admin-dashboard-active) {
   30% {
     transform: translate3d(0, 0, 0);
   }
-  80% {
-    opacity: 1;
-    transform: translate3d(-40px, 0, 0);
-  }
   100% {
     opacity: 1;
-    transform: translate3d(-40px, 0, 0);
+    transform: translate3d(0, 0, 0);
   }
 }
 
