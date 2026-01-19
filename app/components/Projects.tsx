@@ -467,7 +467,7 @@ export default function Projects() {
                 className="projects-marquee-track -ml-[178px] sm:-ml-[208px] md:-ml-[238px]"
                 style={{
                   animationPlayState: 'running',
-                  animationDelay: isVisible ? '6s' : '999s',
+                  animationDelay: isVisible ? '3.0s' : '999s',
                 }}
               >
                 {marqueeRow1.map((p, idx) => (
@@ -529,7 +529,7 @@ export default function Projects() {
                 className="projects-marquee-track"
                 style={{
                   animationPlayState: 'running',
-                  animationDelay: isVisible ? '6s' : '999s',
+                  animationDelay: isVisible ? '3.0s' : '999s',
                 }}
               >
                 {marqueeRow2.map((p, idx) => (
@@ -1019,3 +1019,5 @@ export default function Projects() {
     </section>
   );
 }
+
+
