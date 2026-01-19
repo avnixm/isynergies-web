@@ -123,24 +123,24 @@ export default function Contact() {
   };
 
   return (
-    <section id="contact" className="relative bg-gray-100 py-8">
+    <section id="contact" className="relative bg-gray-100 py-4">
       <div className="mx-auto max-w-5xl px-4 md:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[0.42fr_0.58fr] gap-0 rounded-xl shadow-2xl overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-[0.42fr_0.58fr] gap-0 rounded-xl  overflow-hidden p-3 md:p-4">
           {/* Left Panel - Contact Information */}
-          <div className="relative bg-[#7A0D1A] text-white p-8 md:p-10 lg:p-12 overflow-hidden">
+          <div className="relative bg-[#7A0D1A] text-white p-6 md:p-8 lg:p-10 overflow-hidden">
             {/* Semi-transparent S logo in background */}
             <div className="absolute right-[-60px] top-[-40px] text-[400px] font-black leading-none text-[#8A1E2A]/30 select-none pointer-events-none">
               S
             </div>
 
             <div className="relative z-10">
-              <h2 className="text-4xl md:text-5xl lg:text-5xl font-bold mb-10 font-sans leading-tight">
+              <h2 className="text-3xl md:text-4xl font-bold mb-5 font-sans leading-tight">
                 Let's get
                 <br />
                 in touch
               </h2>
 
-              <div className="space-y-5 font-sans">
+              <div className="space-y-4 font-sans">
                 {/* Location */}
                 <div className="flex items-start gap-4">
                   <div className="mt-1 flex-shrink-0">
@@ -165,7 +165,7 @@ export default function Contact() {
                       />
                     </svg>
                   </div>
-                  <p className="text-base md:text-lg">
+                  <p className="text-xs leading-relaxed">
                     {settings.companyAddress}
                   </p>
                 </div>
@@ -188,7 +188,7 @@ export default function Contact() {
                       />
                     </svg>
                   </div>
-                  <p className="text-base md:text-lg">{settings.companyPhone}</p>
+                  <p className="text-xs leading-relaxed">{settings.companyPhone}</p>
                 </div>
 
                 {/* Facebook */}
@@ -208,7 +208,7 @@ export default function Contact() {
                         />
                       </svg>
                     </div>
-                    <p className="text-base md:text-lg">
+                    <p className="text-xs leading-relaxed">
                       {settings.companyFacebook
                         .replace('https://', '')
                         .replace('http://', '')}
@@ -234,22 +234,22 @@ export default function Contact() {
                       />
                     </svg>
                   </div>
-                  <p className="text-base md:text-lg">{settings.companyEmail}</p>
+                  <p className="text-xs leading-relaxed">{settings.companyEmail}</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Right Panel - Contact Form */}
-          <div className="bg-white px-8 py-10 md:px-10 md:py-12 flex items-center">
+          <div className="bg-white px-5 py-6 md:px-6 md:py-7 flex items-center">
             <div className="w-full max-w-xl ml-auto">
-              <h3 className="text-3xl md:text-[32px] font-bold text-gray-800 mb-6 font-sans">
+              <h3 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4 font-sans">
                 Send us a message
               </h3>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-3">
               {/* Email and Contact No. Row */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label
                     htmlFor="email"

@@ -163,29 +163,31 @@ export default function AboutUs() {
         />
         {/* Main content area: 2 columns, text defines height, image column stretches to match */}
         <div className="container mx-auto max-w-7xl px-4 md:px-8 lg:px-16 relative z-10">
-          <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-stretch">
+          <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-stretch min-h-[600px]">
             {/* Left Side - Text Content */}
-            <div className="md:w-1/2 space-y-2 md:pr-8 relative z-10 font-sans py-5">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{content.title}</h2>
-              
-              <div className={`slide-right-content space-y-2 text-gray-900 text-xs leading-relaxed font-normal ${isVisible ? 'animate' : ''}`}>
-                <p dangerouslySetInnerHTML={{ __html: content.paragraph1 }} />
-                <p dangerouslySetInnerHTML={{ __html: content.paragraph2 }} />
-                <p dangerouslySetInnerHTML={{ __html: content.paragraph3 }} />
-                <p dangerouslySetInnerHTML={{ __html: content.paragraph4 }} />
-                <p dangerouslySetInnerHTML={{ __html: content.paragraph5 }} />
-              </div>
-
-              {/* Mission and Vision Boxes */}
-              <div className={`slide-up-content grid md:grid-cols-2 gap-3 mt-4 ${isVisible ? 'animate' : ''}`}>
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <h3 className="text-base font-bold text-gray-900 mb-1">{content.missionTitle}</h3>
-                  <p className="text-gray-900 text-[10px] leading-tight font-normal" dangerouslySetInnerHTML={{ __html: content.missionText }} />
-                </div>
+            <div className="md:w-1/2 md:pr-8 relative z-10 font-sans flex flex-col justify-center py-8 md:py-0">
+              <div className="space-y-4">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8">{content.title}</h2>
                 
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <h3 className="text-base font-bold text-gray-900 mb-1">{content.visionTitle}</h3>
-                  <p className="text-gray-900 text-[10px] leading-tight font-normal" dangerouslySetInnerHTML={{ __html: content.visionText }} />
+                <div className={`slide-right-content space-y-3 text-gray-900 text-xs leading-relaxed font-normal ${isVisible ? 'animate' : ''}`}>
+                  {content.paragraph1 && <p dangerouslySetInnerHTML={{ __html: content.paragraph1 }} />}
+                  {content.paragraph2 && <p dangerouslySetInnerHTML={{ __html: content.paragraph2 }} />}
+                  {content.paragraph3 && <p dangerouslySetInnerHTML={{ __html: content.paragraph3 }} />}
+                  {content.paragraph4 && <p dangerouslySetInnerHTML={{ __html: content.paragraph4 }} />}
+                  {content.paragraph5 && <p dangerouslySetInnerHTML={{ __html: content.paragraph5 }} />}
+                </div>
+
+                {/* Mission and Vision Boxes */}
+                <div className={`slide-up-content grid md:grid-cols-2 gap-4 mt-6 ${isVisible ? 'animate' : ''}`}>
+                  <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
+                    <h3 className="text-base font-bold text-gray-900 mb-2">{content.missionTitle}</h3>
+                    <p className="text-gray-900 text-[10px] leading-relaxed font-normal" dangerouslySetInnerHTML={{ __html: content.missionText }} />
+                  </div>
+                  
+                  <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
+                    <h3 className="text-base font-bold text-gray-900 mb-2">{content.visionTitle}</h3>
+                    <p className="text-gray-900 text-[10px] leading-relaxed font-normal" dangerouslySetInnerHTML={{ __html: content.visionText }} />
+                  </div>
                 </div>
               </div>
             </div>

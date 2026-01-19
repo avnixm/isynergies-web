@@ -367,7 +367,6 @@ export default function AboutUsPage() {
                 value={formData.paragraph1}
                 onChange={(e) => setFormData({ ...formData, paragraph1: e.target.value })}
                 placeholder="First paragraph about the company..."
-                required
               />
             </div>
 
@@ -378,7 +377,6 @@ export default function AboutUsPage() {
                 value={formData.paragraph2}
                 onChange={(e) => setFormData({ ...formData, paragraph2: e.target.value })}
                 placeholder="Second paragraph..."
-                required
               />
             </div>
 
@@ -389,7 +387,6 @@ export default function AboutUsPage() {
                 value={formData.paragraph3}
                 onChange={(e) => setFormData({ ...formData, paragraph3: e.target.value })}
                 placeholder="Third paragraph..."
-                required
               />
             </div>
 
@@ -401,7 +398,6 @@ export default function AboutUsPage() {
                 onChange={(e) => setFormData({ ...formData, paragraph4: e.target.value })}
                 className="min-h-[100px]"
                 placeholder="Fourth paragraph..."
-                required
               />
             </div>
 
@@ -412,7 +408,6 @@ export default function AboutUsPage() {
                 value={formData.paragraph5}
                 onChange={(e) => setFormData({ ...formData, paragraph5: e.target.value })}
                 placeholder="Fifth paragraph..."
-                required
               />
             </div>
           </CardContent>
@@ -481,6 +476,14 @@ export default function AboutUsPage() {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Save Button */}
+        <div className="flex justify-end pt-4">
+          <Button type="submit" disabled={saving} className="flex items-center gap-2">
+            <Save className="h-4 w-4" />
+            {saving ? 'Saving...' : 'Save Changes'}
+          </Button>
         </div>
       </form>
 

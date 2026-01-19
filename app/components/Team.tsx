@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Encode_Sans_Expanded } from 'next/font/google';
+import Image from 'next/image';
 import Loading from './ui/loading';
 
 const encodeSansExpanded = Encode_Sans_Expanded({
@@ -102,18 +103,15 @@ export default function Team() {
           const data = await response.json();
           // Sort by displayOrder (ascending)
           const sortedData = data.sort((a: any, b: any) => a.displayOrder - b.displayOrder);
-          setMembers(sortedData);
+          // Filter out members without both image and name
+          const filteredData = sortedData.filter((member: TeamMember) => 
+            member.image && member.name && member.name.trim() !== ''
+          );
+          setMembers(filteredData);
         }
       } catch (error) {
         console.error('Error fetching team members:', error);
-        // Fallback to placeholder data
-        setMembers(Array.from({ length: 16 }).map((_, i) => ({
-          id: i + 1,
-          name: `Employee ${i + 1}`,
-          position: 'Team Member',
-          image: null,
-          displayOrder: i,
-        })));
+        setMembers([]);
       } finally {
         setLoading(false);
       }
@@ -130,6 +128,11 @@ export default function Team() {
     );
   }
 
+  // Filter members to only show those with both image and name
+  const validMembers = members.filter(member => 
+    member.image && member.name && member.name.trim() !== ''
+  );
+
   // Calculate row distribution (5-6-5 pattern) - only after data is loaded
   const rows: RowSpec[] = [{ count: 5 }, { count: 6 }, { count: 5 }];
   let cursor = 0;
@@ -138,9 +141,13 @@ export default function Team() {
     <section ref={sectionRef} className="relative bg-[#D7E1E4] py-16">
       {/* subtle watermark */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute right-[-120px] top-[-120px] h-[520px] w-[520px] rounded-full bg-black/5" />
-        <div className="absolute right-[-60px] top-[-40px] h-[520px] w-[520px] text-[380px] font-black leading-none text-black/5 select-none">
-          iS
+        <div className="absolute right-[-60px] top-[-40px] w-[380px] h-[380px] flex items-center justify-center z-0">
+          <img
+            src="/logos/iSgray.png"
+            alt="iS logo"
+            className="w-full h-full object-contain"
+            style={{ filter: 'brightness(0.3) contrast(1.2)' }}
+          />
         </div>
       </div>
 
@@ -154,45 +161,54 @@ export default function Team() {
           </div>
         </div>
 
-        {/* 5 / 6 / 5 rows (exact, no wrapping on desktop) */}
-        <div className="space-y-7">
-          {rows.map((row, rowIdx) => {
-            const start = cursor;
-            cursor += row.count;
-            const items = Array.from({ length: row.count }).map((_, i) => {
-              const memberIndex = start + i;
-              const member = members[memberIndex] || {
-                id: memberIndex,
-                name: `Employee ${memberIndex + 1}`,
-                position: 'Team Member',
-                image: null,
-                displayOrder: memberIndex,
-              };
-              return (
-                <EmployeeCard
-                  key={`${rowIdx}-${i}`}
-                  index={memberIndex}
-                  member={member}
-                />
-              );
-            });
+        {/* Only show rows if there are valid members */}
+        {validMembers.length === 0 ? (
+          <div className="text-center py-16">
+            <p className="text-gray-600 text-lg">No team members to display</p>
+          </div>
+        ) : (
+          /* 5 / 6 / 5 rows (exact, no wrapping on desktop) */
+          <div className="space-y-7">
+            {rows.map((row, rowIdx) => {
+              const start = cursor;
+              cursor += row.count;
+              const items = Array.from({ length: row.count })
+                .map((_, i) => {
+                  const memberIndex = start + i;
+                  return validMembers[memberIndex];
+                })
+                .filter(member => member !== undefined) // Remove undefined entries
+                .map((member, i) => {
+                  const originalIndex = start + i;
+                  return (
+                    <EmployeeCard
+                      key={`${rowIdx}-${originalIndex}-${member.id}`}
+                      index={originalIndex}
+                      member={member}
+                    />
+                  );
+                });
 
-            // Determine animation based on row index: 0 = slide-left, 1 = slide-right, 2 = slide-left
-            const animationClass = rowIdx === 1 ? 'slide-right-row' : 'slide-left-row';
-            
-            return (
-              <div
-                key={rowIdx}
-                className={`grid w-fit mx-auto gap-6 ${animationClass} ${
-                  isVisible ? 'animate' : 'opacity-0'
-                }`}
-                style={{ gridTemplateColumns: `repeat(${row.count}, minmax(0, 1fr))` }}
-              >
-                {items}
-              </div>
-            );
-          })}
-        </div>
+              // Determine animation based on row index: 0 = slide-left, 1 = slide-right, 2 = slide-left
+              const animationClass = rowIdx === 1 ? 'slide-right-row' : 'slide-left-row';
+              
+              // Only render row if it has items
+              if (items.length === 0) return null;
+              
+              return (
+                <div
+                  key={rowIdx}
+                  className={`grid w-fit mx-auto gap-6 ${animationClass} ${
+                    isVisible ? 'animate' : 'opacity-0'
+                  }`}
+                  style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
+                >
+                  {items}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );

@@ -67,23 +67,29 @@
 
 html {
   overflow-x: hidden;
+  overflow-y: auto;
   max-width: 100vw;
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   margin: 0;
   padding: 0;
 }
 
 body {
   overflow-x: hidden;
+  overflow-y: auto;
   max-width: 100vw;
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   margin: 0;
   padding: 0;
   background: linear-gradient(to bottom right, #0D1E66, #003C9D, #001A4F);
   color: var(--foreground);
   position: relative;
+}
+
+/* Only apply overscroll-behavior to admin dashboard */
+body.admin-dashboard-active {
   overscroll-behavior-y: none;
 }
 
@@ -105,11 +111,28 @@ body.admin-dashboard-active {
 }
 
 /* Prevent horizontal overflow in admin dashboard */
-#__next,
-[data-nextjs-scroll-focus-boundary] {
+[data-admin-dashboard] #__next,
+[data-admin-dashboard] [data-nextjs-scroll-focus-boundary] {
   overflow-x: hidden;
   max-width: 100vw;
   width: 100%;
+}
+
+/* Allow vertical scrolling on landing page */
+#__next,
+[data-nextjs-scroll-focus-boundary] {
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-width: 100vw;
+  width: 100%;
+  min-height: 100%;
+  position: relative;
+}
+
+/* Ensure landing page content is scrollable */
+body:not(.admin-dashboard-active) {
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Admin dashboard pages should have white background */

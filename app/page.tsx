@@ -25,7 +25,7 @@ import { ToastProvider } from './components/ui/toast';
 export default function Home() {
   return (
     <ToastProvider>
-      <div className="relative text-white overflow-x-hidden max-w-full overscroll-none">
+      <div className="relative text-white overflow-x-hidden max-w-full">
       {/* Hero Section */}
       <Hero navLinks={navLinks} />
       
