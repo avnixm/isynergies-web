@@ -464,10 +464,10 @@ export default function Projects() {
               }}>
               {/* Top row starts ahead by ~half a card */}
               <div 
-                className="projects-marquee-track -ml-[480px] sm:-ml-[570px] md:-ml-[660px]"
+                className="projects-marquee-track -ml-[178px] sm:-ml-[208px] md:-ml-[238px]"
                 style={{
-                  animationPlayState: isVisible ? 'running' : 'paused',
-                  animationDelay: isVisible ? '6.5s' : '0s',
+                  animationPlayState: 'running',
+                  animationDelay: isVisible ? '6s' : '999s',
                 }}
               >
                 {marqueeRow1.map((p, idx) => (
@@ -528,8 +528,8 @@ export default function Projects() {
               <div 
                 className="projects-marquee-track"
                 style={{
-                  animationPlayState: isVisible ? 'running' : 'paused',
-                  animationDelay: isVisible ? '6.7s' : '0s',
+                  animationPlayState: 'running',
+                  animationDelay: isVisible ? '6s' : '999s',
                 }}
               >
                 {marqueeRow2.map((p, idx) => (
@@ -1019,5 +1019,3 @@ export default function Projects() {
     </section>
   );
 }
-
-
