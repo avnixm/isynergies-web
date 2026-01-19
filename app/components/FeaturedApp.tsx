@@ -87,8 +87,6 @@ export default function FeaturedApp() {
       const response = await fetch('/api/admin/featured-app');
       if (response.ok) {
         const data = await response.json();
-        console.log('Featured App content fetched:', data);
-        // Ensure we have the correct field names (handle both camelCase and snake_case)
         setContent({
           headerImage: data.headerImage || data.header_image || '',
           itemType: (data.itemType || data.item_type || 'app') as 'app' | 'website',
@@ -304,9 +302,9 @@ export default function FeaturedApp() {
       {/* Block 3: Footer / Downloads */}
       {content && (
         <div 
-          className="w-full py-4 px-4 md:px-8 lg:px-16"
+          className="w-full py-4 px-2 md:px-3 lg:px-4"
           style={{
-            background: `linear-gradient(${getGradientDirection(content.gradientDirection || 'to-r')}, ${content.gradientFrom || '#2563eb'}, ${content.gradientTo || '#1e40af'})`,
+            backgroundColor: content.gradientTo || '#1e40af',
           }}
         >
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">

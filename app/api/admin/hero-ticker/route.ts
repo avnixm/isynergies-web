@@ -8,7 +8,6 @@ import { asc } from 'drizzle-orm';
 export async function GET() {
   try {
     const items = await db.select().from(heroTickerItems).orderBy(asc(heroTickerItems.displayOrder));
-    console.log('Fetched hero ticker items:', items);
     return NextResponse.json(items);
   } catch (error: any) {
     console.error('Error fetching hero ticker items:', error);

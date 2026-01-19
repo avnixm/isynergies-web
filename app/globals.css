@@ -168,6 +168,10 @@ body:not(.admin-dashboard-active) {
   white-space: nowrap;
 }
 
+.services-ticker-bg {
+  background: linear-gradient(90deg, #680000 0%, #A00000 52%, #680000 100%);
+}
+
 /* Hide scrollbar for carousels */
 .scrollbar-hide {
   -ms-overflow-style: none;  /* IE and Edge */

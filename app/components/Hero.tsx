@@ -39,26 +39,17 @@ export default function Hero({ navLinks }: HeroProps) {
   useEffect(() => {
     const fetchHeroData = async () => {
       try {
-        // Fetch hero section
         const sectionRes = await fetch('/api/admin/hero-section');
         if (sectionRes.ok) {
           const sectionData = await sectionRes.json();
-          console.log('Hero section data:', sectionData);
           setHeroSection(sectionData);
         }
 
-        // Fetch hero ticker items
         const tickerRes = await fetch('/api/admin/hero-ticker');
         if (tickerRes.ok) {
           const tickerData = await tickerRes.json();
-          console.log('Hero ticker data:', tickerData);
           if (Array.isArray(tickerData) && tickerData.length > 0) {
             setHeroTickerItems(tickerData);
-          } else if (Array.isArray(tickerData) && tickerData.length === 0) {
-            console.log('No ticker items in database, using fallback');
-            // Keep empty array to use fallback
-          } else {
-            console.warn('Hero ticker data is not an array:', tickerData);
           }
         } else {
           const errorText = await tickerRes.text();

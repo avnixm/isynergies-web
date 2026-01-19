@@ -40,9 +40,6 @@ export async function POST(request: Request) {
           { status: 400 }
         );
       }
-      // Debug log for troubleshooting malformed requests (remove in prod)
-      console.log('Received body text:', text);
-      console.log('Body length:', text.length);
       body = JSON.parse(text);
     } catch (parseError) {
       console.error('JSON parse error:', parseError);

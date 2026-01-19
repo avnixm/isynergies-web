@@ -74,7 +74,6 @@ export default function BoardOfDirectors() {
       const response = await fetch('/api/admin/board-settings');
       if (response.ok) {
         const data = await response.json();
-        console.log('Board settings fetched:', data);
         setFooterText(data.footerText || '');
       }
     } catch (error) {

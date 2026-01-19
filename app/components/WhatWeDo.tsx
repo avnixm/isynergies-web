@@ -66,8 +66,6 @@ export default function WhatWeDo() {
       const response = await fetch('/api/admin/what-we-do');
       if (response.ok) {
         const data = await response.json();
-        console.log('What We Do content fetched:', data);
-        // Ensure we have the correct field names (handle both camelCase and snake_case)
         setContent({
           mainText: data.mainText || data.main_text || '',
           tagline: data.tagline || '',

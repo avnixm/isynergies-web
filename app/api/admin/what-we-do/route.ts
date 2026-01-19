@@ -9,8 +9,6 @@ export async function GET() {
   try {
     const [content] = await db.select().from(whatWeDo).limit(1);
     
-    console.log('Raw content from database:', content);
-    
     if (!content) {
       // Return default values if no content exists
       return NextResponse.json({
@@ -25,7 +23,6 @@ export async function GET() {
       tagline: (content as any).tagline || '',
     };
 
-    console.log('Mapped response:', response);
     return NextResponse.json(response);
   } catch (error) {
     console.error('Error fetching what we do content:', error);

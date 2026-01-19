@@ -69,18 +69,12 @@ export default function Shop() {
         const response = await fetch('/api/admin/shop');
         if (response.ok) {
           const data = await response.json();
-          console.log('Shop data fetched:', data);
           if (data.content) {
             setContent(data.content);
           }
           if (data.categories && Array.isArray(data.categories) && data.categories.length > 0) {
-            // Sort by displayOrder (ascending)
             const sortedCategories = data.categories.sort((a: any, b: any) => a.displayOrder - b.displayOrder);
-            console.log('Setting categories:', sortedCategories);
             setCategories(sortedCategories);
-          } else {
-            // Keep default categories if API doesn't return any
-            console.log('No categories from API, using defaults');
           }
         } else {
           console.error('Failed to fetch shop data:', response.status);

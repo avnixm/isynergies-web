@@ -129,12 +129,12 @@ export default function Contact() {
       <div className="absolute bottom-0 right-8 md:bottom-0 md:right-12 w-40 h-40 md:w-64 md:h-64 flex items-center justify-center opacity-10 pointer-events-none z-0">
         <Message className="w-full h-full text-gray-900" strokeWidth={1} />
       </div>
-      <div className="mx-auto max-w-5xl px-4 md:px-6 md:pb-20 md:pt-10 relative z-10" >
+      <div className="mx-auto max-w-6xl px-4 md:px-6 md:pb-20 md:pt-10 relative z-10" >
         <div className="grid grid-cols-1 lg:grid-cols-[0.42fr_0.58fr] gap-0 rounded-xl  overflow-hidden p-3 md:p-4">
           {/* Left Panel - Contact Information */}
-          <div className="relative bg-[#7A0D1A] text-white p-6 md:p-8 lg:p-10 overflow-hidden">
+          <div className="relative bg-[#A00000] text-white p-6 md:p-8 lg:p-10 overflow-hidden">
             {/* Semi-transparent S logo in background */}
-            <div className="absolute right-[-60px] top-[-40px] text-[400px] font-black leading-none text-[#8A1E2A]/30 select-none pointer-events-none">
+            <div className="absolute right-[-60px] top-[-40px] text-[400px] font-black leading-none text-[#A00000]/25 select-none pointer-events-none">
               S
             </div>
 
@@ -351,7 +351,7 @@ export default function Contact() {
                     disabled={submitting}
                     className="inline-flex items-center justify-center rounded-full px-8 py-3 text-sm font-semibold text-white font-sans transition-all duration-300 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      background: '#0D1E66',
                     }}
                   >
                     {submitting ? 'Sending...' : 'Send Message'}

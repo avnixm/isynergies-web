@@ -39,7 +39,6 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { iconImage, label, displayOrder } = body;
 
-    console.log('Creating feature with data:', { iconImage, label, displayOrder });
 
     if (!iconImage || (typeof iconImage === 'string' && iconImage.trim() === '')) {
       return NextResponse.json(

@@ -270,7 +270,12 @@ export default function Services() {
           </div>
 
           {/* Red Scrolling Ticker Bar */}
-          <div className="relative left-1/2 w-screen -translate-x-1/2 bg-[#5B0A0A] py-2.5 md:py-3">
+          <div
+            className="relative left-1/2 w-screen -translate-x-1/2 services-ticker-bg py-2.5 md:py-3"
+            style={{
+              background: 'linear-gradient(90deg, #680000 0%, #A00000 52%, #680000 100%)',
+            }}
+          >
             <div className="ticker-container ticker-fade">
               <div className="ticker-content">
                 {/* One loop */}

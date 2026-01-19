@@ -39,7 +39,6 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
       }
 
       const data = await response.json();
-      console.log('Upload response:', data);
       
       // Return the image ID (which is part of the URL path)
       const rawId = data.id ?? (data.url ? data.url.split('/').pop() : null);
@@ -50,7 +49,6 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
         throw new Error('No image ID returned from server');
       }
       
-      console.log('Setting image ID:', imageId);
       onChange(imageId);
     } catch (error) {
       console.error('Upload error:', error);

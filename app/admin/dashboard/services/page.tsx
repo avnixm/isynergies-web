@@ -773,7 +773,6 @@ export default function ServicesPage() {
             <ImageUpload
               value={serviceFormData.icon || ''}
               onChange={(url: string) => {
-                console.log('ImageUpload onChange called with:', url);
                 setServiceFormData({ ...serviceFormData, icon: url });
               }}
             />
