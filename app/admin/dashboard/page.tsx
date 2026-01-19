@@ -23,18 +23,20 @@ export default function AdminDashboard() {
       const token = localStorage.getItem('admin_token');
       const headers = { 'Authorization': `Bearer ${token}` };
 
-      const [boardRes, projectsRes] = await Promise.all([
+      const [boardRes, projectsRes, teamRes] = await Promise.all([
         fetch('/api/admin/board-members', { headers }),
         fetch('/api/admin/projects', { headers }),
+        fetch('/api/admin/team', { headers }),
       ]);
 
       const board = await boardRes.json();
       const projects = await projectsRes.json();
+      const team = await teamRes.json();
 
       setStats({
         boardMembers: Array.isArray(board) ? board.length : 0,
         projects: Array.isArray(projects) ? projects.length : 0,
-        teamMembers: 16,
+        teamMembers: Array.isArray(team) ? team.length : 0,
         services: 4,
       });
     } catch (error) {
