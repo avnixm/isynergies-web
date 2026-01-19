@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Message } from '@mynaui/icons-react';
 import { useToast } from './ui/toast';
 
 type SiteSettings = {
@@ -124,7 +125,11 @@ export default function Contact() {
 
   return (
     <section id="contact" className="relative bg-gray-100 py-4">
-      <div className="mx-auto max-w-5xl px-4 md:px-6">
+      {/* Message bubble icon in bottom right - half hidden under container */}
+      <div className="absolute bottom-0 right-8 md:bottom-0 md:right-12 w-40 h-40 md:w-64 md:h-64 flex items-center justify-center opacity-10 pointer-events-none z-0">
+        <Message className="w-full h-full text-gray-900" strokeWidth={1} />
+      </div>
+      <div className="mx-auto max-w-5xl px-4 md:px-6 md:pb-20 md:pt-10 relative z-10" >
         <div className="grid grid-cols-1 lg:grid-cols-[0.42fr_0.58fr] gap-0 rounded-xl  overflow-hidden p-3 md:p-4">
           {/* Left Panel - Contact Information */}
           <div className="relative bg-[#7A0D1A] text-white p-6 md:p-8 lg:p-10 overflow-hidden">

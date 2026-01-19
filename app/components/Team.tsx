@@ -168,46 +168,46 @@ export default function Team() {
           </div>
         ) : (
           /* 5 / 6 / 5 rows (exact, no wrapping on desktop) */
-          <div className="space-y-7">
-            {rows.map((row, rowIdx) => {
-              const start = cursor;
-              cursor += row.count;
+        <div className="space-y-7">
+          {rows.map((row, rowIdx) => {
+            const start = cursor;
+            cursor += row.count;
               const items = Array.from({ length: row.count })
                 .map((_, i) => {
-                  const memberIndex = start + i;
+              const memberIndex = start + i;
                   return validMembers[memberIndex];
                 })
                 .filter(member => member !== undefined) // Remove undefined entries
                 .map((member, i) => {
                   const originalIndex = start + i;
-                  return (
-                    <EmployeeCard
+              return (
+                <EmployeeCard
                       key={`${rowIdx}-${originalIndex}-${member.id}`}
                       index={originalIndex}
-                      member={member}
-                    />
-                  );
-                });
+                  member={member}
+                />
+              );
+            });
 
-              // Determine animation based on row index: 0 = slide-left, 1 = slide-right, 2 = slide-left
-              const animationClass = rowIdx === 1 ? 'slide-right-row' : 'slide-left-row';
+            // Determine animation based on row index: 0 = slide-left, 1 = slide-right, 2 = slide-left
+            const animationClass = rowIdx === 1 ? 'slide-right-row' : 'slide-left-row';
               
               // Only render row if it has items
               if (items.length === 0) return null;
-              
-              return (
-                <div
-                  key={rowIdx}
-                  className={`grid w-fit mx-auto gap-6 ${animationClass} ${
-                    isVisible ? 'animate' : 'opacity-0'
-                  }`}
+            
+            return (
+              <div
+                key={rowIdx}
+                className={`grid w-fit mx-auto gap-6 ${animationClass} ${
+                  isVisible ? 'animate' : 'opacity-0'
+                }`}
                   style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
-                >
-                  {items}
-                </div>
-              );
-            })}
-          </div>
+              >
+                {items}
+              </div>
+            );
+          })}
+        </div>
         )}
       </div>
     </section>

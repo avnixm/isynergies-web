@@ -166,6 +166,23 @@ export default function AboutUs() {
           <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-stretch min-h-[600px]">
             {/* Left Side - Text Content */}
             <div className="md:w-1/2 md:pr-8 relative z-10 font-sans flex flex-col justify-center py-8 md:py-0">
+              {/* Information icon in top right */}
+              <div className="absolute top-0 right-0 w-32 h-32 md:w-40 md:h-40 flex items-center justify-center opacity-10 pointer-events-none">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-full h-full text-gray-900"
+                >
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="16" x2="12" y2="12"/>
+                  <line x1="12" y1="8" x2="12.01" y2="8"/>
+                </svg>
+              </div>
               <div className="space-y-4">
                 <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8">{content.title}</h2>
                 
