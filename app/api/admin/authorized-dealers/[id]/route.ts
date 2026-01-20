@@ -9,8 +9,10 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const authError = await requireAuth(request);
-    if (authError) return authError;
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
 
     const { id: idParam } = await params;
     const id = parseInt(idParam);
@@ -43,8 +45,10 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const authError = await requireAuth(request);
-    if (authError) return authError;
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
 
     const { id: idParam } = await params;
     const id = parseInt(idParam);
