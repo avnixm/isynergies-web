@@ -1,5 +1,6 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import 'dotenv/config';
 import mysql from 'mysql2/promise';
 import { drizzle } from 'drizzle-orm/mysql2';
 import { adminUsers } from '../app/db/schema';
@@ -8,16 +9,17 @@ import * as schema from '../app/db/schema';
 
 const execAsync = promisify(exec);
 
-// Hardcoded Aiven for MySQL credentials (for production schema push only)
+// Prefer environment variables; fall back to known production defaults
 const PROD_DB_CONFIG = {
-  host: 'isyn-cieloes.l.aivencloud.com',
-  port: 26771,
-  user: 'avnadmin',
-  password: 'AVNS_nTTBVH-I7yN49JekEuK',
-  database: 'defaultdb',
-  ssl: {
-    rejectUnauthorized: false,
-  },
+  host: process.env.DB_HOST ?? 'isyn-cieloes.l.aivencloud.com',
+  port: Number(process.env.DB_PORT ?? 26771),
+  user: process.env.DB_USER ?? 'avnadmin',
+  password: process.env.DB_PASSWORD ?? 'AVNS_nTTBVH-I7yN49JekEuK',
+  database: process.env.DB_NAME ?? 'defaultdb',
+  ssl:
+    (process.env.DB_SSL ?? 'true') === 'true'
+      ? { rejectUnauthorized: false }
+      : undefined,
 };
 
 async function pushSchema() {
@@ -29,7 +31,7 @@ async function pushSchema() {
     process.env.DB_USER = PROD_DB_CONFIG.user;
     process.env.DB_PASSWORD = PROD_DB_CONFIG.password;
     process.env.DB_NAME = PROD_DB_CONFIG.database;
-    process.env.DB_SSL = 'true';
+    process.env.DB_SSL = PROD_DB_CONFIG.ssl ? 'true' : 'false';
     
     const { stdout, stderr } = await execAsync('npx drizzle-kit push', {
       cwd: process.cwd(),

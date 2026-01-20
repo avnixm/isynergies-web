@@ -360,7 +360,7 @@ export default function ShopPage() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form id="shop-form" onSubmit={handleSubmit} className="space-y-6">
         {/* Shop Content */}
         <Card className="rounded-xl border border-border bg-white shadow-sm">
           <CardHeader>
@@ -613,6 +613,23 @@ export default function ShopPage() {
           </CardContent>
         </Card>
       </form>
+
+      <div className="flex justify-end">
+        <Button
+          type="submit"
+          form="shop-form"
+          onClick={(e) => {
+            e.preventDefault();
+            const form = document.getElementById('shop-form') as HTMLFormElement | null;
+            form?.requestSubmit();
+          }}
+          disabled={saving}
+          className="flex items-center gap-2"
+        >
+          <Save className="h-4 w-4" />
+          {saving ? 'Saving...' : 'Save changes'}
+        </Button>
+      </div>
 
       {/* Add/Edit Dealer Dialog */}
       <Dialog
