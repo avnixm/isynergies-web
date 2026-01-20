@@ -302,14 +302,14 @@ export default function FeaturedApp() {
       {/* Block 3: Footer / Downloads */}
       {content && (
         <div 
-          className="w-full py-4 px-2 md:px-3 lg:px-4"
+          className="w-full py-4 relative"
           style={{
             backgroundColor: content.gradientTo || '#1e40af',
           }}
         >
-          <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6 px-4 md:px-6 lg:px-8">
             {/* Left Side: App QR Codes or Website Hyperlink */}
-            <div className="flex flex-row gap-4 items-center">
+            <div className="flex flex-row gap-2 md:gap-3 items-center -ml-2 md:-ml-4 lg:-ml-6">
               {content.itemType === 'app' ? (
                 /* App Mode: Download Badges */
                 <>
@@ -370,7 +370,7 @@ export default function FeaturedApp() {
 
             {/* Right Side: Logo (always in same position) */}
             {content.logoImage && (
-              <div className="flex-shrink-0">
+              <div className="flex-shrink-0 -mr-2 md:-mr-4 lg:-mr-6">
                 <img
                   src={getImageUrl(content.logoImage)}
                   alt="Logo"

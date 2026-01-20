@@ -85,7 +85,7 @@ export default function BoardOfDirectors() {
     <section
       id="board-of-directors"
       ref={sectionRef}
-      className="relative bg-[#D7E1E4]"
+      className="relative bg-[#D7E1E4] overflow-hidden"
     >
       {/* Red gradient bar header (moved from About Us so sections never overlap) */}
       <div
@@ -102,7 +102,7 @@ export default function BoardOfDirectors() {
       </div>
 
       {/* Muted background shape instead of hardcoded logo */}
-      <div className="absolute right-0 md:right-0 top-20 md:top-32 -translate-y-1/2 z-0 pointer-events-none">
+      <div className="absolute right-0 md:right-0 top-[100px] md:top-[120px] z-0 pointer-events-none">
         <div
           className="w-[400px] h-[800px] md:w-[600px] md:h-[1000px] bg-gradient-to-b from-gray-300/30 via-gray-200/20 to-transparent rounded-l-full"
         />

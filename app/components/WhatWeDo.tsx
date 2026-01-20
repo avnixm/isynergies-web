@@ -129,11 +129,11 @@ export default function WhatWeDo() {
         }`}
         style={{
           background:
-            'linear-gradient(to right, #1e3a8a 0%, rgba(30, 58, 138, 0.95) 60%, rgba(30, 58, 138, 0.4) 80%, transparent 100%)',
+            'linear-gradient(90deg, #030068 0%, #050094 22%, rgba(0, 10, 104, 0) 100%)',
           animationDelay: isVisible ? '0.25s' : '0s',
         }}
       >
-        <h2 className="text-2xl md:text-3xl font-bold text-white">What we do</h2>
+        <h2 className="text-2xl md:text-3xl font-semibold text-white">What we do</h2>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16 relative z-10 pb-16 pt-8">

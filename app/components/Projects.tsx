@@ -318,7 +318,7 @@ export default function Projects() {
     <section id="projects" ref={sectionRef} className="relative bg-[#D7E1E4] py-16">
       <div className="container mx-auto max-w-7xl px-4 md:px-8 lg:px-16">
         <div className="text-center font-sans">
-          <h2 className={`text-4xl md:text-5xl font-bold text-gray-900 slide-down-slow ${
+          <h2 className={`text-4xl md:text-5xl font-semibold text-gray-900 slide-down-slow ${
             isVisible ? 'animate' : 'opacity-0'
           }`}>
             {headerTitle}
@@ -335,10 +335,10 @@ export default function Projects() {
               type="button"
               onClick={() => setView('all')}
               className={[
-                'h-10 w-10 rounded-full border backdrop-blur-sm transition-colors',
+                'h-10 w-10 rounded-full border backdrop-blur-sm transition-all duration-200',
                 view === 'all'
                   ? 'border-white/40 bg-gradient-to-b from-[#2C68D8] to-[#0D1E66] text-white shadow-[0_10px_20px_rgba(0,0,0,0.18)]'
-                  : 'border-black/10 bg-white/50 text-gray-700 hover:bg-white/70',
+                  : 'border-black/10 bg-white/50 text-gray-700 hover:bg-[#0D1E66] hover:text-white hover:scale-110 hover:shadow-md',
               ].join(' ')}
               aria-label="All"
             >
@@ -363,10 +363,10 @@ export default function Projects() {
               type="button"
               onClick={() => setView('desktop')}
               className={[
-                'h-10 w-10 rounded-full border backdrop-blur-sm transition-colors',
+                'h-10 w-10 rounded-full border backdrop-blur-sm transition-all duration-200',
                 view === 'desktop'
                   ? 'border-white/40 bg-gradient-to-b from-[#2C68D8] to-[#0D1E66] text-white shadow-[0_10px_20px_rgba(0,0,0,0.18)]'
-                  : 'border-black/10 bg-white/50 text-gray-700 hover:bg-white/70',
+                  : 'border-black/10 bg-white/50 text-gray-700 hover:bg-[#0D1E66] hover:text-white hover:scale-110 hover:shadow-md',
               ].join(' ')}
               aria-label="Desktop"
             >
@@ -390,10 +390,10 @@ export default function Projects() {
               type="button"
               onClick={() => setView('mobile')}
               className={[
-                'h-10 w-10 rounded-full border backdrop-blur-sm transition-colors',
+                'h-10 w-10 rounded-full border backdrop-blur-sm transition-all duration-200',
                 view === 'mobile'
                   ? 'border-white/40 bg-gradient-to-b from-[#2C68D8] to-[#0D1E66] text-white shadow-[0_10px_20px_rgba(0,0,0,0.18)]'
-                  : 'border-black/10 bg-white/50 text-gray-700 hover:bg-white/70',
+                  : 'border-black/10 bg-white/50 text-gray-700 hover:bg-[#0D1E66] hover:text-white hover:scale-110 hover:shadow-md',
               ].join(' ')}
               aria-label="Mobile"
             >
@@ -416,10 +416,10 @@ export default function Projects() {
               type="button"
               onClick={() => setView('tools')}
               className={[
-                'h-10 w-10 rounded-full border backdrop-blur-sm transition-colors',
+                'h-10 w-10 rounded-full border backdrop-blur-sm transition-all duration-200',
                 view === 'tools'
                   ? 'border-white/40 bg-gradient-to-b from-[#2C68D8] to-[#0D1E66] text-white shadow-[0_10px_20px_rgba(0,0,0,0.18)]'
-                  : 'border-black/10 bg-white/50 text-gray-700 hover:bg-white/70',
+                  : 'border-black/10 bg-white/50 text-gray-700 hover:bg-[#0D1E66] hover:text-white hover:scale-110 hover:shadow-md',
               ].join(' ')}
               aria-label="Tools"
             >
@@ -475,7 +475,7 @@ export default function Projects() {
                     key={`r1-${p.id}-${idx}`}
                     type="button"
                     onClick={() => setSelected(p)}
-                    className="group relative aspect-[16/9] w-[320px] sm:w-[380px] md:w-[440px] overflow-hidden rounded-2xl text-left shadow-[0_12px_26px_rgba(0,0,0,0.14)] transition-transform duration-300 ease-in-out hover:scale-[1.01] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0D1E66]/60"
+                     className="group relative aspect-[16/9] w-[320px] sm:w-[380px] md:w-[440px] overflow-hidden rounded-2xl text-left transition-transform duration-300 ease-in-out hover:scale-[1.01] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0D1E66]/60"
                     aria-haspopup="dialog"
                     aria-controls="project-modal"
                   >
@@ -489,7 +489,7 @@ export default function Projects() {
                           alt={p.title}
                           className="absolute inset-0 w-full h-full object-cover"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       </>
                     ) : (
                       <>
@@ -537,7 +537,7 @@ export default function Projects() {
                     key={`r2-${p.id}-${idx}`}
                     type="button"
                     onClick={() => setSelected(p)}
-                    className="group relative aspect-[16/9] w-[320px] sm:w-[380px] md:w-[440px] overflow-hidden rounded-2xl text-left shadow-[0_12px_26px_rgba(0,0,0,0.14)] transition-transform duration-300 ease-in-out hover:scale-[1.01] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0D1E66]/60"
+                     className="group relative aspect-[16/9] w-[320px] sm:w-[380px] md:w-[440px] overflow-hidden rounded-2xl text-left transition-transform duration-300 ease-in-out hover:scale-[1.01] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0D1E66]/60"
                     aria-haspopup="dialog"
                     aria-controls="project-modal"
                   >
@@ -551,7 +551,7 @@ export default function Projects() {
                           alt={p.title}
                           className="absolute inset-0 w-full h-full object-cover"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       </>
                     ) : (
                       <>
@@ -588,7 +588,7 @@ export default function Projects() {
                 key={p.id}
                 type="button"
                 onClick={() => setSelected(p)}
-                className="group relative h-[230px] md:h-[250px] w-full overflow-hidden rounded-2xl text-left shadow-[0_12px_26px_rgba(0,0,0,0.14)] transition-transform duration-300 ease-in-out hover:scale-[1.01] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0D1E66]/60"
+                 className="group relative h-[230px] md:h-[250px] w-full overflow-hidden rounded-2xl text-left transition-transform duration-300 ease-in-out hover:scale-[1.01] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0D1E66]/60"
                 aria-haspopup="dialog"
                 aria-controls="project-modal"
               >
@@ -602,7 +602,7 @@ export default function Projects() {
                       alt={p.title}
                       className="absolute inset-0 w-full h-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </>
                 ) : (
                   <>
