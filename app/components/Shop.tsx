@@ -21,6 +21,13 @@ type ShopContent = {
   authorizedDealerImage: string;
 };
 
+type AuthorizedDealer = {
+  id: number;
+  name: string;
+  image: string;
+  displayOrder: number;
+};
+
 export default function Shop() {
   const [content, setContent] = useState<ShopContent>({
     title: 'Shop',
@@ -34,6 +41,7 @@ export default function Shop() {
     { id: 3, name: 'Printers', text: 'PRINTERS', image: '', displayOrder: 2 },
     { id: 4, name: 'Hardware', text: 'HARDWARE', image: '', displayOrder: 3 },
   ]);
+  const [authorizedDealers, setAuthorizedDealers] = useState<AuthorizedDealer[]>([]);
   const [loading, setLoading] = useState(true);
   const sectionRef = useRef<HTMLElement | null>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -66,9 +74,13 @@ export default function Shop() {
   useEffect(() => {
     const fetchShopData = async () => {
       try {
-        const response = await fetch('/api/admin/shop');
-        if (response.ok) {
-          const data = await response.json();
+        const [shopResponse, dealersResponse] = await Promise.all([
+          fetch('/api/admin/shop'),
+          fetch('/api/admin/authorized-dealers'),
+        ]);
+
+        if (shopResponse.ok) {
+          const data = await shopResponse.json();
           if (data.content) {
             setContent(data.content);
           }
@@ -77,7 +89,20 @@ export default function Shop() {
             setCategories(sortedCategories);
           }
         } else {
-          console.error('Failed to fetch shop data:', response.status);
+          console.error('Failed to fetch shop data:', shopResponse.status);
+        }
+
+        if (dealersResponse.ok) {
+          const dealers = await dealersResponse.json();
+          if (Array.isArray(dealers)) {
+            setAuthorizedDealers(dealers);
+          } else {
+            console.error('Invalid dealers response format:', dealers);
+          }
+        } else {
+          const errorData = await dealersResponse.json().catch(() => ({}));
+          console.error('Failed to fetch authorized dealers:', dealersResponse.status, errorData);
+          // If table doesn't exist, dealers will be empty array, which will show fallback
         }
       } catch (error) {
         console.error('Error fetching shop data:', error);
@@ -94,7 +119,10 @@ export default function Shop() {
       <section
         id="shop"
         ref={sectionRef}
-        className="relative bg-gradient-to-b from-[#0A1D5B] via-[#0D1E66] to-[#05113A] text-white overflow-hidden min-h-[700px] flex items-center justify-center"
+        className="relative text-white overflow-hidden min-h-[700px] flex items-center justify-center"
+        style={{
+          background: 'linear-gradient(180deg, #071B6E 0%, #004AB9 100%)'
+        }}
       >
         <Loading message="Loading shop content..." />
       </section>
@@ -105,9 +133,12 @@ export default function Shop() {
     <section
       id="shop"
       ref={sectionRef}
-      className={`relative bg-gradient-to-b from-[#0A1D5B] via-[#0D1E66] to-[#05113A] text-white overflow-hidden ${
+      className={`relative text-white overflow-hidden ${
         isVisible ? 'animate-fadeIn-slow' : 'opacity-0'
       }`}
+      style={{
+        background: 'linear-gradient(180deg, #071B6E 0%, #004AB9 100%)'
+      }}
     >
       {/* subtle watermark */}
       <div className="pointer-events-none absolute inset-0 opacity-[0.18] z-0">
@@ -119,10 +150,10 @@ export default function Shop() {
       {/* Fixed rigid layout: 48% left, 52% right */}
       <div className="relative w-full flex items-stretch z-10" style={{ minHeight: '700px', height: '700px' }}>
         {/* Left Panel (~48%) */}
-        <div className="relative w-[48%] bg-gradient-to-b from-[#122C7E] via-[#0D1E66] to-[#081239] flex flex-col" style={{ height: '100%' }}>
+        <div className="relative w-[48%] flex flex-col" style={{ height: '100%' }}>
           <div className="p-8 md:p-10 flex flex-col h-full justify-between">
             {/* Top Section: Title and Description */}
-            <div className="flex flex-col">
+            <div className="flex flex-col relative">
               {/* Header with title and button */}
               <div className="flex items-start justify-between gap-6 mb-6">
                 <h2 className={`font-sans text-4xl md:text-5xl font-bold tracking-tight text-white slide-right-content ${
@@ -142,7 +173,7 @@ export default function Shop() {
               </div>
 
               {/* Paragraph description */}
-              <p className={`max-w-xl text-xs md:text-sm leading-relaxed text-white/85 font-sans slide-right-content ${
+              <p className={`max-w-xl text-xs md:text-sm leading-relaxed text-white/85 font-sans slide-right-content relative z-10 ${
                 isVisible ? 'animate' : 'opacity-0'
               }`}
               style={{
@@ -150,11 +181,22 @@ export default function Shop() {
               }}>
                 {content.description}
               </p>
+              {/* iSgray logo near description */}
+              <img
+                src="/logos/iSgray.png"
+                alt="iSgray"
+                className="absolute top-20 right-0 opacity-[0.15] pointer-events-none z-0"
+                style={{
+                  width: '250px',
+                  height: '250px',
+                  filter: 'brightness(2) contrast(1.2) invert(0.1)',
+                }}
+              />
             </div>
 
             {/* Middle Section: Sales hexagon - centered with even spacing */}
-            <div className="flex items-center justify-center flex-1 py-8">
-              <div className="relative h-[180px] w-[180px]">
+            <div className="flex items-center justify-center flex-1 py-8 relative">
+              <div className="relative h-[220px] w-[220px]">
                 {content.salesIcon ? (
                   <Image
                     src={typeof content.salesIcon === 'string' && (content.salesIcon.startsWith('/api/images/') || content.salesIcon.startsWith('http') || content.salesIcon.startsWith('/'))
@@ -172,24 +214,108 @@ export default function Shop() {
                   </div>
                 )}
               </div>
+              {/* iSgray logo under sales icon */}
+              <img
+                src="/logos/iSgray.png"
+                alt="iSgray"
+                className="absolute pointer-events-none"
+                style={{
+                  width: '500px',
+                  height: '500px',
+                  filter: 'brightness(2) contrast(1.2) invert(0.1)',
+                  bottom: '10px',
+                  left: '460px',
+                  transform: 'translateX(-50%)'
+                }}
+              />
             </div>
 
-            {/* Bottom Section: Authorized Dealer strip - with even spacing */}
-            <div className="w-full pt-2 pb-4 px-6">
-              <div className="relative h-[140px] w-full">
-                {content.authorizedDealerImage ? (
-                  <Image
-                    src={typeof content.authorizedDealerImage === 'string' && (content.authorizedDealerImage.startsWith('/api/images/') || content.authorizedDealerImage.startsWith('http') || content.authorizedDealerImage.startsWith('/'))
-                      ? content.authorizedDealerImage 
-                      : `/api/images/${content.authorizedDealerImage}`}
-                    alt="Authorized dealer logos"
-                    fill
-                    className="object-contain"
-                    sizes="(min-width: 1024px) 520px, 100vw"
-                    priority={false}
-                  />
+            {/* Bottom Section: Authorized Dealer strip - matching reference */}
+            <div className="w-full pt-0 pb-4 -mt-4">
+              <div className="relative w-full">
+                {authorizedDealers.length > 0 ? (
+                  <div 
+                    className="overflow-hidden"
+                    style={{
+                      background: 'linear-gradient(270deg, rgba(65, 65, 65, 0) 0%, #7A0000 33.17%, #930000 55.29%, #7A0000 75%, rgba(65, 65, 65, 0) 100%)',
+                      paddingTop: '6px',
+                      paddingRight: '54px',
+                      paddingBottom: '6px',
+                      paddingLeft: '54px',
+                      height: '165px',
+                      width: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    {/* Logos Grid */}
+                    <div className="grid grid-cols-4 items-center justify-items-center" style={{ gap: '4px', flex: '1', overflow: 'hidden' }}>
+                      {authorizedDealers.map((dealer) => {
+                        const imageUrl = dealer.image.startsWith('/api/images/') || dealer.image.startsWith('http') || dealer.image.startsWith('/')
+                          ? dealer.image
+                          : `/api/images/${dealer.image}`;
+                        // Use object-contain for Huawei logo, object-cover for others
+                        const isHuawei = dealer.name.toLowerCase().includes('huawei');
+                        const objectFitClass = isHuawei ? 'object-contain' : 'object-cover';
+                        return (
+                          <div
+                            key={dealer.id}
+                            className="relative flex items-center justify-center"
+                            style={{ 
+                              height: '100%', 
+                              width: '100%',
+                              maxHeight: '120px',
+                              overflow: 'hidden'
+                            }}
+                          >
+                            <Image
+                              src={imageUrl}
+                              alt={dealer.name}
+                              fill
+                              className={`${objectFitClass} filter brightness-0 invert`}
+                              sizes="(max-width: 768px) 25vw, 20vw"
+                              unoptimized
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Label */}
+                    <div className="text-center" style={{ marginTop: '12px', marginBottom: '6px', flexShrink: 0 }}>
+                      <p 
+                        className="text-white uppercase"
+                        style={{
+                          fontFamily: 'Encode Sans Expanded, sans-serif',
+                          fontWeight: 600,
+                          fontSize: '10px',
+                          lineHeight: '100%',
+                          letterSpacing: '0%',
+                          paddingTop: '4px',
+                          paddingBottom: '4px'
+                        }}
+                      >
+                        AUTHORIZED DEALER
+                      </p>
+                    </div>
+                  </div>
+                ) : content.authorizedDealerImage ? (
+                  <div className="relative h-[140px] w-full">
+                    <Image
+                      src={typeof content.authorizedDealerImage === 'string' && (content.authorizedDealerImage.startsWith('/api/images/') || content.authorizedDealerImage.startsWith('http') || content.authorizedDealerImage.startsWith('/'))
+                        ? content.authorizedDealerImage 
+                        : `/api/images/${content.authorizedDealerImage}`}
+                      alt="Authorized dealer logos"
+                      fill
+                      className="object-contain"
+                      sizes="(min-width: 1024px) 520px, 100vw"
+                      priority={false}
+                    />
+                  </div>
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-300/20 rounded-lg">
+                  <div className="w-full h-[140px] flex items-center justify-center bg-gray-300/20 rounded-lg">
                     <span className="text-white/40 text-sm font-semibold">Authorized Dealer Logos</span>
                   </div>
                 )}

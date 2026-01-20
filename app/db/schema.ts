@@ -150,6 +150,16 @@ export const shopContent = mysqlTable('shop_content', {
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
 });
 
+// Authorized Dealers (Brand Logos)
+export const authorizedDealers = mysqlTable('authorized_dealers', {
+  id: int('id').primaryKey().autoincrement(),
+  name: varchar('name', { length: 255 }).notNull(),
+  image: varchar('image', { length: 255 }).notNull(), // Image ID from images table
+  displayOrder: int('display_order').notNull().default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
+});
+
 // Hero Section (Main logos and content)
 export const heroSection = mysqlTable('hero_section', {
   id: int('id').primaryKey().autoincrement(),
