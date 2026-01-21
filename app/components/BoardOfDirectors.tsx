@@ -122,7 +122,7 @@ export default function BoardOfDirectors() {
           />
 
           {/* iSgray logo between 4th and 5th board member at the bottom */}
-          <div className="absolute top-[-200px] md:top-[-240px] left-[75%] md:left-[80%] -translate-x-1/2 w-[500px] h-[500px] md:w-[600px] md:h-[600px] flex items-center justify-center z-0 pointer-events-none">
+          <div className="absolute bottom-20 md:bottom-24 left-[75%] md:left-[80%] -translate-x-1/2 translate-y-1/2 w-[500px] h-[500px] md:w-[600px] md:h-[600px] flex items-center justify-center z-0 pointer-events-none">
             <img
               src="/logos/iSgray.png"
               alt="iS logo"

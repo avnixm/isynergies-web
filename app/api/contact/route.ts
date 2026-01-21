@@ -49,7 +49,16 @@ export async function POST(request: Request) {
     const forwardTo = settings?.contactForwardEmail || settings?.companyEmail || process.env.EMAIL_USER;
     const senderUser = process.env.EMAIL_USER || settings?.companyEmail;
     const senderPass = process.env.EMAIL_APP_PASSWORD || process.env.APP_PASSWORD;
-    const senderFrom = process.env.EMAIL_FROM || senderUser;
+    const senderFrom = (() => {
+      const fromEnv = process.env.EMAIL_FROM;
+      // Ensure "from" always has a valid email envelope; fall back to senderUser
+      if (fromEnv) {
+        return fromEnv.includes('@')
+          ? (fromEnv.includes('<') ? fromEnv : `${fromEnv} <${senderUser}>`)
+          : `${fromEnv} <${senderUser}>`;
+      }
+      return `iSynergies Contact <${senderUser}>`;
+    })();
     const baseUrl = (() => {
       const originHdr = request.headers.get('origin');
       if (originHdr) return originHdr;
@@ -60,15 +69,12 @@ export async function POST(request: Request) {
       return '';
     })();
 
-    const defaultLogoUrl = 'https://i.ibb.co/cccGBf61/isyn-logo.png';
     const logoUrl = (() => {
-      const val = settings?.logoImage;
-      if (val) {
-        if (/^https?:\/\//.test(val)) return val;
-        if (val.startsWith('/')) return baseUrl ? `${baseUrl}${val}` : val;
-        return baseUrl ? `${baseUrl}/api/images/${val}` : `/api/images/${val}`;
-      }
-      return defaultLogoUrl;
+      if (!settings?.logoImage) return null;
+      const val = settings.logoImage;
+      if (/^https?:\/\//.test(val)) return val;
+      if (val.startsWith('/')) return baseUrl ? `${baseUrl}${val}` : val;
+      return baseUrl ? `${baseUrl}/api/images/${val}` : `/api/images/${val}`;
     })();
 
     if (!forwardTo || !senderUser || !senderPass) {
@@ -108,30 +114,6 @@ export async function POST(request: Request) {
       const muted = '#6B7280';
       const cardBorder = '#E5E7EB';
 
-      // Try to embed the logo inline (CID). If that fails, fall back to using the remote URL.
-      const attachments: Array<any> = [];
-      let imgSrc = logoUrl ? logoUrl : null;
-
-      if (logoUrl && /^https?:\/\//.test(logoUrl)) {
-        try {
-          const resp = await fetch(logoUrl);
-          if (resp.ok) {
-            const arrayBuffer = await resp.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
-            attachments.push({
-              filename: 'isyn-logo.png',
-              content: buffer,
-              cid: 'isyn-logo',
-            });
-            imgSrc = 'cid:isyn-logo';
-          } else {
-            console.warn('Logo fetch returned non-OK status:', resp.status);
-          }
-        } catch (fetchErr) {
-          console.warn('Failed to fetch logo for embedding, will use remote URL instead.', fetchErr);
-        }
-      }
-
       const html = `
 <!doctype html>
 <html>
@@ -155,9 +137,9 @@ export async function POST(request: Request) {
                       <div style="margin-top:6px;font-size:13px;opacity:.9;">${safe(brand)}</div>
                     </td>
                     ${
-                      imgSrc
+                      logoUrl
                         ? `<td align="right" style="vertical-align:middle;">
-                            <img src="${safe(imgSrc)}" alt="${safe(brand)} logo" style="max-height:46px; max-width:160px; display:block; border-radius:6px; background: rgba(255,255,255,0.08); padding:6px 8px;" />
+                            <img src="${safe(logoUrl)}" alt="${safe(brand)} logo" style="max-height:46px; max-width:160px; display:block; border-radius:6px; background: rgba(255,255,255,0.08); padding:6px 8px;" />
                           </td>`
                         : ''
                     }
@@ -247,9 +229,9 @@ export async function POST(request: Request) {
         await transporter.sendMail({
           from: senderFrom,
           to: forwardTo,
+          replyTo: email,
           subject,
           html,
-          attachments: attachments.length ? attachments : undefined,
         });
       } catch (mailError) {
         console.error('Failed to send contact email:', mailError);
