@@ -4,21 +4,37 @@ import { drizzle } from 'drizzle-orm/mysql2';
 import { featuredApp } from '../app/db/schema';
 import { eq } from 'drizzle-orm';
 
-const DB_CONFIG = {
+const useProd = process.argv.includes('--prod');
+
+// Local/dev config from env
+const DEV_DB_CONFIG = {
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '3306'),
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'isynergies',
-  ssl: process.env.DB_SSL === 'true' ? {
-    rejectUnauthorized: false,
-  } : undefined,
+  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
 };
+
+// Production defaults (matches scripts/setup-database-prod.ts)
+const PROD_DB_CONFIG = {
+  host: process.env.DB_HOST ?? 'isyn-cieloes.l.aivencloud.com',
+  port: Number(process.env.DB_PORT ?? 26771),
+  user: process.env.DB_USER ?? 'avnadmin',
+  password: process.env.DB_PASSWORD ?? 'AVNS_nTTBVH-I7yN49JekEuK',
+  database: process.env.DB_NAME ?? 'defaultdb',
+  ssl:
+    (process.env.DB_SSL ?? 'true') === 'true'
+      ? { rejectUnauthorized: false }
+      : undefined,
+};
+
+const DB_CONFIG = useProd ? PROD_DB_CONFIG : DEV_DB_CONFIG;
 
 async function updateBannerHeight() {
   let connection;
   try {
-    console.log('🔗 Connecting to database...');
+    console.log(`🔗 Connecting to database (${useProd ? 'production' : 'development'})...`);
     connection = await mysql.createConnection(DB_CONFIG);
     const db = drizzle(connection, { schema: { featuredApp }, mode: 'default' });
 

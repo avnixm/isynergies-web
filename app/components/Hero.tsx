@@ -214,13 +214,24 @@ export default function Hero({ navLinks }: HeroProps) {
                     parts.push(text.substring(lastIndex, match.index));
                   }
                   // Add the link
+                  const href = match[2];
+                  const isHashLink = typeof href === 'string' && href.startsWith('#');
                   parts.push(
                     <a
                       key={key++}
-                      href={match[2]}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={href}
+                      {...(!isHashLink
+                        ? { target: '_blank', rel: 'noopener noreferrer' }
+                        : {})}
                       className="underline hover:text-gray-300 transition-colors"
+                      onClick={(e) => {
+                        if (!isHashLink) return;
+                        e.preventDefault();
+                        const el = document.querySelector(href);
+                        if (el) {
+                          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                      }}
                     >
                       {match[1]}
                     </a>
