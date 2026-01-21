@@ -101,7 +101,10 @@ export default function WhatWeDo() {
       <section
         id="what-we-do"
         ref={sectionRef}
-        className="relative bg-[#D7E1E4] py-16"
+        className="relative text-white py-16"
+        style={{
+          background: 'linear-gradient(180deg, #07186E 0%, #004AB9 50%, #07186E 100%)',
+        }}
       >
         <Loading message="Loading What We Do section" />
       </section>
@@ -120,69 +123,54 @@ export default function WhatWeDo() {
     <section
       id="what-we-do"
       ref={sectionRef}
-      className="relative bg-[#D7E1E4]"
+      className="relative text-white"
+      style={{
+        background: 'linear-gradient(180deg, #07186E 0%, #004AB9 50%, #07186E 100%)',
+      }}
     >
-      {/* Header Banner */}
-      <div
-        className={`w-full h-[60px] z-10 flex items-center px-4 md:px-8 lg:px-16 ${
-          isVisible ? 'animate-fadeIn-slow' : 'opacity-0'
-        }`}
-        style={{
-          background:
-            'linear-gradient(90deg, #030068 0%, #050094 22%, rgba(0, 10, 104, 0) 100%)',
-          animationDelay: isVisible ? '0.25s' : '0s',
-        }}
-      >
-        <h2 className="text-2xl md:text-3xl font-semibold text-white">What we do</h2>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16 relative z-10 pb-16 pt-8">
-        {/* Images Carousel */}
-        <div
-          className={`mb-8 slide-left-bouncy ${isVisible ? 'animate' : ''}`}
+      {/* Gray background carousel section - edge to edge */}
+      {images.length > 0 && (
+        <div 
+          className="bg-[#D7E1E4] pt-2 pb-2 projects-marquee relative left-1/2 w-screen -translate-x-1/2"
           style={{
-            animationDelay: isVisible ? '1.5s' : '0s',
+            ['--marquee-duration' as any]: '40s',
           }}
         >
-          <div className="what-we-do-carousel-scrollbar">
-            <div className="flex overflow-x-auto gap-4 pb-2">
-              {images.length > 0 ? (
-                images.map((img) => {
-                  const imageUrl = getImageUrl(img.image);
-                  return (
-                    <div
-                      key={img.id}
-                      className="flex-shrink-0 w-[280px] h-[200px] md:w-[350px] md:h-[250px] overflow-hidden bg-gray-200"
-                    >
-                      {imageUrl ? (
-                        <Image
-                          src={imageUrl}
-                          alt={img.alt}
-                          width={350}
-                          height={250}
-                          className="w-full h-full object-cover"
-                          unoptimized
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200" />
-                      )}
-                    </div>
-                  );
-                })
-              ) : (
-                // Placeholder if no images
-                Array.from({ length: 3 }).map((_, i) => (
+          <div className={`projects-marquee-row ${isVisible ? 'animate' : 'opacity-0'}`}
+            style={{
+              animationDelay: isVisible ? '0.3s' : '0s',
+            }}
+          >
+            <div className="projects-marquee-track" style={{ gap: '12px' }}>
+              {[...images, ...images].map((img, index) => {
+                const imageUrl = getImageUrl(img.image);
+                return (
                   <div
-                    key={i}
-                    className="flex-shrink-0 w-[280px] h-[200px] md:w-[350px] md:h-[250px] rounded-lg bg-gradient-to-br from-blue-100 to-blue-200"
-                  />
-                ))
-              )}
+                    key={img.id + '-' + index}
+                    className="flex-shrink-0 w-[320px] h-[200px] md:w-[420px] md:h-[250px] overflow-hidden rounded-lg"
+                  >
+                    {imageUrl ? (
+                      <Image
+                        src={imageUrl}
+                        alt={img.alt}
+                        width={350}
+                        height={250}
+                        className="w-full h-full object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200" />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
+      )}
 
-        {/* Bottom Text Section */}
+      {/* Bottom Text Section */}
+      <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16 relative z-10 py-5">
         {content && (
           <div
             className={`md:p-3 space-y-4 text-center ${
@@ -193,10 +181,10 @@ export default function WhatWeDo() {
             }}
           >
             <div
-              className="text-gray-900 text-xs leading-relaxed font-normal max-w-4xl mx-auto"
+              className="text-white/85 text-xs md:text-sm leading-relaxed font-light max-w-6xl mx-auto"
               dangerouslySetInnerHTML={{ __html: content.mainText }}
             />
-            <p className="text-gray-900 text-xs leading-relaxed font-normal mt-4" dangerouslySetInnerHTML={{ __html: content.tagline }} />
+            <p className="text-white/85 text-xs md:text-sm leading-relaxed font-light mt-4 max-w-6xl mx-auto" dangerouslySetInnerHTML={{ __html: content.tagline }} />
           </div>
         )}
       </div>

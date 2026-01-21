@@ -17,6 +17,7 @@ export const siteSettings = mysqlTable('site_settings', {
   companyAddress: text('company_address').notNull(),
   companyPhone: varchar('company_phone', { length: 50 }).notNull(),
   companyEmail: varchar('company_email', { length: 255 }).notNull(),
+  contactForwardEmail: varchar('contact_forward_email', { length: 255 }),
   companyFacebook: varchar('company_facebook', { length: 255 }),
   companyTwitter: varchar('company_twitter', { length: 255 }),
   companyInstagram: varchar('company_instagram', { length: 255 }),

@@ -15,6 +15,7 @@ export async function GET() {
         companyAddress: 'ASKI Building 105 Maharlika Highway, Cabanatuan City, Nueva Ecija',
         companyPhone: '+63 123 456 7890',
         companyEmail: 'info@isynergies.com',
+        contactForwardEmail: '',
         companyFacebook: 'https://facebook.com/isynergies',
         companyTwitter: '',
         companyInstagram: '',
@@ -25,7 +26,18 @@ export async function GET() {
     return NextResponse.json(settings);
   } catch (error) {
     console.error('Error fetching site settings:', error);
-    return NextResponse.json({ error: 'Failed to fetch site settings' }, { status: 500 });
+    // Fail soft: return defaults so UI still renders if DB is unreachable
+    return NextResponse.json({
+      companyName: 'iSynergies Inc.',
+      companyAddress: 'ASKI Building 105 Maharlika Highway, Cabanatuan City, Nueva Ecija',
+      companyPhone: '+63 123 456 7890',
+      companyEmail: 'info@isynergies.com',
+      contactForwardEmail: '',
+      companyFacebook: 'https://facebook.com/isynergies',
+      companyTwitter: '',
+      companyInstagram: '',
+      logoImage: null,
+    });
   }
 }
 
@@ -42,6 +54,7 @@ export async function PUT(request: Request) {
       companyAddress,
       companyPhone,
       companyEmail,
+      contactForwardEmail,
       companyFacebook,
       companyTwitter,
       companyInstagram,
@@ -53,6 +66,7 @@ export async function PUT(request: Request) {
       companyAddress,
       companyPhone,
       companyEmail,
+      contactForwardEmail,
       companyFacebook,
       companyTwitter,
       companyInstagram,

@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
+import nodemailer from 'nodemailer';
 import { db } from '@/app/db';
-import { contactMessages } from '@/app/db/schema';
+import { contactMessages, siteSettings } from '@/app/db/schema';
 
-// POST /api/contact - Submit a contact message
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
+// POST /api/contact - Submit a contact message and forward via email
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -39,6 +43,218 @@ export async function POST(request: Request) {
       projectTitle: projectTitle ?? null,
       status: 'new',
     });
+
+    // Fetch forwarding email preference; fall back to company email
+    const [settings] = await db.select().from(siteSettings).limit(1);
+    const forwardTo = settings?.contactForwardEmail || settings?.companyEmail || process.env.EMAIL_USER;
+    const senderUser = process.env.EMAIL_USER || settings?.companyEmail;
+    const senderPass = process.env.EMAIL_APP_PASSWORD || process.env.APP_PASSWORD;
+    const senderFrom = process.env.EMAIL_FROM || senderUser;
+    const baseUrl = (() => {
+      const originHdr = request.headers.get('origin');
+      if (originHdr) return originHdr;
+      const host = request.headers.get('host');
+      if (host) return `https://${host}`;
+      if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
+      if (process.env.BASE_URL) return process.env.BASE_URL;
+      return '';
+    })();
+
+    const defaultLogoUrl = 'https://i.ibb.co/cccGBf61/isyn-logo.png';
+    const logoUrl = (() => {
+      const val = settings?.logoImage;
+      if (val) {
+        if (/^https?:\/\//.test(val)) return val;
+        if (val.startsWith('/')) return baseUrl ? `${baseUrl}${val}` : val;
+        return baseUrl ? `${baseUrl}/api/images/${val}` : `/api/images/${val}`;
+      }
+      return defaultLogoUrl;
+    })();
+
+    if (!forwardTo || !senderUser || !senderPass) {
+      console.warn('Email configuration missing: ensure EMAIL_USER and EMAIL_APP_PASSWORD/APP_PASSWORD are set.');
+    } else {
+      const transporter = process.env.SMTP_HOST
+        ? nodemailer.createTransport({
+            host: process.env.SMTP_HOST,
+            port: Number(process.env.SMTP_PORT || 587),
+            secure: process.env.SMTP_SECURE === 'true',
+            auth: {
+              user: senderUser,
+              pass: senderPass,
+            },
+          })
+        : nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+              user: senderUser,
+              pass: senderPass,
+            },
+          });
+
+      const subject = `New contact message from ${name}`;
+      const safe = (s: string) =>
+        String(s)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+
+      const brand = settings?.companyName || 'iSynergies Inc.';
+      const primary = '#0D1E66';
+      const bg = '#F3F4F6';
+      const text = '#111827';
+      const muted = '#6B7280';
+      const cardBorder = '#E5E7EB';
+
+      // Try to embed the logo inline (CID). If that fails, fall back to using the remote URL.
+      const attachments: Array<any> = [];
+      let imgSrc = logoUrl ? logoUrl : null;
+
+      if (logoUrl && /^https?:\/\//.test(logoUrl)) {
+        try {
+          const resp = await fetch(logoUrl);
+          if (resp.ok) {
+            const arrayBuffer = await resp.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            attachments.push({
+              filename: 'isyn-logo.png',
+              content: buffer,
+              cid: 'isyn-logo',
+            });
+            imgSrc = 'cid:isyn-logo';
+          } else {
+            console.warn('Logo fetch returned non-OK status:', resp.status);
+          }
+        } catch (fetchErr) {
+          console.warn('Failed to fetch logo for embedding, will use remote URL instead.', fetchErr);
+        }
+      }
+
+      const html = `
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${safe(brand)} — Contact Form</title>
+  </head>
+  <body style="margin:0;padding:0;background:${bg};font-family:Arial,Helvetica,sans-serif;color:${text};">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${bg};padding:28px 12px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:600px;background:#ffffff;border:1px solid ${cardBorder};border-radius:14px;overflow:hidden;">
+            <tr>
+              <td style="padding:18px 22px;background:${primary};color:#ffffff;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="vertical-align:middle;">
+                      <div style="font-size:12px;letter-spacing:1.6px;text-transform:uppercase;opacity:.9;">New message</div>
+                      <div style="margin-top:4px;font-size:20px;font-weight:700;line-height:1.25;">Contact Form Submission</div>
+                      <div style="margin-top:6px;font-size:13px;opacity:.9;">${safe(brand)}</div>
+                    </td>
+                    ${
+                      imgSrc
+                        ? `<td align="right" style="vertical-align:middle;">
+                            <img src="${safe(imgSrc)}" alt="${safe(brand)} logo" style="max-height:46px; max-width:160px; display:block; border-radius:6px; background: rgba(255,255,255,0.08); padding:6px 8px;" />
+                          </td>`
+                        : ''
+                    }
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:18px 22px 4px 22px;">
+                <div style="font-size:14px;color:${muted};line-height:1.6;">
+                  You received a new message from your website contact form. Details are below.
+                </div>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:14px 22px 0 22px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${cardBorder};border-radius:12px;">
+                  <tr>
+                    <td style="padding:14px 16px;">
+                      <div style="font-size:12px;color:${muted};text-transform:uppercase;letter-spacing:1px;">From</div>
+                      <div style="margin-top:2px;font-size:16px;font-weight:700;">${safe(name)}</div>
+                      <div style="margin-top:6px;font-size:14px;color:${text};">
+                        <span style="color:${muted};">Email:</span>
+                        <a href="mailto:${safe(email)}" style="color:${primary};text-decoration:none;font-weight:600;">${safe(email)}</a>
+                      </div>
+                      <div style="margin-top:6px;font-size:14px;color:${text};">
+                        <span style="color:${muted};">Contact No.:</span> <span style="font-weight:600;">${safe(contactNo)}</span>
+                      </div>
+                      ${
+                        projectTitle
+                          ? `<div style="margin-top:6px;font-size:14px;color:${text};"><span style="color:${muted};">Project:</span> <span style="font-weight:600;">${safe(projectTitle)}</span></div>`
+                          : ''
+                      }
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:14px 22px 0 22px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${cardBorder};border-radius:12px;background:#ffffff;">
+                  <tr>
+                    <td style="padding:14px 16px;">
+                      <div style="font-size:12px;color:${muted};text-transform:uppercase;letter-spacing:1px;">Message</div>
+                      <div style="margin-top:8px;font-size:14px;line-height:1.7;color:${text};white-space:pre-wrap;">${safe(message)}</div>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:18px 22px 22px 22px;">
+                <table role="presentation" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="border-radius:999px;background:${primary};">
+                      <a href="mailto:${safe(email)}?subject=${encodeURIComponent(`Re: ${subject}`)}"
+                        style="display:inline-block;padding:10px 16px;color:#ffffff;text-decoration:none;font-weight:700;font-size:13px;border-radius:999px;">
+                        Reply to ${safe(name)}
+                      </a>
+                    </td>
+                    <td style="width:10px;"></td>
+                    <td>
+                      <div style="font-size:12px;color:${muted};line-height:1.5;">
+                        Tip: reply directly to this email to respond faster.
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+
+          <div style="max-width:600px;margin:14px auto 0 auto;font-size:11px;color:${muted};line-height:1.6;text-align:center;">
+            This email was generated by ${safe(brand)} website contact form.
+          </div>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+
+      try {
+        await transporter.sendMail({
+          from: senderFrom,
+          to: forwardTo,
+          subject,
+          html,
+          attachments: attachments.length ? attachments : undefined,
+        });
+      } catch (mailError) {
+        console.error('Failed to send contact email:', mailError);
+      }
+    }
 
     return NextResponse.json(
       { success: true, message: 'Message sent successfully!' },

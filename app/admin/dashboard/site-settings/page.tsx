@@ -18,6 +18,7 @@ type SiteSettings = {
   companyAddress: string;
   companyPhone: string;
   companyEmail: string;
+  contactForwardEmail: string;
   companyFacebook: string;
   companyTwitter: string;
   companyInstagram: string;
@@ -31,6 +32,7 @@ export default function SiteSettingsPage() {
     companyAddress: '',
     companyPhone: '',
     companyEmail: '',
+    contactForwardEmail: '',
     companyFacebook: '',
     companyTwitter: '',
     companyInstagram: '',
@@ -53,6 +55,7 @@ export default function SiteSettingsPage() {
         companyAddress: data.companyAddress || '',
         companyPhone: data.companyPhone || '',
         companyEmail: data.companyEmail || '',
+        contactForwardEmail: data.contactForwardEmail || '',
         companyFacebook: data.companyFacebook || '',
         companyTwitter: data.companyTwitter || '',
         companyInstagram: data.companyInstagram || '',
@@ -165,6 +168,20 @@ export default function SiteSettingsPage() {
                   placeholder="info@isynergies.com"
                   required
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="contactForwardEmail">Contact Form Forwarding Email</Label>
+                <Input
+                  id="contactForwardEmail"
+                  type="email"
+                  value={settings.contactForwardEmail}
+                  onChange={(e) => setSettings({ ...settings, contactForwardEmail: e.target.value })}
+                  placeholder="support@isynergies.com"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Messages from the Contact form will be sent to this address. Defaults to the company email if left empty.
+                </p>
               </div>
             </div>
           </CardContent>

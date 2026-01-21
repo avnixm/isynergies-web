@@ -2,10 +2,10 @@ import Image from "next/image";
 
 const navLinks = [
   { label: "Home", href: "#home" },
-  { label: "About Us", href: "#about" },
   { label: "Services", href: "#services" },
   { label: "Projects", href: "#projects" },
   { label: "Shop", href: "#shop" },
+  { label: "About Us", href: "#about" },
   { label: "Login", href: "/admin/login" },
 ];
 
@@ -29,29 +29,29 @@ export default function Home() {
       {/* Hero Section */}
       <Hero navLinks={navLinks} />
       
-      {/* About Us Section */}
-      <AboutUs />
-      
-      {/* What We Do Section */}
-      <WhatWeDo />
-      
-      {/* Board of Directors Section */}
-      <BoardOfDirectors />
-      
+      {/* Featured App Section */}
+      <FeaturedApp />
+
       {/* Services Section */}
       <Services />
+
+      {/* What We Do Section */}
+      <WhatWeDo />
 
       {/* Projects Section */}
       <Projects />
 
-      {/* Featured App Section */}
-      <FeaturedApp />
+      {/* Shop Section */}
+      <Shop />
+
+      {/* About Us Section */}
+      <AboutUs />
+      
+      {/* Board of Directors Section */}
+      <BoardOfDirectors />
 
       {/* Our Team Section */}
       <Team />
-
-      {/* Shop Section */}
-      <Shop />
 
       {/* Contact Section */}
       <Contact />

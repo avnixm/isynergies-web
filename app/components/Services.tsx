@@ -178,16 +178,6 @@ export default function Services() {
       background: 'linear-gradient(180deg, #07186E 0%, #004AB9 50%, #07186E 100%)',
     }}>
       <div className="relative min-h-screen overflow-hidden">
-        {/* subtle hex background pattern */}
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.10]"
-          style={{
-            backgroundImage:
-              "url(\"data:image/svg+xml,%3Csvg width='120' height='120' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M60 6 L101 30 L101 90 L60 114 L19 90 L19 30 Z' fill='none' stroke='%23ffffff' stroke-width='1'/%3E%3C/svg%3E\")",
-            backgroundSize: '120px 120px',
-          }}
-        />
-
         {/* Layout wrapper (fits in one desktop viewport) */}
         <div className="container mx-auto flex min-h-screen max-w-7xl flex-col justify-between px-4 py-6 md:px-6 md:py-8 lg:px-12">
           {/* Top area: Our Services - left copy + right hex cluster */}

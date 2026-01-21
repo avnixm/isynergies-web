@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import Image from 'next/image';
 import Loading from './ui/loading';
 import { Star } from 'lucide-react';
@@ -144,6 +144,12 @@ export default function FeaturedApp() {
     }
   };
 
+  const marqueeImages = useMemo(() => {
+    if (!carouselImages || carouselImages.length === 0) return [];
+    // Duplicate for a seamless marquee loop (same strategy as Projects)
+    return [...carouselImages, ...carouselImages];
+  }, [carouselImages]);
+
   if (loading) {
     return (
       <section id="featured-app" ref={sectionRef} className="relative bg-white py-16">
@@ -264,41 +270,49 @@ export default function FeaturedApp() {
       ) : null}
 
       {/* Block 2: Horizontal Carousel */}
-      {carouselImages.length > 0 && (
+      {marqueeImages.length > 0 && (
         <div className="w-full py-4">
-          <div 
-            className={`flex overflow-x-auto gap-2 scrollbar-hide slide-left-row ${
-              isVisible ? 'animate' : 'opacity-0'
-            }`} 
-            style={{ 
-              paddingLeft: '10px',
-              animationDelay: isVisible ? '0.3s' : '0s',
+          <div
+            className="projects-marquee relative left-1/2 w-screen -translate-x-1/2"
+            style={{
+              ['--marquee-duration' as any]: '40s',
             }}
           >
-            {carouselImages.map((img, index) => {
-              const imageUrl = getImageUrl(img.image);
-              const isFirst = index === 0;
-              return (
-                <div
-                  key={img.id}
-                  className={`flex-shrink-0 overflow-hidden bg-gray-200 rounded-lg ${
-                    isFirst 
-                      ? 'w-[400px] h-[180px] md:w-[550px] md:h-[220px]' 
-                      : 'w-[250px] h-[180px] md:w-[350px] md:h-[220px]'
-                  }`}
-                >
-                  {imageUrl ? (
-                    <img
-                      src={imageUrl}
-                      alt={img.alt}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200" />
-                  )}
-                </div>
-              );
-            })}
+            <div
+              className={`projects-marquee-row ${
+                isVisible ? 'animate-fadeIn-slow' : 'opacity-0'
+              }`}
+              style={{
+                animationDelay: isVisible ? '0.3s' : '0s',
+              }}
+            >
+              <div className="projects-marquee-track">
+                {marqueeImages.map((img, index) => {
+                  const imageUrl = getImageUrl(img.image);
+                  const isFirst = (index % carouselImages.length) === 0;
+                  return (
+                    <div
+                      key={`${img.id}-${index}`}
+                      className={`flex-shrink-0 overflow-hidden bg-gray-200 rounded-lg ${
+                        isFirst
+                          ? 'w-[400px] h-[180px] md:w-[550px] md:h-[220px]'
+                          : 'w-[250px] h-[180px] md:w-[350px] md:h-[220px]'
+                      }`}
+                    >
+                      {imageUrl ? (
+                        <img
+                          src={imageUrl}
+                          alt={img.alt}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200" />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -21,10 +21,14 @@ export async function GET() {
     return NextResponse.json(content[0]);
   } catch (error) {
     console.error('Error fetching hero section:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch hero section' },
-      { status: 500 }
-    );
+    // Fail soft in production: return defaults so the homepage still renders even if DB is unreachable
+    return NextResponse.json({
+      id: 1,
+      weMakeItLogo: null,
+      isLogo: null,
+      fullLogo: null,
+      backgroundImage: null,
+    });
   }
 }
 
