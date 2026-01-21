@@ -101,7 +101,7 @@ export default function FeaturedApp() {
           gradientTo: data.gradientTo || data.gradient_to || '#1e40af',
           gradientDirection: data.gradientDirection || data.gradient_direction || 'to-r',
           appLogo: data.appLogo || data.app_logo || '',
-          bannerHeight: data.bannerHeight || data.banner_height || 'h-48',
+          bannerHeight: data.bannerHeight || data.banner_height || 'h-60',
         });
       } else {
         console.error('Failed to fetch content:', response.status, response.statusText);
@@ -183,7 +183,7 @@ export default function FeaturedApp() {
       {/* Block 1: Customizable Banner or Fallback to Header Image */}
       {useCustomBanner ? (
         <div
-          className={`w-full ${content.bannerHeight || 'h-64'} relative overflow-hidden`}
+          className={`w-full ${content.bannerHeight || 'h-60'} relative overflow-hidden`}
           style={{
             background: `linear-gradient(${getGradientDirection(content.gradientDirection || 'to-r')}, ${content.gradientFrom || '#2563eb'}, ${content.gradientTo || '#1e40af'})`,
           }}
@@ -228,7 +228,7 @@ export default function FeaturedApp() {
           {/* Feature Icons - Bottom Right */}
           {features.length > 0 && (
             <div 
-              className={`absolute bottom-[-5px] right-18 z-10 hidden md:flex items-center gap-6 max-w-md justify-end ${
+              className={`absolute bottom-[-5px] right-8 z-10 hidden md:flex items-center gap-6 max-w-md justify-end ${
                 isVisible ? 'animate-fadeIn-slow' : 'opacity-0'
               }`}
               style={{
@@ -243,7 +243,7 @@ export default function FeaturedApp() {
                       <img
                         src={iconUrl}
                         alt={feature.label}
-                        className="h-24 w-24 object-contain"
+                        className="h-28 w-28 object-contain"
                       />
                     )}
                   </div>
@@ -267,7 +267,7 @@ export default function FeaturedApp() {
       {carouselImages.length > 0 && (
         <div className="w-full py-4">
           <div 
-            className={`flex overflow-x-auto gap-4 scrollbar-hide slide-left-row ${
+            className={`flex overflow-x-auto gap-2 scrollbar-hide slide-left-row ${
               isVisible ? 'animate' : 'opacity-0'
             }`} 
             style={{ 

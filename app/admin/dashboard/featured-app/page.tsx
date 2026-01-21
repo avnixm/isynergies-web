@@ -116,7 +116,7 @@ export default function FeaturedAppPage() {
         gradientTo: data.gradientTo || data.gradient_to || '#1e40af',
         gradientDirection: data.gradientDirection || data.gradient_direction || 'to-r',
         appLogo: data.appLogo || data.app_logo || '',
-        bannerHeight: data.bannerHeight || data.banner_height || 'h-48',
+        bannerHeight: data.bannerHeight || data.banner_height || 'h-60',
       });
       }
     } catch (error) {

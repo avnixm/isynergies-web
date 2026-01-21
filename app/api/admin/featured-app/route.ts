@@ -79,7 +79,7 @@ export async function PUT(request: Request) {
       gradientTo: body?.gradientTo ?? '#1e40af',
       gradientDirection: body?.gradientDirection ?? 'to-r',
       appLogo: body?.appLogo ?? '',
-      bannerHeight: body?.bannerHeight ?? 'h-48',
+      bannerHeight: body?.bannerHeight ?? 'h-60',
     };
 
     // Check if content exists

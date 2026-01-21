@@ -201,7 +201,18 @@ export const images = mysqlTable('images', {
   filename: varchar('filename', { length: 255 }).notNull(),
   mimeType: varchar('mime_type', { length: 100 }).notNull(),
   size: int('size').notNull(),
-  data: longtext('data').notNull(), // Base64 encoded image data
+  data: longtext('data').notNull(), // Base64 encoded image data (or empty if chunked)
+  isChunked: int('is_chunked').default(0), // 0 = not chunked, 1 = chunked
+  chunkCount: int('chunk_count').default(0), // Number of chunks if chunked
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// Image chunks table for storing large files in chunks
+export const imageChunks = mysqlTable('image_chunks', {
+  id: int('id').primaryKey().autoincrement(),
+  imageId: int('image_id').notNull(), // References images.id
+  chunkIndex: int('chunk_index').notNull(), // 0-based index of the chunk
+  data: longtext('data').notNull(), // Base64 encoded chunk data
   createdAt: timestamp('created_at').defaultNow(),
 });
 
@@ -240,7 +251,7 @@ export const featuredApp = mysqlTable('featured_app', {
   gradientTo: varchar('gradient_to', { length: 50 }).default('#1e40af'),
   gradientDirection: varchar('gradient_direction', { length: 20 }).default('to-r'),
   appLogo: varchar('app_logo', { length: 255 }),
-  bannerHeight: varchar('banner_height', { length: 20 }).default('h-64'),
+  bannerHeight: varchar('banner_height', { length: 20 }).default('h-60'),
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
 });
 
