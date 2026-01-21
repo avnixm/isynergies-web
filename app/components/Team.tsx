@@ -139,18 +139,26 @@ export default function Team() {
 
   return (
     <section ref={sectionRef} className="relative bg-[#D7E1E4] py-16">
-      
+      {/* subtle watermark */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute right-[-60px] top-[-40px] w-[380px] h-[380px] flex items-center justify-center z-0">
+          <img
+            src="/logos/iSgray.png"
+            alt="iS logo"
+            className="w-full h-full object-contain"
+            style={{ filter: 'brightness(0.3) contrast(1.2)' }}
+          />
+        </div>
+      </div>
 
       <div className="container mx-auto max-w-7xl px-4 md:px-8 lg:px-16 relative z-10">
-        {/* thin header bar (match Board panel height) */}
-        <div
-          className={`w-full h-[60px] z-10 flex items-center justify-center px-4 md:px-8 lg:px-16 mb-10`}
-          style={{
-            background:
-              'linear-gradient(to right, rgba(13,30,102,0) 0%, rgba(13,30,102,0.95) 60%, rgba(13,30,102,0.4) 80%, transparent 100%)',
-          }}
-        >
-          <p className="text-2xl md:text-3xl font-bold text-white text-center">Our Team</p>
+        {/* header bar */}
+        <div className="mx-auto mb-10 w-full max-w-5xl overflow-hidden rounded-2xl">
+          <div className="bg-gradient-to-r from-transparent via-[#0D1E66] to-transparent py-4">
+            <h2 className="text-center font-sans text-4xl md:text-5xl font-bold text-white">
+              Our Team
+            </h2>
+          </div>
         </div>
 
         {/* Only show rows if there are valid members */}
