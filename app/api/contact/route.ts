@@ -49,7 +49,16 @@ export async function POST(request: Request) {
     const forwardTo = settings?.contactForwardEmail || settings?.companyEmail || process.env.EMAIL_USER;
     const senderUser = process.env.EMAIL_USER || settings?.companyEmail;
     const senderPass = process.env.EMAIL_APP_PASSWORD || process.env.APP_PASSWORD;
-    const senderFrom = process.env.EMAIL_FROM || senderUser;
+    const senderFrom = (() => {
+      const fromEnv = process.env.EMAIL_FROM;
+      // Ensure "from" always has a valid email envelope; fall back to senderUser
+      if (fromEnv) {
+        return fromEnv.includes('@')
+          ? (fromEnv.includes('<') ? fromEnv : `${fromEnv} <${senderUser}>`)
+          : `${fromEnv} <${senderUser}>`;
+      }
+      return `iSynergies Contact <${senderUser}>`;
+    })();
     const baseUrl = (() => {
       const originHdr = request.headers.get('origin');
       if (originHdr) return originHdr;
@@ -220,6 +229,7 @@ export async function POST(request: Request) {
         await transporter.sendMail({
           from: senderFrom,
           to: forwardTo,
+          replyTo: email,
           subject,
           html,
         });
