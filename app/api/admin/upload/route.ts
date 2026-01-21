@@ -3,6 +3,10 @@ import { db } from '@/app/db';
 import { images } from '@/app/db/schema';
 import { requireAuth } from '@/app/lib/auth-middleware';
 
+// Increase max duration for large file uploads
+export const maxDuration = 300; // 5 minutes
+export const runtime = 'nodejs';
+
 export async function POST(request: Request) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
@@ -18,11 +22,6 @@ export async function POST(request: Request) {
     // Validate file type
     if (!file.type.startsWith('image/')) {
       return NextResponse.json({ error: 'File must be an image' }, { status: 400 });
-    }
-
-    // Validate file size (10MB max)
-    if (file.size > 10 * 1024 * 1024) {
-      return NextResponse.json({ error: 'File size must be less than 10MB' }, { status: 400 });
     }
 
     // Read file as buffer and convert to base64

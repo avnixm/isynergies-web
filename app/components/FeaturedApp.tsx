@@ -183,7 +183,7 @@ export default function FeaturedApp() {
       {/* Block 1: Customizable Banner or Fallback to Header Image */}
       {useCustomBanner ? (
         <div
-          className={`w-full ${content.bannerHeight || 'h-48'} relative overflow-hidden`}
+          className={`w-full ${content.bannerHeight || 'h-64'} relative overflow-hidden`}
           style={{
             background: `linear-gradient(${getGradientDirection(content.gradientDirection || 'to-r')}, ${content.gradientFrom || '#2563eb'}, ${content.gradientTo || '#1e40af'})`,
           }}
@@ -216,7 +216,11 @@ export default function FeaturedApp() {
               <img
                 src={getImageUrl(content.appLogo)}
                 alt="App Logo"
-                className="h-24 md:h-32 w-auto object-contain"
+                 className="w-auto object-contain"
+                  style={{
+                    height: '220px',
+                    maxHeight: '220px',
+                  }}
               />
             </div>
           )}
