@@ -10,6 +10,8 @@ type SiteSettings = {
   companyPhone: string;
   companyEmail: string;
   companyFacebook: string;
+  companyLat?: number | string;
+  companyLng?: number | string;
 };
 
 export default function Contact() {
@@ -26,9 +28,43 @@ export default function Contact() {
     companyPhone: '+63 123 456 7890',
     companyEmail: 'info@isynergies.com',
     companyFacebook: 'https://facebook.com/isynergies',
+  companyLat: 15.488563,
+  companyLng: 120.975303,
   });
   const [submitting, setSubmitting] = useState(false);
   const [phoneError, setPhoneError] = useState('');
+
+  // Build OpenStreetMap URLs only (use OSM embed with marker when coords available).
+  const getOSMEmbedSrc = (latVal: string, lngVal: string, zoom = 17) => {
+    const lat = Number(latVal);
+    const lng = Number(lngVal);
+    const latDelta = 0.003;
+    const lngDelta = 0.004;
+    const left = (lng - lngDelta).toFixed(6);
+    const right = (lng + lngDelta).toFixed(6);
+    const bottom = (lat - latDelta).toFixed(6);
+    const top = (lat + latDelta).toFixed(6);
+    return `https://www.openstreetmap.org/export/embed.html?bbox=${left}%2C${bottom}%2C${right}%2C${top}&layer=mapnik&marker=${latVal}%2C${lngVal}`;
+  };
+
+  const getMapSrc = () => {
+    if (settings.companyLat && settings.companyLng) {
+      const lat = encodeURIComponent(String(settings.companyLat));
+      const lng = encodeURIComponent(String(settings.companyLng));
+      return getOSMEmbedSrc(lat, lng);
+    }
+    // Fallback: use OSM search page (not ideal but works without coords)
+    return `https://www.openstreetmap.org/search?query=${encodeURIComponent(settings.companyAddress || '')}`;
+  };
+
+  const getMapLink = () => {
+    if (settings.companyLat && settings.companyLng) {
+      const lat = encodeURIComponent(String(settings.companyLat));
+      const lng = encodeURIComponent(String(settings.companyLng));
+      return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=17/${lat}/${lng}`;
+    }
+    return `https://www.openstreetmap.org/search?query=${encodeURIComponent(settings.companyAddress || '')}`;
+  };
 
   // Validate phone number: exactly 11 digits starting with "09"
   const validatePhone = (phone: string): boolean => {
@@ -55,7 +91,9 @@ export default function Contact() {
         const response = await fetch('/api/admin/site-settings');
         if (response.ok) {
           const data = await response.json();
-          setSettings(data);
+          // Merge server settings with local defaults so missing fields (like lat/lng)
+          // don't wipe out the hard-coded coordinates used for the map.
+          setSettings(prev => ({ ...prev, ...data }));
         }
       } catch (error) {
         console.error('Error fetching site settings:', error);
@@ -241,6 +279,36 @@ export default function Contact() {
                   </div>
                   <p className="text-xs leading-relaxed">{settings.companyEmail}</p>
                 </div>
+                {/* Map (embedded using helper: OpenStreetMap when coords available) */}
+                {((settings.companyLat && settings.companyLng) || settings.companyAddress) && (
+                  <div className="mt-4">
+                    <div className="w-full h-40 sm:h-56 rounded-md overflow-hidden border border-white/20">
+                      <iframe
+                        title="Company location"
+                        src={getMapSrc()}
+                        className="w-full h-full border-0"
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                      />
+                    </div>
+                    {
+                      (() => {
+                        const link = getMapLink();
+                        const label = link.includes('openstreetmap') ? 'Open in OpenStreetMap' : 'Open in Google Maps';
+                        return (
+                          <a
+                            href={link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-white underline mt-2 inline-block"
+                          >
+                            {label}
+                          </a>
+                        );
+                      })()
+                    }
+                  </div>
+                )}
               </div>
             </div>
           </div>
