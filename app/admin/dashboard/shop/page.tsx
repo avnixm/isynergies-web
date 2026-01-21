@@ -557,7 +557,13 @@ export default function ShopPage() {
                   const imageUrl = getImageUrl(dealer.image);
                   return (
                     <Card key={dealer.id} className="overflow-hidden rounded-xl border border-border bg-white transition-shadow hover:shadow-md group">
-                      <div className="relative aspect-square w-full bg-muted/30 rounded-t-xl overflow-hidden flex items-center justify-center p-4">
+                      <div
+                        className="relative aspect-square w-full rounded-t-xl overflow-hidden flex items-center justify-center p-4"
+                        style={{
+                          background:
+                            'linear-gradient(270deg, rgba(65, 65, 65, 0) 0%, #7A0000 33.17%, #930000 55.29%, #7A0000 75%, rgba(65, 65, 65, 0) 100%)',
+                        }}
+                      >
                         {imageUrl ? (
                           <Image
                             src={imageUrl}

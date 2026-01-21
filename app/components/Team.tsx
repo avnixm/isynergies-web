@@ -139,23 +139,14 @@ export default function Team() {
 
   return (
     <section ref={sectionRef} className="relative bg-[#D7E1E4] py-16">
-      {/* subtle watermark */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute right-[-60px] top-[-40px] w-[380px] h-[380px] flex items-center justify-center z-0">
-          <img
-            src="/logos/iSgray.png"
-            alt="iS logo"
-            className="w-full h-full object-contain"
-            style={{ filter: 'brightness(0.3) contrast(1.2)' }}
-          />
-        </div>
-      </div>
-
       <div className="container mx-auto max-w-7xl px-4 md:px-8 lg:px-16 relative z-10">
-        {/* header bar */}
+        {/* header bar - match thickness with Board strip (60px) */}
         <div className="mx-auto mb-10 w-full max-w-5xl overflow-hidden rounded-2xl">
-          <div className="bg-gradient-to-r from-transparent via-[#0D1E66] to-transparent py-4">
-            <h2 className="text-center font-sans text-4xl md:text-5xl font-bold text-white">
+          <div
+            className="bg-gradient-to-r from-transparent via-[#0D1E66] to-transparent flex items-center justify-center"
+            style={{ height: '60px' }}
+          >
+            <h2 className="text-center font-sans text-4xl md:text-5xl font-semibold text-white">
               Our Team
             </h2>
           </div>

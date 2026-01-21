@@ -281,7 +281,7 @@ export default function Shop() {
                           </div>
                         );
                       })}
-                    </div>
+            </div>
 
                     {/* Label */}
                     <div className="text-center" style={{ marginTop: '12px', marginBottom: '6px', flexShrink: 0 }}>
@@ -302,17 +302,17 @@ export default function Shop() {
                     </div>
                   </div>
                 ) : content.authorizedDealerImage ? (
-                  <div className="relative h-[140px] w-full">
-                    <Image
-                      src={typeof content.authorizedDealerImage === 'string' && (content.authorizedDealerImage.startsWith('/api/images/') || content.authorizedDealerImage.startsWith('http') || content.authorizedDealerImage.startsWith('/'))
-                        ? content.authorizedDealerImage 
-                        : `/api/images/${content.authorizedDealerImage}`}
-                      alt="Authorized dealer logos"
-                      fill
-                      className="object-contain"
-                      sizes="(min-width: 1024px) 520px, 100vw"
-                      priority={false}
-                    />
+              <div className="relative h-[140px] w-full">
+                  <Image
+                    src={typeof content.authorizedDealerImage === 'string' && (content.authorizedDealerImage.startsWith('/api/images/') || content.authorizedDealerImage.startsWith('http') || content.authorizedDealerImage.startsWith('/'))
+                      ? content.authorizedDealerImage 
+                      : `/api/images/${content.authorizedDealerImage}`}
+                    alt="Authorized dealer logos"
+                    fill
+                    className="object-contain"
+                    sizes="(min-width: 1024px) 520px, 100vw"
+                    priority={false}
+                  />
                   </div>
                 ) : (
                   <div className="w-full h-[140px] flex items-center justify-center bg-gray-300/20 rounded-lg">
@@ -340,11 +340,11 @@ export default function Shop() {
                     animationDelay: isVisible ? `${0.3 + index * 0.1}s` : '0s',
                   }}
                 >
-                  <CategoryStrip
-                    name={c.name}
-                    text={c.text || c.name.toUpperCase()}
-                    image={c.image || null}
-                  />
+              <CategoryStrip
+                name={c.name}
+                text={c.text || c.name.toUpperCase()}
+                image={c.image || null}
+              />
                 </div>
               );
             })

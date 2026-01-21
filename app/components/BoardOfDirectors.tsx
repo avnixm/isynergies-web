@@ -85,7 +85,7 @@ export default function BoardOfDirectors() {
     <section
       id="board-of-directors"
       ref={sectionRef}
-      className="relative bg-[#D7E1E4] overflow-hidden"
+      className="relative bg-[#D7E1E4] overflow-visible"
     >
       {/* Red gradient bar header (moved from About Us so sections never overlap) */}
       <div
@@ -98,7 +98,7 @@ export default function BoardOfDirectors() {
           animationDelay: isVisible ? '0.3s' : '0s',
         }}
       >
-        <p className="text-2xl md:text-3xl font-bold text-white text-center">Our Board of Directors</p>
+        <p className="text-2xl md:text-3xl font-semibold text-white text-center">Our Board of Directors</p>
       </div>
 
       {/* Muted background shape instead of hardcoded logo */}
