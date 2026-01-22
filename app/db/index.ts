@@ -2,7 +2,8 @@ import { drizzle } from 'drizzle-orm/mysql2';
 import mysql from 'mysql2/promise';
 import * as schema from './schema';
 
-// Create the connection pool with better connection management
+// Create the connection pool optimized for serverless environments (Vercel production)
+// These settings apply to both development and production
 const connection = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '3306'),
@@ -13,12 +14,14 @@ const connection = mysql.createPool({
   ssl: process.env.DB_SSL === 'true' ? {
     rejectUnauthorized: false, // For cloud databases with self-signed certificates
   } : undefined,
-  // Connection pool settings - reduced to prevent "too many connections" error
-  connectionLimit: 5, // Reduced from 10 to prevent connection exhaustion
-  queueLimit: 0, // Unlimited queue for connection requests
-  idleTimeout: 60000, // Close idle connections after 1 minute (reduced from 5 minutes)
+  // Connection pool settings optimized for serverless (Vercel production)
+  // Each serverless function instance gets its own pool, so we need very low limits
+  // This prevents "Too many connections" errors in production
+  connectionLimit: 1, // Single connection per instance to minimize total connections
+  queueLimit: 10, // Limit queue to prevent memory issues
+  idleTimeout: 20000, // Close idle connections after 20 seconds (faster cleanup for production)
   // Timeout settings (in milliseconds)
-  connectTimeout: 10000, // 10 seconds for initial connection (reduced from 2 minutes)
+  connectTimeout: 5000, // 5 seconds for initial connection
   // Enable connection reuse
   waitForConnections: true, // Queue connection requests when pool is exhausted
   // Automatically close idle connections
