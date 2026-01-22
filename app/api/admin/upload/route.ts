@@ -10,6 +10,9 @@ import { eq, asc } from 'drizzle-orm';
 export const maxDuration = 300; // 5 minutes (max for Vercel hobby plan)
 export const runtime = 'nodejs';
 
+// Disable body parsing - we need to handle FormData manually
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   // Log request details for debugging
   console.log('Upload request received:', {
@@ -17,22 +20,44 @@ export async function POST(request: Request) {
     url: request.url,
     hasAuthHeader: !!request.headers.get('authorization'),
     contentType: request.headers.get('content-type'),
+    contentLength: request.headers.get('content-length'),
   });
 
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) {
-    console.error('Auth failed:', {
-      status: authResult.status,
-      statusText: authResult.statusText,
-    });
-    return authResult;
+  try {
+    const authResult = await requireAuth(request);
+    if (authResult instanceof NextResponse) {
+      console.error('Auth failed:', {
+        status: authResult.status,
+        statusText: authResult.statusText,
+        body: await authResult.clone().text().catch(() => 'Could not read body'),
+      });
+      return authResult;
+    }
+    
+    console.log('Auth successful, user:', authResult.username);
+  } catch (authError: any) {
+    console.error('Auth error:', authError);
+    return NextResponse.json(
+      { error: 'Authentication error', details: authError?.message },
+      { status: 401 }
+    );
   }
-  
-  console.log('Auth successful, user:', authResult.username);
 
   try {
+    // Check if request body exists
+    if (!request.body) {
+      console.error('No request body received');
+      return NextResponse.json({ error: 'No file data received' }, { status: 400 });
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
+    
+    console.log('File received:', {
+      name: file?.name,
+      size: file?.size,
+      type: file?.type,
+    });
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
