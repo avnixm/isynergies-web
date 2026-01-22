@@ -196,15 +196,19 @@ export const contactMessages = mysqlTable('contact_messages', {
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
 });
 
-// Images Storage (Store images as base64 in database)
+// Images Storage (Store images/videos using Vercel Blob URLs)
 export const images = mysqlTable('images', {
   id: int('id').primaryKey().autoincrement(),
   filename: varchar('filename', { length: 255 }).notNull(),
   mimeType: varchar('mime_type', { length: 100 }).notNull(),
   size: int('size').notNull(),
-  data: longtext('data').notNull(), // Base64 encoded image data (or empty if chunked)
-  isChunked: int('is_chunked').default(0), // 0 = not chunked, 1 = chunked
-  chunkCount: int('chunk_count').default(0), // Number of chunks if chunked
+  // Legacy: base64 data (for backward compatibility with existing images)
+  data: longtext('data').notNull(), // Base64 encoded image data (deprecated, use url instead)
+  // New: Vercel Blob URL (preferred method for new uploads)
+  url: varchar('url', { length: 500 }), // Vercel Blob URL for the file
+  // Legacy: chunking support (deprecated, use Vercel Blob multipart instead)
+  isChunked: int('is_chunked').default(0), // 0 = not chunked, 1 = chunked (deprecated)
+  chunkCount: int('chunk_count').default(0), // Number of chunks if chunked (deprecated)
   createdAt: timestamp('created_at').defaultNow(),
 });
 

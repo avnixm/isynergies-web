@@ -685,6 +685,13 @@ export default function FeaturedApp() {
                                   
                                   console.error(`Video load error for item ${item.id}:`, errorDetails);
                                   
+                                  // Check if this is a corrupted video from the old system
+                                  if (error?.code === 4 && mediaUrl.includes('/api/images/')) {
+                                    console.warn(`Video ${item.id} appears to be corrupted. This may be an old video uploaded with the previous system. Please re-upload it using the new Vercel Blob system.`);
+                                    // You could show a user-friendly message here
+                                    // For now, we'll just log it
+                                  }
+                                  
                                   // Try to fetch the URL directly to see what's wrong
                                   fetch(mediaUrl)
                                     .then(res => {

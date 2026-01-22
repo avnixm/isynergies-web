@@ -26,6 +26,20 @@ export async function GET(
       );
     }
 
+    // NEW: If image has a Vercel Blob URL, redirect to it (preferred method)
+    if (image.url && image.url.startsWith('https://')) {
+      console.log(`Redirecting to Vercel Blob URL for image ${imageId}: ${image.url}`);
+      // For video files, we need to ensure proper headers for streaming
+      const isVideo = image.mimeType?.startsWith('video/');
+      if (isVideo && range) {
+        // If there's a range request, we need to proxy it through
+        // For now, redirect and let Vercel Blob handle range requests
+        return NextResponse.redirect(image.url, 307); // 307 preserves method and body
+      }
+      return NextResponse.redirect(image.url, 302);
+    }
+
+    // LEGACY: Fall back to base64/chunked storage for backward compatibility
     // Check if image is chunked
     const isChunked = (image as any).isChunked === 1 || (image as any).is_chunked === 1;
     
@@ -149,14 +163,33 @@ export async function GET(
         isValidVideoSignature: isValidVideo,
       });
       
+      // If video signature is invalid, the video is likely corrupted
       if (!isValidVideo && buffer.length > 0) {
-        console.warn(`Warning: Video ${imageId} may have invalid file signature. First bytes: ${hexSignature}`);
+        console.error(`ERROR: Video ${imageId} has invalid file signature. First bytes: ${hexSignature}. This video may be corrupted.`);
+        return NextResponse.json(
+          { 
+            error: 'Video file appears to be corrupted or incomplete. Please re-upload this video using the new upload system.',
+            imageId,
+            suggestion: 'This video was uploaded using the old system. Please delete it and re-upload using the new Vercel Blob system.'
+          },
+          { status: 500 }
+        );
       }
       
       // Check if buffer size matches expected file size
       const expectedSize = (image as any).size || 0;
       if (expectedSize > 0 && Math.abs(buffer.length - expectedSize) > 1000) {
-        console.warn(`Warning: Video ${imageId} buffer size (${buffer.length}) doesn't match expected size (${expectedSize})`);
+        console.error(`ERROR: Video ${imageId} buffer size (${buffer.length}) doesn't match expected size (${expectedSize}). Video may be incomplete.`);
+        return NextResponse.json(
+          { 
+            error: 'Video file appears to be incomplete. The file size does not match the expected size.',
+            imageId,
+            expectedSize,
+            actualSize: buffer.length,
+            suggestion: 'Please re-upload this video using the new Vercel Blob system.'
+          },
+          { status: 500 }
+        );
       }
     }
     
