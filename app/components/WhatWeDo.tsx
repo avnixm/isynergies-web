@@ -2,7 +2,13 @@
 
 import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
+import { Encode_Sans_Expanded } from 'next/font/google';
 import Loading from './ui/loading';
+
+const encodeSansExpanded = Encode_Sans_Expanded({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+});
 
 type WhatWeDoContent = {
   mainText: string;
@@ -101,10 +107,7 @@ export default function WhatWeDo() {
       <section
         id="what-we-do"
         ref={sectionRef}
-        className="relative text-white py-16"
-        style={{
-          background: 'linear-gradient(180deg, #07186E 0%, #004AB9 50%, #07186E 100%)',
-        }}
+        className="relative bg-[#D7E1E4] py-16"
       >
         <Loading message="Loading What We Do section" />
       </section>
@@ -123,15 +126,26 @@ export default function WhatWeDo() {
     <section
       id="what-we-do"
       ref={sectionRef}
-      className="relative text-white"
-      style={{
-        background: 'linear-gradient(180deg, #07186E 0%, #004AB9 50%, #07186E 100%)',
-      }}
+      className="relative bg-[#D7E1E4] overflow-visible"
     >
+      {/* Blue gradient bar header (moved from About Us so sections never overlap) */}
+      <div
+        className={`w-full h-[60px] z-10 flex items-center justify-start px-4 md:px-8 lg:px-16 dropdown-smooth ${
+          isVisible ? 'animate' : ''
+        }`}
+        style={{
+          background:
+            'linear-gradient(to right, #030068 0%, #050094 22%, rgba(0, 10, 104, 0) 100%)',
+          animationDelay: isVisible ? '0.3s' : '0s',
+        }}
+      >
+        <p className="text-2xl md:text-3xl font-semibold text-white">What We Do</p>
+      </div>
+
       {/* Gray background carousel section - edge to edge */}
       {images.length > 0 && (
         <div 
-          className="bg-[#D7E1E4] pt-2 pb-2 projects-marquee relative left-1/2 w-screen -translate-x-1/2"
+          className="bg-[#D7E1E4] pt-2.5 pb-1.5  projects-marquee relative left-1/2 w-screen -translate-x-1/2"
           style={{
             ['--marquee-duration' as any]: '40s',
           }}
@@ -141,19 +155,19 @@ export default function WhatWeDo() {
               animationDelay: isVisible ? '0.3s' : '0s',
             }}
           >
-            <div className="projects-marquee-track" style={{ gap: '12px' }}>
+            <div className="projects-marquee-track" style={{ gap: '6px' }}>
               {[...images, ...images].map((img, index) => {
                 const imageUrl = getImageUrl(img.image);
                 return (
                   <div
                     key={img.id + '-' + index}
-                    className="flex-shrink-0 w-[320px] h-[200px] md:w-[420px] md:h-[250px] overflow-hidden rounded-lg"
+                    className="flex-shrink-0 w-[360px] h-[200px] md:w-[480px] md:h-[250px] overflow-hidden "
                   >
                     {imageUrl ? (
                       <Image
                         src={imageUrl}
                         alt={img.alt}
-                        width={350}
+                        width={480}
                         height={250}
                         className="w-full h-full object-cover"
                         unoptimized
@@ -170,23 +184,30 @@ export default function WhatWeDo() {
       )}
 
       {/* Bottom Text Section */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 lg:px-16 relative z-10 py-5">
-        {content && (
-          <div
-            className={`md:p-3 space-y-4 text-center ${
-              isVisible ? 'animate-fadeIn-slow' : 'opacity-0'
-            }`}
-            style={{
-              animationDelay: isVisible ? '0.8s' : '0s',
-            }}
-          >
+      <div className="relative left-1/2 w-screen -translate-x-1/2 py-5" style={{
+        background: 'linear-gradient(180deg, #071B6E 0%, #004AB9 100%)',
+      }}>
+        <div className="container mx-auto max-w-7xl px-4 md:px-8 lg:px-16 relative z-10">
+          {content && (
             <div
-              className="text-white/85 text-xs md:text-sm leading-relaxed font-light max-w-6xl mx-auto"
-              dangerouslySetInnerHTML={{ __html: content.mainText }}
-            />
-            <p className="text-white/85 text-xs md:text-sm leading-relaxed font-light mt-4 max-w-6xl mx-auto" dangerouslySetInnerHTML={{ __html: content.tagline }} />
-          </div>
-        )}
+              className={`md:p-3 space-y-4 text-center ${
+                isVisible ? 'animate-fadeIn-slow' : 'opacity-0'
+              }`}
+              style={{
+                animationDelay: isVisible ? '0.8s' : '0s',
+              }}
+            >
+              <div
+                className="text-white/85 max-w-6xl mx-auto text-xs md:text-sm leading-relaxed font-sans text-center"
+                dangerouslySetInnerHTML={{ __html: content.mainText }}
+              />
+              <p 
+                className="text-white/85 mt-4 max-w-6xl mx-auto text-xs md:text-sm leading-relaxed font-sans text-center"
+                dangerouslySetInnerHTML={{ __html: content.tagline }} 
+              />
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );

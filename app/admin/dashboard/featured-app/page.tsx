@@ -28,6 +28,7 @@ type FeaturedAppContent = {
   gradientTo: string;
   gradientDirection: string;
   appLogo: string;
+  poweredByImage: string;
   bannerHeight: string;
 };
 
@@ -62,7 +63,8 @@ export default function FeaturedAppPage() {
     gradientTo: '#1e40af',
     gradientDirection: 'to-r',
     appLogo: '',
-    bannerHeight: 'h-48',
+    poweredByImage: '',
+    bannerHeight: 'h-60',
   });
   const [carouselImages, setCarouselImages] = useState<FeaturedAppCarouselImage[]>([]);
   const [features, setFeatures] = useState<FeaturedAppFeature[]>([]);
@@ -116,6 +118,7 @@ export default function FeaturedAppPage() {
         gradientTo: data.gradientTo || data.gradient_to || '#1e40af',
         gradientDirection: data.gradientDirection || data.gradient_direction || 'to-r',
         appLogo: data.appLogo || data.app_logo || '',
+        poweredByImage: data.poweredByImage || data.powered_by_image || '',
         bannerHeight: data.bannerHeight || data.banner_height || 'h-60',
       });
       }
@@ -535,6 +538,27 @@ export default function FeaturedAppPage() {
                 }}
               />
             </div>
+            {/* Banner Height */}
+            <div className="space-y-2">
+              <Label htmlFor="bannerHeight" className="text-xs">Banner Height</Label>
+              <select
+                id="bannerHeight"
+                value={content.bannerHeight}
+                onChange={(e) => setContent({ ...content, bannerHeight: e.target.value })}
+                className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <option value="h-32">Small (h-32)</option>
+                <option value="h-40">Medium (h-40)</option>
+                <option value="h-48">Large (h-48)</option>
+                <option value="h-60">Extra Large (h-60)</option>
+                <option value="h-72">XXL (h-72)</option>
+                <option value="h-80">XXXL (h-80)</option>
+                <option value="h-96">Huge (h-96)</option>
+              </select>
+              <p className="text-xs text-muted-foreground">
+                Select the height of the banner (Tailwind CSS height classes)
+              </p>
+            </div>
           </div>
 
           {/* App Logo */}
@@ -551,17 +575,17 @@ export default function FeaturedAppPage() {
             </p>
           </div>
 
-          {/* Legacy Header Image (for backward compatibility) */}
+          {/* Powered By Image */}
           <div className="space-y-2">
-            <Label htmlFor="headerImage" className="text-sm font-medium">
-              Legacy Header Banner Image (Optional)
+            <Label htmlFor="poweredByImage" className="text-sm font-medium">
+              Powered By Image (Next to App Logo)
             </Label>
             <ImageUpload
-              value={content.headerImage}
-              onChange={(imageId) => setContent({ ...content, headerImage: imageId })}
+              value={content.poweredByImage}
+              onChange={(imageId) => setContent({ ...content, poweredByImage: imageId })}
             />
             <p className="text-xs text-muted-foreground">
-              Old header image format (used as fallback if new banner is not configured)
+              Image displayed next to the app logo (e.g., "Powered by: eCPAY")
             </p>
           </div>
 

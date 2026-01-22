@@ -19,6 +19,7 @@ type FeaturedAppContent = {
   gradientTo: string;
   gradientDirection: string;
   appLogo: string;
+  poweredByImage: string;
   bannerHeight: string;
 };
 
@@ -101,6 +102,7 @@ export default function FeaturedApp() {
           gradientTo: data.gradientTo || data.gradient_to || '#1e40af',
           gradientDirection: data.gradientDirection || data.gradient_direction || 'to-r',
           appLogo: data.appLogo || data.app_logo || '',
+          poweredByImage: data.poweredByImage || data.powered_by_image || '',
           bannerHeight: data.bannerHeight || data.banner_height || 'h-60',
         });
       } else {
@@ -209,32 +211,47 @@ export default function FeaturedApp() {
             </div>
           </div>
 
-          {/* App Logo - Left Side (Vertically Centered) */}
-          {content.appLogo && (
-            <div 
-              className={`absolute left-8 top-1/2 -translate-y-1/2 z-10 ${
-                isVisible ? 'animate-fadeIn-slow' : 'opacity-0'
-              }`}
-              style={{
-                animationDelay: isVisible ? '0.3s' : '0s',
-              }}
-            >
+          {/* App Logo and Powered By Image - Left Side (Vertically Centered) */}
+          <div 
+            className={`absolute left-8 top-1/2 -translate-y-1/2 z-10 h-full flex items-center gap-1 ${
+              isVisible ? 'animate-fadeIn-slow' : 'opacity-0'
+            }`}
+            style={{
+              animationDelay: isVisible ? '0.3s' : '0s',
+              maxHeight: '100%',
+              paddingTop: '1rem',
+              paddingBottom: '1rem',
+            }}
+          >
+            {content.appLogo && (
               <img
                 src={getImageUrl(content.appLogo)}
                 alt="App Logo"
-                 className="w-auto object-contain"
-                  style={{
-                    height: '220px',
-                    maxHeight: '220px',
-                  }}
+                className="w-auto h-full object-contain"
+                style={{
+                  maxHeight: '100%',
+                  maxWidth: '100%',
+                }}
               />
-            </div>
-          )}
+            )}
+            {content.poweredByImage && (
+              <img
+                src={getImageUrl(content.poweredByImage)}
+                alt="Powered By"
+                className="w-auto h-full object-contain"
+                style={{
+                  maxHeight: '100%',
+                  maxWidth: '100%',
+                  marginTop: '5rem',
+                }}
+              />
+            )}
+          </div>
 
           {/* Feature Icons - Bottom Right */}
           {features.length > 0 && (
             <div 
-              className={`absolute bottom-[-5px] right-8 z-10 hidden md:flex items-center gap-6 max-w-md justify-end ${
+              className={`absolute bottom-[-5px] right-8 z-10 hidden md:flex items-center gap-4 max-w-md justify-end ${
                 isVisible ? 'animate-fadeIn-slow' : 'opacity-0'
               }`}
               style={{
@@ -271,7 +288,7 @@ export default function FeaturedApp() {
 
       {/* Block 2: Horizontal Carousel */}
       {marqueeImages.length > 0 && (
-        <div className="w-full py-4">
+        <div className="w-full py-4 bg-[#D7E1E4]">
           <div
             className="projects-marquee relative left-1/2 w-screen -translate-x-1/2"
             style={{
@@ -286,14 +303,16 @@ export default function FeaturedApp() {
                 animationDelay: isVisible ? '0.3s' : '0s',
               }}
             >
-              <div className="projects-marquee-track">
+              <div className="projects-marquee-track" style={{ gap: '10px' }}>
                 {marqueeImages.map((img, index) => {
                   const imageUrl = getImageUrl(img.image);
                   const isFirst = (index % carouselImages.length) === 0;
                   return (
                     <div
                       key={`${img.id}-${index}`}
-                      className={`flex-shrink-0 overflow-hidden bg-gray-200 rounded-lg ${
+                      className={`flex-shrink-0 overflow-hidden bg-gray-200 ${
+                        isFirst ? 'rounded-lg' : ''
+                      } ${
                         isFirst
                           ? 'w-[400px] h-[180px] md:w-[550px] md:h-[220px]'
                           : 'w-[250px] h-[180px] md:w-[350px] md:h-[220px]'
@@ -320,10 +339,7 @@ export default function FeaturedApp() {
       {/* Block 3: Footer / Downloads */}
       {content && (
         <div 
-          className="w-full py-4 relative"
-          style={{
-            backgroundColor: content.gradientTo || '#1e40af',
-          }}
+          className="w-full py-4 relative bg-[#D7E1E4]"
         >
           <div className="flex flex-col md:flex-row justify-between items-center gap-6 px-4 md:px-6 lg:px-8">
             {/* Left Side: App QR Codes or Website Hyperlink */}
@@ -332,7 +348,7 @@ export default function FeaturedApp() {
                 /* App Mode: Download Badges */
                 <>
                   {content.downloadText && (
-                    <p className="text-white text-sm md:text-base font-medium whitespace-nowrap">
+                    <p className="text-gray-900 text-sm md:text-base font-medium whitespace-nowrap">
                       {content.downloadText}
                     </p>
                   )}
@@ -368,7 +384,7 @@ export default function FeaturedApp() {
                 /* Website Mode: Visit Link */
                 <>
                   {content.visitText && (
-                    <p className="text-white text-sm md:text-base font-medium whitespace-nowrap">
+                    <p className="text-gray-900 text-sm md:text-base font-medium whitespace-nowrap">
                       {content.visitText}
                     </p>
                   )}
@@ -377,7 +393,7 @@ export default function FeaturedApp() {
                       href={content.websiteUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-white text-sm md:text-base font-medium underline hover:text-blue-200 transition-colors"
+                      className="text-gray-900 text-sm md:text-base font-medium underline hover:text-blue-600 transition-colors"
                     >
                       {content.websiteUrl}
                     </a>

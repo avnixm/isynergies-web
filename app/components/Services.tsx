@@ -174,32 +174,32 @@ export default function Services() {
   }, []);
 
   return (
-    <section id="services" ref={sectionRef} className="relative text-white" style={{
-      background: 'linear-gradient(180deg, #07186E 0%, #004AB9 50%, #07186E 100%)',
-    }}>
-      <div className="relative min-h-screen overflow-hidden">
+    <section id="services" ref={sectionRef} className="relative text-white overflow-visible">
+      <div className="relative overflow-visible" style={{
+        background: 'linear-gradient(180deg, #07186E 0%, #004AB9 50%, #07186E 100%)',
+      }}>
         {/* Layout wrapper (fits in one desktop viewport) */}
-        <div className="container mx-auto flex min-h-screen max-w-7xl flex-col justify-between px-4 py-6 md:px-6 md:py-8 lg:px-12">
+        <div className="container mx-auto flex max-w-7xl flex-col px-4 pt-1 pb-0 md:px-6 md:pt-2 md:pb-0 lg:px-12">
           {/* Top area: Our Services - left copy + right hex cluster */}
-          <div className="grid w-full items-center gap-6 md:grid-cols-2">
+          <div className="grid w-full items-center gap-2 md:grid-cols-2 md:gap-3">
             {/* Left copy */}
-            <div className={`space-y-2 pr-4 md:pr-6 font-sans ml-4 md:ml-12 -mt-8 md:-mt-30 slide-right-content ${
+            <div className={`pr-4 md:pr-6 font-sans ml-4 md:ml-12 -mt-8 md:-mt-30 slide-right-content ${
               isVisible ? 'animate' : 'opacity-0'
             }`}>
-              <h2 className="text-3xl md:text-4xl font-semibold text-white mb-3">
+              <h2 className="text-3xl md:text-4xl font-semibold text-white mb-0.5">
                 Our Services
               </h2>
 
-              <p className="text-xs leading-relaxed font-light text-white/85 max-w-xl">
+              <p className="text-xs leading-relaxed font-light text-white/85 max-w-xl mt-0.5">
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed
                 consequat quam. Sed vel lorem finibus enim consectetur eleifend sit
                 amet vel neque.
               </p>
 
-              <ul className="mt-3 space-y-2 text-sm md:text-base font-semibold text-white">
+              <ul className="mt-0.5 space-y-0 text-sm md:text-base font-semibold text-white">
                 {['Development', 'Support', 'Analysis & Design', 'Sales'].map(
                   (t) => (
-                    <li key={t} className="flex items-center gap-3">
+                    <li key={t} className="flex items-center gap-2 mt-0.5">
                       <span className="text-[18px] leading-none text-white/90">
                         •
                       </span>
@@ -213,7 +213,7 @@ export default function Services() {
             {/* Right hex cluster */}
             <div className="flex justify-center md:justify-end">
               <div className="w-full max-w-[760px]">
-                <div className="grid grid-cols-3 grid-rows-2 place-items-center gap-x-[60px] md:gap-x-[70px] gap-y-4">
+                <div className="grid grid-cols-3 grid-rows-2 place-items-center gap-x-[60px] md:gap-x-[70px] gap-y-0 mt-4 md:mt-8">
                   {/* top row */}
                   <div className={`col-start-2 row-start-1 slide-down-slow ${
                     isVisible ? 'animate' : 'opacity-0'
@@ -237,7 +237,7 @@ export default function Services() {
                   </div>
 
                   {/* bottom row (offset upward for honeycomb) */}
-                  <div className={`col-start-1 row-start-2 -mt-4 md:-mt-[140px] translate-x-[90px] md:translate-x-[110px] slide-up-slow ${
+                  <div className={`col-start-1 row-start-2 -mt-4 md:-mt-[120px] translate-x-[90px] md:translate-x-[110px] slide-up-slow ${
                     isVisible ? 'animate' : 'opacity-0'
                   }`}>
                     <HexImage
@@ -246,7 +246,7 @@ export default function Services() {
                       className=""
                     />
                   </div>
-                  <div className={`col-start-2 row-start-2 -mt-4 md:-mt-[140px] translate-x-[80px] md:translate-x-[100px] slide-up-slow ${
+                  <div className={`col-start-2 row-start-2 -mt-4 md:-mt-[120px] translate-x-[80px] md:translate-x-[100px] slide-up-slow ${
                     isVisible ? 'animate' : 'opacity-0'
                   }`}
                   style={{ animationDelay: isVisible ? '0.2s' : '0s' }}>
@@ -260,79 +260,92 @@ export default function Services() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Red Scrolling Ticker Bar - Separator */}
-          <div
-            className="relative left-1/2 w-screen -translate-x-1/2 services-ticker-bg py-2 md:py-2.5 mt-[-20px] md:mt-[-30px]"
-            style={{
-              background: 'linear-gradient(90deg, #680000 0%, #A00000 50%, #680000 100%)',
-            }}
-          >
-            <div className="ticker-container ticker-fade">
-              <div className="ticker-content">
-                {/* One loop */}
-                <div className="ticker-row">
-                  {tickerItems.map((item) => (
-                    <span key={`ticker-1-${item.id}`}>
-                      <span className="ticker-item">{item.text}</span>
-                      <span className="ticker-star">*</span>
-                    </span>
-                  ))}
-                </div>
-
-                {/* Duplicate loop for seamless scroll */}
-                <div className="ticker-row" aria-hidden>
-                  {tickerItems.map((item) => (
-                    <span key={`ticker-2-${item.id}`}>
-                      <span className="ticker-item">{item.text}</span>
-                      <span className="ticker-star">*</span>
-                    </span>
-                  ))}
-                </div>
-              </div>
+      {/* Red Scrolling Ticker Bar - Separator */}
+      <div
+        className="relative left-1/2 w-screen -translate-x-1/2 services-ticker-bg py-2 md:py-2.5"
+        style={{
+          background: 'linear-gradient(90deg, #680000 0%, #A00000 50%, #680000 100%)',
+        }}
+      >
+        <div className="ticker-container ticker-fade">
+          <div className="ticker-content">
+            {/* One loop */}
+            <div className="ticker-row">
+              {tickerItems.map((item) => (
+                <span key={`ticker-1-${item.id}`}>
+                  <span className="ticker-item">{item.text}</span>
+                  <span className="ticker-star">*</span>
+                </span>
+              ))}
             </div>
-          </div>
 
-          {/* By the Numbers (kept compact so it stays visible) */}
-          <div className={`pt-4 pb-4 md:pt-6 md:pb-6 slide-up-content ${
-            isVisible ? 'animate' : 'opacity-0'
-          }`}>
-            <div className="text-center font-sans">
-              <h3 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8">
-                By the Numbers
-              </h3>
-
-              <div className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-4 md:gap-x-8 md:gap-y-6">
-                {loading ? (
-                  <div className="col-span-2 md:col-span-4">
-                    <Loading message="Loading statistics" size="md" className="text-white" />
-                  </div>
-                ) : (
-                  statistics.map((stat) => (
-                    <div key={stat.id}>
-                      <div 
-                        className="font-sans text-center"
-                        style={{
-                          fontFamily: 'Encode Sans Expanded',
-                          fontWeight: 600,
-                          fontSize: '64px',
-                          lineHeight: '100%',
-                          letterSpacing: '0%',
-                        }}
-                      >
-                        {stat.value}
-                      </div>
-                      <div className="mt-1 text-sm md:text-base font-semibold">
-                        {stat.label}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
+            {/* Duplicate loop for seamless scroll */}
+            <div className="ticker-row" aria-hidden>
+              {tickerItems.map((item) => (
+                <span key={`ticker-2-${item.id}`}>
+                  <span className="ticker-item">{item.text}</span>
+                  <span className="ticker-star">*</span>
+                </span>
+              ))}
             </div>
           </div>
         </div>
       </div>
+
+      {/* By the Numbers (kept compact so it stays visible) */}
+      <div className="relative left-1/2 w-screen -translate-x-1/2 bg-[#D7E1E4] pt-4 pb-4 md:pt-6 md:pb-6 overflow-visible">
+        <div className={`container mx-auto max-w-7xl px-4 md:px-6 lg:px-12 slide-up-content relative ${
+          isVisible ? 'animate' : 'opacity-0'
+        }`}>
+          <div className="text-center font-sans">
+            <h3 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8 text-gray-900">
+              By the Numbers
+            </h3>
+
+            <div className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-4 md:gap-x-8 md:gap-y-6 relative">
+              {loading ? (
+                <div className="col-span-2 md:col-span-4">
+                  <Loading message="Loading statistics" size="md" className="text-gray-900" />
+                </div>
+              ) : (
+                statistics.map((stat) => (
+                  <div key={stat.id}>
+                    <div 
+                      className="font-sans text-center text-gray-900"
+                      style={{
+                        fontFamily: 'Encode Sans Expanded',
+                        fontWeight: 600,
+                        fontSize: '64px',
+                        lineHeight: '100%',
+                        letterSpacing: '0%',
+                      }}
+                    >
+                      {stat.value}
+                    </div>
+                    <div className="mt-1 text-sm md:text-base font-semibold text-gray-900">
+                      {stat.label}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* iSgray logo under the last item position - overflows to next section */}
+      {!loading && statistics.length > 0 && (
+        <div className="absolute bottom-[-150px] md:bottom-[-200px] left-[70%] md:left-[82%] -translate-x-1/2 w-[400px] h-[400px] md:w-[500px] md:h-[500px] flex items-center justify-center z-0 pointer-events-none">
+          <img
+            src="/logos/iSgray.png"
+            alt="iS logo"
+            className="w-full h-full object-contain"
+            style={{ filter: 'brightness(0.3) contrast(1.8)' }}
+          />
+        </div>
+      )}
     </section>
   );
 }

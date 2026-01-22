@@ -252,6 +252,7 @@ export const featuredApp = mysqlTable('featured_app', {
   gradientTo: varchar('gradient_to', { length: 50 }).default('#1e40af'),
   gradientDirection: varchar('gradient_direction', { length: 20 }).default('to-r'),
   appLogo: varchar('app_logo', { length: 255 }),
+  poweredByImage: varchar('powered_by_image', { length: 255 }),
   bannerHeight: varchar('banner_height', { length: 20 }).default('h-60'),
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
 });

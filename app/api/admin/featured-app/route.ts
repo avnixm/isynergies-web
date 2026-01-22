@@ -25,6 +25,7 @@ export async function GET() {
         gradientTo: '#1e40af',
         gradientDirection: 'to-r',
         appLogo: '',
+        poweredByImage: '',
         bannerHeight: 'h-48',
       });
     }
@@ -44,7 +45,8 @@ export async function GET() {
       gradientTo: (content as any).gradientTo || (content as any).gradient_to || '#1e40af',
       gradientDirection: (content as any).gradientDirection || (content as any).gradient_direction || 'to-r',
       appLogo: (content as any).appLogo || (content as any).app_logo || '',
-      bannerHeight: (content as any).bannerHeight || (content as any).banner_height || 'h-48',
+      poweredByImage: (content as any).poweredByImage || (content as any).powered_by_image || '',
+      bannerHeight: (content as any).bannerHeight || (content as any).banner_height || 'h-60',
     };
 
     return NextResponse.json(response);
@@ -79,6 +81,7 @@ export async function PUT(request: Request) {
       gradientTo: body?.gradientTo ?? '#1e40af',
       gradientDirection: body?.gradientDirection ?? 'to-r',
       appLogo: body?.appLogo ?? '',
+      poweredByImage: body?.poweredByImage ?? '',
       bannerHeight: body?.bannerHeight ?? 'h-60',
     };
 
