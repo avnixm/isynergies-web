@@ -40,7 +40,7 @@ export async function POST(request: Request) {
 
     // If this is the first chunk, create the main image record
     if (chunkIndex === 0) {
-      const [result] = await db.insert(images).values({
+      const result: { id: number }[] = await db.insert(images).values({
         filename,
         mimeType: fileType,
         size: fileSize,
