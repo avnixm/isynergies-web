@@ -42,10 +42,37 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json({ user });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Auth check error:', error);
+    console.error('Error details:', {
+      message: error?.message,
+      code: error?.code,
+      errno: error?.errno,
+      sqlState: error?.sqlState,
+      sqlMessage: error?.sqlMessage,
+      stack: error?.stack,
+    });
+    
+    // Provide more specific error messages
+    let errorMessage = 'Internal server error';
+    if (error?.code === 'ECONNREFUSED' || error?.code === 'ENOTFOUND') {
+      errorMessage = 'Database connection failed. Please check your database configuration.';
+    } else if (error?.code === 'ER_ACCESS_DENIED_ERROR') {
+      errorMessage = 'Database access denied. Please check your credentials.';
+    } else if (error?.code === 'ER_BAD_DB_ERROR') {
+      errorMessage = 'Database does not exist. Please check your database name.';
+    } else if (error?.sqlMessage) {
+      errorMessage = `Database error: ${error.sqlMessage}`;
+    }
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: errorMessage,
+        ...(process.env.NODE_ENV === 'development' && {
+          details: error?.message,
+          code: error?.code,
+        })
+      },
       { status: 500 }
     );
   }
