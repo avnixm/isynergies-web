@@ -28,6 +28,11 @@ export default function Contact() {
     contactNo: '',
     name: '',
     message: '',
+    wantsDemo: false,
+    demoMonth: '',
+    demoDay: '',
+    demoYear: '',
+    demoTime: '',
   });
   const [settings, setSettings] = useState<SiteSettings>({
     companyName: 'iSynergies Inc.',
@@ -88,6 +93,29 @@ export default function Contact() {
       return;
     }
 
+    // Validate demo fields if wantsDemo is true
+    if (formData.wantsDemo) {
+      if (!formData.demoMonth || !formData.demoDay || !formData.demoYear || !formData.demoTime) {
+        toast.error('Please fill in all demo date and time fields');
+        return;
+      }
+      
+      // Validate that the selected date is not in the past
+      const selectedDate = new Date(
+        parseInt(formData.demoYear),
+        parseInt(formData.demoMonth) - 1,
+        parseInt(formData.demoDay)
+      );
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      selectedDate.setHours(0, 0, 0, 0);
+      
+      if (selectedDate < today) {
+        toast.error('Please select a date that is today or in the future');
+        return;
+      }
+    }
+
     setSubmitting(true);
 
     try {
@@ -104,6 +132,11 @@ export default function Contact() {
           contactNo: '',
           name: '',
           message: '',
+          wantsDemo: false,
+          demoMonth: '',
+          demoDay: '',
+          demoYear: '',
+          demoTime: '',
         });
       } else {
         toast.error('Failed to send message. Please try again.');
@@ -116,7 +149,7 @@ export default function Contact() {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     let value = e.target.value;
     
     // Filter phone number to only allow digits
@@ -130,10 +163,132 @@ export default function Contact() {
       value = value.replace(/[^a-zA-Z\s'-]/g, ''); // Only allow letters, spaces, hyphens, apostrophes
     }
     
-    setFormData({
+    // Reset day when month or year changes
+    const updates: any = {
       ...formData,
       [e.target.name]: value,
-    });
+    };
+    
+    if (e.target.name === 'demoMonth' || e.target.name === 'demoYear') {
+      updates.demoDay = ''; // Reset day selection when month or year changes
+    }
+    
+    setFormData(updates);
+  };
+
+  const handleWantsDemoChange = (wantsDemo: boolean) => {
+    if (wantsDemo) {
+      // Set defaults to current date
+      const today = new Date();
+      const currentYear = today.getFullYear().toString();
+      const currentMonth = (today.getMonth() + 1).toString(); // getMonth() returns 0-11
+      const currentDay = today.getDate();
+      const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+      const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+      
+      // If today is a weekday, use today. If weekend, find next weekday
+      let defaultDay = currentDay;
+      if (dayOfWeek === 0) {
+        // Sunday, set to Monday (next day)
+        defaultDay = currentDay + 1;
+      } else if (dayOfWeek === 6) {
+        // Saturday, set to Monday (2 days later)
+        defaultDay = currentDay + 2;
+      }
+      
+      // If the default day exceeds the month, find the first weekday in the current month
+      // (The day selector will filter to show only future weekdays anyway)
+      if (defaultDay > daysInMonth) {
+        // Find first weekday in current month
+        for (let day = 1; day <= daysInMonth; day++) {
+          const testDate = new Date(today.getFullYear(), today.getMonth(), day);
+          const testDayOfWeek = testDate.getDay();
+          if (testDayOfWeek >= 1 && testDayOfWeek <= 5) {
+            defaultDay = day;
+            break;
+          }
+        }
+      }
+      
+      setFormData({
+        ...formData,
+        wantsDemo,
+        demoYear: currentYear,
+        demoMonth: currentMonth,
+        demoDay: defaultDay.toString(),
+        demoTime: '',
+      });
+    } else {
+      // Reset demo fields when toggling off
+      setFormData({
+        ...formData,
+        wantsDemo,
+        demoMonth: '',
+        demoDay: '',
+        demoYear: '',
+        demoTime: '',
+      });
+    }
+  };
+
+  // Get available days for selected month/year (Monday to Friday only, no past dates)
+  const getAvailableDays = () => {
+    if (!formData.demoMonth || !formData.demoYear) return [];
+    
+    const month = parseInt(formData.demoMonth);
+    const year = parseInt(formData.demoYear);
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const days: number[] = [];
+    
+    // Get today's date (set to start of day for comparison)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month - 1, day);
+      date.setHours(0, 0, 0, 0);
+      const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+      
+      // Only include Monday (1) through Friday (5) and dates that are today or in the future
+      if (dayOfWeek >= 1 && dayOfWeek <= 5 && date >= today) {
+        days.push(day);
+      }
+    }
+    
+    return days;
+  };
+
+  // Get available years (current year and future years only)
+  const getAvailableYears = () => {
+    const currentYear = new Date().getFullYear();
+    const years: number[] = [];
+    // Include current year and next 5 years
+    for (let i = 0; i <= 5; i++) {
+      years.push(currentYear + i);
+    }
+    return years;
+  };
+
+  // Get available time slots
+  const getTimeSlots = () => {
+    const slots: string[] = [];
+    // 9AM to 12PM (noon)
+    for (let hour = 9; hour <= 12; hour++) {
+      if (hour === 12) {
+        slots.push('12:00 PM');
+      } else {
+        slots.push(`${hour}:00 AM`);
+        slots.push(`${hour}:30 AM`);
+      }
+    }
+    // 1PM to 5PM
+    for (let hour = 1; hour <= 5; hour++) {
+      slots.push(`${hour}:00 PM`);
+      if (hour < 5) {
+        slots.push(`${hour}:30 PM`);
+      }
+    }
+    return slots;
   };
 
   return (
@@ -358,6 +513,153 @@ export default function Contact() {
                   required
                 />
               </div>
+
+              {/* Do you want a demo? */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 font-sans">
+                  Do you want a demo?
+                </label>
+                <div className="flex gap-4">
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="radio"
+                      name="wantsDemo"
+                      checked={formData.wantsDemo === true}
+                      onChange={() => handleWantsDemoChange(true)}
+                      className="w-4 h-4 text-[#7A0D1A] focus:ring-2 focus:ring-[#7A0D1A] border-gray-300"
+                    />
+                    <span className="ml-2 text-sm text-gray-700 font-sans">Yes</span>
+                  </label>
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="radio"
+                      name="wantsDemo"
+                      checked={formData.wantsDemo === false}
+                      onChange={() => handleWantsDemoChange(false)}
+                      className="w-4 h-4 text-[#7A0D1A] focus:ring-2 focus:ring-[#7A0D1A] border-gray-300"
+                    />
+                    <span className="ml-2 text-sm text-gray-700 font-sans">No</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Demo Date/Time Fields (shown only if wantsDemo is true) */}
+              {formData.wantsDemo && (
+                <div className="space-y-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Month */}
+                    <div>
+                      <label
+                        htmlFor="demoMonth"
+                        className="block text-sm font-medium text-gray-700 mb-2 font-sans"
+                      >
+                        Month
+                      </label>
+                      <select
+                        id="demoMonth"
+                        name="demoMonth"
+                        value={formData.demoMonth}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A0D1A] focus:border-transparent text-gray-900 font-sans text-sm"
+                        required={formData.wantsDemo}
+                      >
+                        <option value="">Select Month</option>
+                        <option value="1">January</option>
+                        <option value="2">February</option>
+                        <option value="3">March</option>
+                        <option value="4">April</option>
+                        <option value="5">May</option>
+                        <option value="6">June</option>
+                        <option value="7">July</option>
+                        <option value="8">August</option>
+                        <option value="9">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                      </select>
+                    </div>
+
+                    {/* Day (Monday to Friday only) */}
+                    <div>
+                      <label
+                        htmlFor="demoDay"
+                        className="block text-sm font-medium text-gray-700 mb-2 font-sans"
+                      >
+                        Day
+                      </label>
+                      <select
+                        id="demoDay"
+                        name="demoDay"
+                        value={formData.demoDay}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A0D1A] focus:border-transparent text-gray-900 font-sans text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        required={formData.wantsDemo}
+                        disabled={!formData.demoMonth}
+                      >
+                        <option value="">Select Day</option>
+                        {getAvailableDays().map((day) => (
+                          <option key={day} value={day}>
+                            {day}
+                          </option>
+                        ))}
+                      </select>
+                      {formData.demoMonth && formData.demoYear && getAvailableDays().length === 0 && (
+                        <p className="text-xs text-red-600 mt-1">No available weekdays in this month (past dates excluded)</p>
+                      )}
+                    </div>
+
+                    {/* Year (present or future only) - Disabled, always current year */}
+                    <div>
+                      <label
+                        htmlFor="demoYear"
+                        className="block text-sm font-medium text-gray-700 mb-2 font-sans"
+                      >
+                        Year
+                      </label>
+                      <select
+                        id="demoYear"
+                        name="demoYear"
+                        value={formData.demoYear}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A0D1A] focus:border-transparent text-gray-900 font-sans text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        required={formData.wantsDemo}
+                        disabled={true}
+                      >
+                        {formData.demoYear && (
+                          <option value={formData.demoYear}>
+                            {formData.demoYear}
+                          </option>
+                        )}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Time Selection */}
+                  <div>
+                    <label
+                      htmlFor="demoTime"
+                      className="block text-sm font-medium text-gray-700 mb-2 font-sans"
+                    >
+                      Time
+                    </label>
+                    <select
+                      id="demoTime"
+                      name="demoTime"
+                      value={formData.demoTime}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A0D1A] focus:border-transparent text-gray-900 font-sans text-sm"
+                      required={formData.wantsDemo}
+                    >
+                      <option value="">Select Time</option>
+                      {getTimeSlots().map((time) => (
+                        <option key={time} value={time}>
+                          {time}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
 
               {/* Message Field */}
               <div>

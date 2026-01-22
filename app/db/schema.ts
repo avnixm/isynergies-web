@@ -190,6 +190,12 @@ export const contactMessages = mysqlTable('contact_messages', {
   // Optional link to a specific project inquiry
   projectId: int('project_id'),
   projectTitle: varchar('project_title', { length: 255 }),
+  // Demo request fields
+  wantsDemo: boolean('wants_demo').default(false),
+  demoMonth: varchar('demo_month', { length: 2 }),
+  demoDay: varchar('demo_day', { length: 2 }),
+  demoYear: varchar('demo_year', { length: 4 }),
+  demoTime: varchar('demo_time', { length: 50 }),
   status: varchar('status', { length: 50 }).notNull().default('new'), // new, read, replied, archived
   adminNotes: text('admin_notes'),
   createdAt: timestamp('created_at').defaultNow(),

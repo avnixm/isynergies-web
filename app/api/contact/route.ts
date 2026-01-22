@@ -10,13 +10,23 @@ export const maxDuration = 60;
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, contactNo, message, projectId, projectTitle } = body;
+    const { name, email, contactNo, message, projectId, projectTitle, wantsDemo, demoMonth, demoDay, demoYear, demoTime } = body;
 
     if (!name || !email || !contactNo || !message) {
       return NextResponse.json(
         { error: 'All fields are required' },
         { status: 400 }
       );
+    }
+
+    // Validate demo fields if wantsDemo is true
+    if (wantsDemo) {
+      if (!demoMonth || !demoDay || !demoYear || !demoTime) {
+        return NextResponse.json(
+          { error: 'All demo date and time fields are required when requesting a demo' },
+          { status: 400 }
+        );
+      }
     }
 
     // Validate phone number: exactly 11 digits starting with "09"
@@ -41,6 +51,11 @@ export async function POST(request: Request) {
       message,
       projectId: projectId ?? null,
       projectTitle: projectTitle ?? null,
+      wantsDemo: wantsDemo ?? false,
+      demoMonth: wantsDemo ? demoMonth : null,
+      demoDay: wantsDemo ? demoDay : null,
+      demoYear: wantsDemo ? demoYear : null,
+      demoTime: wantsDemo ? demoTime : null,
       status: 'new',
     });
 
@@ -173,6 +188,12 @@ export async function POST(request: Request) {
                       ${
                         projectTitle
                           ? `<div style="margin-top:6px;font-size:14px;color:${text};"><span style="color:${muted};">Project:</span> <span style="font-weight:600;">${safe(projectTitle)}</span></div>`
+                          : ''
+                      }
+                      ${
+                        wantsDemo
+                          ? `<div style="margin-top:6px;font-size:14px;color:${text};"><span style="color:${muted};">Demo Request:</span> <span style="font-weight:600;">Yes</span></div>
+                             <div style="margin-top:6px;font-size:14px;color:${text};"><span style="color:${muted};">Preferred Date:</span> <span style="font-weight:600;">${safe(demoMonth || '')}/${safe(demoDay || '')}/${safe(demoYear || '')} at ${safe(demoTime || '')}</span></div>`
                           : ''
                       }
                     </td>
