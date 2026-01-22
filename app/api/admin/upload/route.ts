@@ -45,16 +45,26 @@ export async function POST(request: Request) {
     // If the base64 data is larger than chunk size, split it into chunks
     if (base64Length > CHUNK_SIZE) {
       // Create the main image record with chunked flag
-      const [result] = await db.insert(images).values({
-        filename,
-        mimeType: file.type,
-        size: file.size,
-        data: '', // Empty for chunked images
-        isChunked: 1,
-        chunkCount: Math.ceil(base64Length / CHUNK_SIZE),
-      }).$returningId();
+      let result;
+      try {
+        result = await db.insert(images).values({
+          filename,
+          mimeType: file.type,
+          size: file.size,
+          data: '', // Empty for chunked images
+          isChunked: 1,
+          chunkCount: Math.ceil(base64Length / CHUNK_SIZE),
+        }).$returningId();
+      } catch (insertError: any) {
+        console.error('Error inserting image record:', insertError);
+        throw new Error(`Failed to create image record: ${insertError.message || insertError.sqlMessage || 'Unknown error'}`);
+      }
 
-      const imageId = result.id;
+      const imageId = result[0]?.id || result?.id;
+      if (!imageId) {
+        console.error('No ID returned from insert:', result);
+        throw new Error('Failed to get image ID from database');
+      }
 
       // Split base64 data into chunks
       const chunks: { imageId: number; chunkIndex: number; data: string }[] = [];
@@ -68,12 +78,23 @@ export async function POST(request: Request) {
       }
 
       // Insert chunks in batches to avoid overwhelming the database
-      for (const chunk of chunks) {
-        await db.insert(imageChunks).values({
-          imageId: chunk.imageId,
-          chunkIndex: chunk.chunkIndex,
-          data: chunk.data,
-        });
+      try {
+        for (const chunk of chunks) {
+          await db.insert(imageChunks).values({
+            imageId: chunk.imageId,
+            chunkIndex: chunk.chunkIndex,
+            data: chunk.data,
+          });
+        }
+      } catch (chunkError: any) {
+        console.error('Error inserting chunks:', chunkError);
+        // Try to clean up the main image record if chunk insertion fails
+        try {
+          await db.delete(images).where(eq(images.id, imageId));
+        } catch (cleanupError) {
+          console.error('Error cleaning up failed image record:', cleanupError);
+        }
+        throw new Error(`Failed to save file chunks: ${chunkError.message || chunkError.sqlMessage || 'Unknown error'}`);
       }
 
       // Return image ID as URL
@@ -86,26 +107,46 @@ export async function POST(request: Request) {
       }, { status: 200 });
     } else {
       // Small file - store directly (non-chunked)
-      const [result] = await db.insert(images).values({
-        filename,
-        mimeType: file.type,
-        size: file.size,
-        data: base64Data,
-        isChunked: 0,
-        chunkCount: 0,
-      }).$returningId();
+      let result;
+      try {
+        result = await db.insert(images).values({
+          filename,
+          mimeType: file.type,
+          size: file.size,
+          data: base64Data,
+          isChunked: 0,
+          chunkCount: 0,
+        }).$returningId();
+      } catch (insertError: any) {
+        console.error('Error inserting image record:', insertError);
+        throw new Error(`Failed to save image: ${insertError.message || insertError.sqlMessage || 'Unknown error'}`);
+      }
+
+      const imageId = result[0]?.id || result?.id;
+      if (!imageId) {
+        console.error('No ID returned from insert:', result);
+        throw new Error('Failed to get image ID from database');
+      }
 
       // Return image ID as URL
-      const url = `/api/images/${result.id}`;
+      const url = `/api/images/${imageId}`;
 
       return NextResponse.json({ 
         url, 
         filename,
-        id: result.id 
+        id: imageId 
       }, { status: 200 });
     }
   } catch (error: any) {
     console.error('Upload error:', error);
+    console.error('Error details:', {
+      message: error?.message,
+      code: error?.code,
+      errno: error?.errno,
+      sqlState: error?.sqlState,
+      sqlMessage: error?.sqlMessage,
+      stack: error?.stack,
+    });
     
     // Provide more specific error messages
     let errorMessage = 'Failed to upload file';
@@ -113,12 +154,21 @@ export async function POST(request: Request) {
       errorMessage = 'Connection was reset during upload. Please try again.';
     } else if (error.code === 'ETIMEDOUT' || error.message?.includes('timeout')) {
       errorMessage = 'Upload timed out. Please try again.';
+    } else if (error.code === 'ER_ACCESS_DENIED_ERROR' || error.code === 'ENOTFOUND') {
+      errorMessage = 'Database connection failed. Please check your database configuration.';
+    } else if (error.code === 'ER_NO_SUCH_TABLE') {
+      errorMessage = 'Database table not found. Please run database migrations.';
+    } else if (error.sqlMessage) {
+      errorMessage = `Database error: ${error.sqlMessage}`;
     } else if (error.message) {
       errorMessage = error.message;
     }
     
     return NextResponse.json(
-      { error: errorMessage },
+      { 
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      },
       { status: 500 }
     );
   }
