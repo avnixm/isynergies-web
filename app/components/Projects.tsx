@@ -79,6 +79,12 @@ export default function Projects() {
   const [inquiryError, setInquiryError] = useState<string | null>(null);
   const [inquiryPhoneError, setInquiryPhoneError] = useState('');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  // Demo request fields (project inquiry)
+  const [inquiryWantsDemo, setInquiryWantsDemo] = useState(false);
+  const [inquiryDemoMonth, setInquiryDemoMonth] = useState('');
+  const [inquiryDemoDay, setInquiryDemoDay] = useState('');
+  const [inquiryDemoYear, setInquiryDemoYear] = useState('');
+  const [inquiryDemoTime, setInquiryDemoTime] = useState('');
 
   // Validate phone number: exactly 11 digits starting with "09"
   const validateInquiryPhone = (phone: string): boolean => {
@@ -97,6 +103,81 @@ export default function Projects() {
     }
     setInquiryPhoneError('');
     return true;
+  };
+
+  const handleInquiryWantsDemoChange = (wantsDemo: boolean) => {
+    if (wantsDemo) {
+      const today = new Date();
+      const currentYear = today.getFullYear().toString();
+      const currentMonth = (today.getMonth() + 1).toString();
+      const currentDay = today.getDate();
+      const dayOfWeek = today.getDay();
+      const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+      let defaultDay = currentDay;
+      if (dayOfWeek === 0) defaultDay = currentDay + 1;
+      else if (dayOfWeek === 6) defaultDay = currentDay + 2;
+      if (defaultDay > daysInMonth) {
+        for (let day = 1; day <= daysInMonth; day++) {
+          const testDate = new Date(today.getFullYear(), today.getMonth(), day);
+          if (testDate.getDay() >= 1 && testDate.getDay() <= 5) {
+            defaultDay = day;
+            break;
+          }
+        }
+      }
+      setInquiryWantsDemo(true);
+      setInquiryDemoYear(currentYear);
+      setInquiryDemoMonth(currentMonth);
+      setInquiryDemoDay(defaultDay.toString());
+      setInquiryDemoTime('');
+    } else {
+      setInquiryWantsDemo(false);
+      setInquiryDemoMonth('');
+      setInquiryDemoDay('');
+      setInquiryDemoYear('');
+      setInquiryDemoTime('');
+    }
+  };
+
+  const getInquiryAvailableDays = (): number[] => {
+    if (!inquiryDemoMonth || !inquiryDemoYear) return [];
+    const month = parseInt(inquiryDemoMonth);
+    const year = parseInt(inquiryDemoYear);
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const days: number[] = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month - 1, day);
+      date.setHours(0, 0, 0, 0);
+      const dayOfWeek = date.getDay();
+      if (dayOfWeek >= 1 && dayOfWeek <= 5 && date >= today) days.push(day);
+    }
+    return days;
+  };
+
+  const getInquiryTimeSlots = (): string[] => {
+    const slots: string[] = [];
+    for (let hour = 9; hour <= 12; hour++) {
+      if (hour === 12) slots.push('12:00 PM');
+      else { slots.push(`${hour}:00 AM`); slots.push(`${hour}:30 AM`); }
+    }
+    for (let hour = 1; hour <= 5; hour++) {
+      slots.push(`${hour}:00 PM`);
+      if (hour < 5) slots.push(`${hour}:30 PM`);
+    }
+    return slots;
+  };
+
+  const handleInquiryDemoChange = (field: 'demoMonth' | 'demoDay' | 'demoTime', value: string) => {
+    if (field === 'demoMonth') {
+      setInquiryDemoMonth(value);
+      setInquiryDemoDay('');
+    } else if (field === 'demoDay') {
+      setInquiryDemoDay(value);
+    } else {
+      setInquiryDemoTime(value);
+    }
   };
   
   // Fallback data
@@ -242,6 +323,11 @@ export default function Projects() {
     setInquirySubmitting(false);
     setInquiryError(null);
     setInquiryPhoneError('');
+    setInquiryWantsDemo(false);
+    setInquiryDemoMonth('');
+    setInquiryDemoDay('');
+    setInquiryDemoYear('');
+    setInquiryDemoTime('');
   };
 
   const handleCloseModal = () => {
@@ -260,6 +346,25 @@ export default function Projects() {
       return;
     }
 
+    if (inquiryWantsDemo) {
+      if (!inquiryDemoMonth || !inquiryDemoDay || !inquiryDemoYear || !inquiryDemoTime) {
+        setInquiryError('Please fill in all demo date and time fields');
+        return;
+      }
+      const selectedDate = new Date(
+        parseInt(inquiryDemoYear),
+        parseInt(inquiryDemoMonth) - 1,
+        parseInt(inquiryDemoDay)
+      );
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      selectedDate.setHours(0, 0, 0, 0);
+      if (selectedDate < today) {
+        setInquiryError('Please select a date that is today or in the future');
+        return;
+      }
+    }
+
     setInquirySubmitting(true);
     setInquiryError(null);
 
@@ -273,10 +378,14 @@ export default function Projects() {
           name: inquiryName,
           email: inquiryEmail,
           contactNo: inquiryContactNo,
-          // Include project context in the stored message as well
           message: `Project inquiry about: ${selected.title}\n\n${inquiryMessage}`,
           projectId: Number.isNaN(Number(selected.id)) ? null : Number(selected.id),
           projectTitle: selected.title,
+          wantsDemo: inquiryWantsDemo,
+          demoMonth: inquiryWantsDemo ? inquiryDemoMonth : null,
+          demoDay: inquiryWantsDemo ? inquiryDemoDay : null,
+          demoYear: inquiryWantsDemo ? inquiryDemoYear : null,
+          demoTime: inquiryWantsDemo ? inquiryDemoTime : null,
         }),
       });
 
@@ -790,6 +899,118 @@ export default function Projects() {
                           placeholder="Tell us more about your needs or questions regarding this project..."
                         />
                       </div>
+
+                      <div className="space-y-1.5">
+                        <span className="block text-xs font-semibold uppercase tracking-wide text-gray-600">
+                          Do you want a demo?
+                        </span>
+                        <div className="flex gap-4">
+                          <label className="flex items-center cursor-pointer">
+                            <input
+                              type="radio"
+                              name="inquiryWantsDemo"
+                              checked={inquiryWantsDemo === true}
+                              onChange={() => handleInquiryWantsDemoChange(true)}
+                              className="w-4 h-4 text-[#0D1E66] focus:ring-2 focus:ring-[#0D1E66] border-gray-300"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">Yes</span>
+                          </label>
+                          <label className="flex items-center cursor-pointer">
+                            <input
+                              type="radio"
+                              name="inquiryWantsDemo"
+                              checked={inquiryWantsDemo === false}
+                              onChange={() => handleInquiryWantsDemoChange(false)}
+                              className="w-4 h-4 text-[#0D1E66] focus:ring-2 focus:ring-[#0D1E66] border-gray-300"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">No</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {inquiryWantsDemo && (
+                        <div className="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            <div className="space-y-1.5">
+                              <label className="block text-xs font-semibold uppercase tracking-wide text-gray-600">
+                                Month
+                              </label>
+                              <select
+                                value={inquiryDemoMonth}
+                                onChange={(e) => handleInquiryDemoChange('demoMonth', e.target.value)}
+                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#0D1E66] focus:outline-none focus:ring-2 focus:ring-[#0D1E66]/30"
+                                required={inquiryWantsDemo}
+                              >
+                                <option value="">Select Month</option>
+                                <option value="1">January</option>
+                                <option value="2">February</option>
+                                <option value="3">March</option>
+                                <option value="4">April</option>
+                                <option value="5">May</option>
+                                <option value="6">June</option>
+                                <option value="7">July</option>
+                                <option value="8">August</option>
+                                <option value="9">September</option>
+                                <option value="10">October</option>
+                                <option value="11">November</option>
+                                <option value="12">December</option>
+                              </select>
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="block text-xs font-semibold uppercase tracking-wide text-gray-600">
+                                Day
+                              </label>
+                              <select
+                                value={inquiryDemoDay}
+                                onChange={(e) => handleInquiryDemoChange('demoDay', e.target.value)}
+                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#0D1E66] focus:outline-none focus:ring-2 focus:ring-[#0D1E66]/30 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                required={inquiryWantsDemo}
+                                disabled={!inquiryDemoMonth}
+                              >
+                                <option value="">Select Day</option>
+                                {getInquiryAvailableDays().map((day) => (
+                                  <option key={day} value={day}>
+                                    {day}
+                                  </option>
+                                ))}
+                              </select>
+                              {inquiryDemoMonth && inquiryDemoYear && getInquiryAvailableDays().length === 0 && (
+                                <p className="text-xs text-red-600 mt-1">No available weekdays in this month (past dates excluded)</p>
+                              )}
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="block text-xs font-semibold uppercase tracking-wide text-gray-600">
+                                Year
+                              </label>
+                              <select
+                                value={inquiryDemoYear}
+                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                disabled
+                              >
+                                {inquiryDemoYear && <option value={inquiryDemoYear}>{inquiryDemoYear}</option>}
+                              </select>
+                            </div>
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="block text-xs font-semibold uppercase tracking-wide text-gray-600">
+                              Time
+                            </label>
+                            <select
+                              value={inquiryDemoTime}
+                              onChange={(e) => handleInquiryDemoChange('demoTime', e.target.value)}
+                              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[#0D1E66] focus:outline-none focus:ring-2 focus:ring-[#0D1E66]/30"
+                              required={inquiryWantsDemo}
+                            >
+                              <option value="">Select Time</option>
+                              {getInquiryTimeSlots().map((time) => (
+                                <option key={time} value={time}>
+                                  {time}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      )}
 
                       {inquiryError && (
                         <p className="text-sm text-red-600">{inquiryError}</p>
