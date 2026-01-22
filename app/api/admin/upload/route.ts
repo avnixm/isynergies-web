@@ -6,7 +6,8 @@ import { sql } from 'drizzle-orm';
 import { eq, asc } from 'drizzle-orm';
 
 // Increase max duration for large file uploads (videos can be very large)
-export const maxDuration = 600; // 10 minutes
+// Note: Vercel hobby plan max is 300 seconds (5 minutes)
+export const maxDuration = 300; // 5 minutes (max for Vercel hobby plan)
 export const runtime = 'nodejs';
 
 export async function POST(request: Request) {
