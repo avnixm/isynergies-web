@@ -10,6 +10,8 @@ interface CustomVideoPlayerProps {
   className?: string;
   onPauseRequested?: () => void;
   shouldPause?: boolean;
+  onPlay?: () => void;
+  playerId?: string | number;
 }
 
 // Helper to extract direct video URL from various sources
@@ -52,7 +54,7 @@ function getDirectVideoUrl(url: string): string | null {
   return null;
 }
 
-export function CustomVideoPlayer({ src, poster, title, className = '', onPauseRequested, shouldPause = false }: CustomVideoPlayerProps) {
+export function CustomVideoPlayer({ src, poster, title, className = '', onPauseRequested, shouldPause = false, onPlay, playerId }: CustomVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -77,7 +79,12 @@ export function CustomVideoPlayer({ src, poster, title, className = '', onPauseR
 
     const updateTime = () => setCurrentTime(video.currentTime);
     const updateDuration = () => setDuration(video.duration);
-    const handlePlay = () => setIsPlaying(true);
+    const handlePlay = () => {
+      setIsPlaying(true);
+      if (onPlay) {
+        onPlay();
+      }
+    };
     const handlePause = () => setIsPlaying(false);
     const handleLoadStart = () => setIsLoading(true);
     const handleCanPlay = () => setIsLoading(false);
@@ -420,6 +427,16 @@ export function CustomVideoPlayer({ src, poster, title, className = '', onPauseR
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
           title={title || 'Video'}
+          onLoad={() => {
+            // When iframe loads, if it's set to autoplay, notify parent
+            // This is a best-effort approach for iframe videos
+            // Note: Due to cross-origin restrictions, we can't directly detect iframe video playback
+            if (onPlay && embedUrl.includes('autoplay=1') && !shouldPause) {
+              setTimeout(() => {
+                if (onPlay) onPlay();
+              }, 500);
+            }
+          }}
         />
       </div>
     );
