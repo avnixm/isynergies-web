@@ -25,7 +25,7 @@ export default function Home() {
   return (
     <ToastProvider>
       <div className="relative text-white overflow-x-hidden max-w-full">
-      {/* Hero Section */}
+      {/* Hero Setion */}
       <Hero navLinks={navLinks} />
       
       {/* Featured App Section */}
