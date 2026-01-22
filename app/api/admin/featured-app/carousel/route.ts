@@ -8,18 +8,28 @@ import { asc } from 'drizzle-orm';
 export async function GET() {
   try {
     const images = await db
-      .select()
+      .select({
+        id: featuredAppCarouselImages.id,
+        image: featuredAppCarouselImages.image,
+        alt: featuredAppCarouselImages.alt,
+        displayOrder: featuredAppCarouselImages.displayOrder,
+        mediaType: featuredAppCarouselImages.mediaType,
+      })
       .from(featuredAppCarouselImages)
       .orderBy(asc(featuredAppCarouselImages.displayOrder));
     
     // Map results to ensure mediaType has a default value if null/undefined
-    const mappedImages = images.map((img: any) => ({
-      id: img.id,
-      image: img.image,
-      alt: img.alt,
-      displayOrder: img.displayOrder,
-      mediaType: img.mediaType || img.media_type || 'image', // Handle both camelCase and snake_case
-    }));
+    const mappedImages = images.map((img: any) => {
+      const mediaType = img.mediaType || img.media_type || 'image';
+      console.log(`Carousel item ${img.id}: mediaType=${mediaType}, image=${img.image}`);
+      return {
+        id: img.id,
+        image: img.image,
+        alt: img.alt,
+        displayOrder: img.displayOrder,
+        mediaType, // Handle both camelCase and snake_case
+      };
+    });
     
     return NextResponse.json(mappedImages);
   } catch (error: any) {

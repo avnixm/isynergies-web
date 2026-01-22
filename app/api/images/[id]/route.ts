@@ -54,13 +54,27 @@ export async function GET(
     // Convert base64 back to buffer
     const buffer = Buffer.from(base64Data, 'base64');
 
-    // Return image with proper headers
+    // Log for debugging (especially for videos)
+    const isVideo = image.mimeType?.startsWith('video/');
+    if (isVideo) {
+      console.log(`Serving video ${id}:`, {
+        mimeType: image.mimeType,
+        size: buffer.length,
+        filename: image.filename,
+        isChunked,
+      });
+    }
+
+    // Return image/video with proper headers
     return new NextResponse(buffer, {
       status: 200,
       headers: {
-        'Content-Type': image.mimeType,
+        'Content-Type': image.mimeType || 'application/octet-stream',
         'Content-Length': buffer.length.toString(),
         'Cache-Control': 'public, max-age=31536000, immutable',
+        // Add CORS headers for video streaming
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET',
       },
     });
   } catch (error) {

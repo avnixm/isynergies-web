@@ -131,7 +131,9 @@ export default function FeaturedApp() {
       const response = await fetch('/api/admin/featured-app/carousel');
       if (response.ok) {
         const data = await response.json();
+        console.log('Fetched carousel images:', data);
         const sortedData = data.sort((a: FeaturedAppCarouselImage, b: FeaturedAppCarouselImage) => a.displayOrder - b.displayOrder);
+        console.log('Sorted carousel images:', sortedData);
         setCarouselImages(sortedData);
       } else {
         console.error('Failed to fetch carousel images:', response.status, response.statusText);
@@ -587,6 +589,16 @@ export default function FeaturedApp() {
                     const isVideo = item.mediaType === 'video' || (item.image && (item.image.endsWith('.mp4') || item.image.endsWith('.webm') || item.image.endsWith('.mov')));
                     const isHovered = hoveredVideoIndex === index;
                     
+                    // Debug logging for videos
+                    if (isVideo) {
+                      console.log(`Video item ${item.id}:`, {
+                        mediaType: item.mediaType,
+                        image: item.image,
+                        mediaUrl,
+                        isVideo,
+                      });
+                    }
+                    
                     return (
                       <div
                         key={item.id}
@@ -646,6 +658,19 @@ export default function FeaturedApp() {
                                 muted
                                 loop
                                 playsInline
+                                onError={(e) => {
+                                  console.error(`Video load error for item ${item.id}:`, {
+                                    mediaUrl,
+                                    error: e,
+                                    videoElement: e.currentTarget,
+                                  });
+                                }}
+                                onLoadStart={() => {
+                                  console.log(`Video load started for item ${item.id}:`, mediaUrl);
+                                }}
+                                onLoadedData={() => {
+                                  console.log(`Video loaded for item ${item.id}`);
+                                }}
                               />
                               {/* Permanent play button overlay for videos - always visible, hides when playing */}
                               {playingVideoIndex !== index && (
@@ -772,6 +797,16 @@ export default function FeaturedApp() {
                   const isVideo = item.mediaType === 'video' || (item.image && (item.image.endsWith('.mp4') || item.image.endsWith('.webm') || item.image.endsWith('.mov')));
                   const isActive = index === modalIndex;
                   
+                  // Debug logging for videos in modal
+                  if (isVideo && isActive) {
+                    console.log(`Modal video item ${item.id}:`, {
+                      mediaType: item.mediaType,
+                      image: item.image,
+                      mediaUrl,
+                      isVideo,
+                    });
+                  }
+                  
                   return (
                     <div
                       key={item.id}
@@ -792,6 +827,19 @@ export default function FeaturedApp() {
                             muted={!isActive}
                             loop
                             playsInline
+                            onError={(e) => {
+                              console.error(`Modal video load error for item ${item.id}:`, {
+                                mediaUrl,
+                                error: e,
+                                videoElement: e.currentTarget,
+                              });
+                            }}
+                            onLoadStart={() => {
+                              console.log(`Modal video load started for item ${item.id}:`, mediaUrl);
+                            }}
+                            onLoadedData={() => {
+                              console.log(`Modal video loaded for item ${item.id}`);
+                            }}
                           />
                         ) : (
                           <img
