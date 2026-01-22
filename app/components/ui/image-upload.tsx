@@ -10,9 +10,11 @@ interface ImageUploadProps {
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
+  acceptVideo?: boolean; // Allow video files
+  mediaType?: 'image' | 'video'; // Current media type for preview
 }
 
-export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
+export function ImageUpload({ value, onChange, disabled, acceptVideo = false, mediaType }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -61,41 +63,63 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: {
-      'image/png': ['.png'],
-      'image/jpeg': ['.jpg', '.jpeg'],
-      'image/gif': ['.gif'],
-      'image/webp': ['.webp'],
-      'image/svg+xml': ['.svg'],
-    },
+    accept: acceptVideo
+      ? {
+          'image/png': ['.png'],
+          'image/jpeg': ['.jpg', '.jpeg'],
+          'image/gif': ['.gif'],
+          'image/webp': ['.webp'],
+          'image/svg+xml': ['.svg'],
+          'video/mp4': ['.mp4'],
+          'video/webm': ['.webm'],
+          'video/quicktime': ['.mov'],
+        }
+      : {
+          'image/png': ['.png'],
+          'image/jpeg': ['.jpg', '.jpeg'],
+          'image/gif': ['.gif'],
+          'image/webp': ['.webp'],
+          'image/svg+xml': ['.svg'],
+        },
     maxFiles: 1,
     disabled: disabled || uploading,
   });
 
-  // Construct proper image URL for display
+  // Construct proper image/video URL for display
   const displayUrl = value
     ? (typeof value === 'string' && (value.startsWith('/api/images/') || value.startsWith('http'))
         ? value 
         : `/api/images/${value}`)
     : '';
 
+  // Check if it's a video file - use mediaType prop if available, otherwise check URL
+  const isVideo = mediaType === 'video' || (displayUrl && (displayUrl.endsWith('.mp4') || displayUrl.endsWith('.webm') || displayUrl.endsWith('.mov') || displayUrl.includes('video')));
+
   return (
     <div className="space-y-4">
       {value ? (
         <div className="relative w-full h-64 rounded-lg overflow-hidden border border-border bg-muted/30">
-          <Image
-            src={displayUrl}
-            alt="Upload"
-            fill
-            className="object-contain"
-            unoptimized
-          />
+          {isVideo ? (
+            <video
+              src={displayUrl}
+              controls
+              className="w-full h-full object-contain"
+            />
+          ) : (
+            <Image
+              src={displayUrl}
+              alt="Upload"
+              fill
+              className="object-contain"
+              unoptimized
+            />
+          )}
           <button
             type="button"
             onClick={() => onChange('')}
             className="absolute top-2 right-2 p-1.5 rounded-lg bg-white border border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={disabled}
-            aria-label="Delete image"
+            aria-label="Delete media"
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -121,7 +145,7 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
                 {isDragActive ? (
                   <>
                     <Upload className="h-12 w-12 text-blue-500" />
-                    <p className="text-sm text-blue-600 font-medium">Drop the image here</p>
+                    <p className="text-sm text-blue-600 font-medium">Drop the {acceptVideo ? 'file' : 'image'} here</p>
                   </>
                 ) : (
                   <>
@@ -129,7 +153,9 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
                     <p className="text-sm text-gray-600">
                       <span className="font-medium text-blue-600">Click to upload</span> or drag and drop
                     </p>
-                    <p className="text-xs text-gray-500">PNG, JPG, JPEG, GIF, WEBP, SVG</p>
+                    <p className="text-xs text-gray-500">
+                      {acceptVideo ? 'PNG, JPG, JPEG, GIF, WEBP, SVG, MP4, WEBM, MOV' : 'PNG, JPG, JPEG, GIF, WEBP, SVG'}
+                    </p>
                   </>
                 )}
               </>

@@ -122,7 +122,7 @@ export default function Team() {
 
   if (loading) {
     return (
-      <section ref={sectionRef} className="relative bg-gray-100 py-16 flex justify-center items-center min-h-screen">
+      <section ref={sectionRef} className="relative bg-[#D7E1E4] py-16 flex justify-center items-center min-h-screen">
         <Loading message="Loading team members" size="lg" />
       </section>
     );
@@ -138,7 +138,7 @@ export default function Team() {
   let cursor = 0;
 
   return (
-    <section ref={sectionRef} className="relative bg-gray-100 py-16">
+    <section ref={sectionRef} className="relative bg-[#D7E1E4] py-15">
       <div className="container mx-auto max-w-7xl px-4 md:px-8 lg:px-16 relative z-10">
         {/* header bar - match thickness with Board strip (60px) */}
         <div className="mx-auto mb-10 w-full max-w-5xl overflow-hidden rounded-2xl">

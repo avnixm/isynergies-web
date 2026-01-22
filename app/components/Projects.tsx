@@ -315,7 +315,7 @@ export default function Projects() {
   }, [view]);
 
   return (
-    <section id="projects" ref={sectionRef} className="relative bg-[#D7E1E4] py-16">
+    <section id="projects" ref={sectionRef} className="relative bg-[#D7E1E4] py-5">
       <div className="container mx-auto max-w-7xl px-4 md:px-8 lg:px-16">
         <div className="text-center font-sans">
           <h2 className={`text-4xl md:text-5xl font-semibold text-gray-900 slide-down-slow ${

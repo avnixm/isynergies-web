@@ -257,11 +257,12 @@ export const featuredApp = mysqlTable('featured_app', {
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
 });
 
-// Featured App Carousel Images
+// Featured App Carousel Images/Videos
 export const featuredAppCarouselImages = mysqlTable('featured_app_carousel_images', {
   id: int('id').primaryKey().autoincrement(),
   image: varchar('image', { length: 255 }).notNull(),
   alt: varchar('alt', { length: 255 }).notNull().default('Featured app carousel image'),
+  mediaType: varchar('media_type', { length: 20 }).default('image'), // 'image' or 'video'
   displayOrder: int('display_order').notNull().default(0),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),

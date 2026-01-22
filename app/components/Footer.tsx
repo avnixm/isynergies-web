@@ -43,7 +43,9 @@ export default function Footer() {
   }, []);
 
   return (
-    <footer className="relative bg-[#D7E1E4] text-gray-900 overflow-hidden">
+    <footer className="relative text-white overflow-hidden" style={{
+      background: 'linear-gradient(to bottom right, #0D1E66, #003C9D, #001A4F)'
+    }}>
       {/* Hexagonal pattern background */}
       <div 
         className="absolute inset-0 opacity-20"
@@ -78,7 +80,7 @@ export default function Footer() {
             </div>
 
             {/* Contact information */}
-            <div className="space-y-1.5 text-xs md:text-sm text-gray-700 leading-normal">
+            <div className="space-y-1.5 text-xs md:text-sm text-white/90 leading-normal">
               <p>{settings.companyAddress}</p>
               <p>{settings.companyPhone}</p>
               <p>{settings.companyEmail}</p>
@@ -135,38 +137,38 @@ export default function Footer() {
 
           {/* Right: Site map */}
           <div className="font-sans">
-            <h3 className="text-lg md:text-xl font-bold mb-4 text-gray-900">Site Map</h3>
+            <h3 className="text-lg md:text-xl font-bold mb-4 text-white">Site Map</h3>
 
             <div className="grid grid-cols-2 gap-x-6 md:gap-x-8 gap-y-1.5 text-xs md:text-sm">
               <div className="space-y-1.5">
-                <a href="#home" className="block text-gray-700 hover:text-gray-900 transition-colors">
+                <a href="#home" className="block text-white/90 hover:text-white transition-colors">
                   Home
                 </a>
-                <a href="#about" className="block text-gray-700 hover:text-gray-900 transition-colors">
+                <a href="#about" className="block text-white/90 hover:text-white transition-colors">
                   About Us
                 </a>
-                <a href="#services" className="block text-gray-700 hover:text-gray-900 transition-colors">
+                <a href="#services" className="block text-white/90 hover:text-white transition-colors">
                   Services
                 </a>
-                <a href="#shop" className="block text-gray-700 hover:text-gray-900 transition-colors">
+                <a href="#shop" className="block text-white/90 hover:text-white transition-colors">
                   Shop
                 </a>
-                <a href="#team" className="block text-gray-700 hover:text-gray-900 transition-colors">
+                <a href="#team" className="block text-white/90 hover:text-white transition-colors">
                   Team
                 </a>
-                <a href="#contact" className="block text-gray-700 hover:text-gray-900 transition-colors">
+                <a href="#contact" className="block text-white/90 hover:text-white transition-colors">
                   Contact Us
                 </a>
               </div>
 
               <div className="space-y-1.5">
-                <a href="#help" className="block text-gray-700 hover:text-gray-900 transition-colors">
+                <a href="#help" className="block text-white/90 hover:text-white transition-colors">
                   Help Center
                 </a>
-                <a href="#terms" className="block text-gray-700 hover:text-gray-900 transition-colors">
+                <a href="#terms" className="block text-white/90 hover:text-white transition-colors">
                   Terms of Service
                 </a>
-                <a href="#privacy" className="block text-gray-700 hover:text-gray-900 transition-colors">
+                <a href="#privacy" className="block text-white/90 hover:text-white transition-colors">
                   Privacy Policy
                 </a>
               </div>
@@ -175,7 +177,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom copyright row */}
-        <div className="mt-6 pt-4 border-t border-gray-300 text-center text-xs md:text-sm font-sans text-gray-600">
+        <div className="mt-6 pt-4 border-t border-white/10 text-center text-xs md:text-sm font-sans text-white/70">
           Copyright {settings.companyName}. All Rights Reserved
         </div>
       </div>

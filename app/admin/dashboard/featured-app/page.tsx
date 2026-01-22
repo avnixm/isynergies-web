@@ -36,6 +36,7 @@ type FeaturedAppCarouselImage = {
   id: number;
   image: string;
   alt: string;
+  mediaType?: string;
   displayOrder: number;
 };
 
@@ -77,6 +78,7 @@ export default function FeaturedAppPage() {
   const [formCarouselImage, setFormCarouselImage] = useState({
     image: '',
     alt: '',
+    mediaType: 'image',
     displayOrder: 0,
   });
   const [savingCarouselImage, setSavingCarouselImage] = useState(false);
@@ -202,6 +204,7 @@ export default function FeaturedAppPage() {
     setFormCarouselImage({
       image: '',
       alt: '',
+      mediaType: 'image',
       displayOrder: getNextAvailableCarouselOrder(),
     });
     setCarouselOrderError('');
@@ -213,6 +216,7 @@ export default function FeaturedAppPage() {
     setFormCarouselImage({
       image: image.image,
       alt: image.alt,
+      mediaType: image.mediaType || 'image',
       displayOrder: image.displayOrder,
     });
     setCarouselOrderError('');
@@ -225,6 +229,7 @@ export default function FeaturedAppPage() {
     setFormCarouselImage({
       image: '',
       alt: '',
+      mediaType: 'image',
       displayOrder: getNextAvailableCarouselOrder(),
     });
     setCarouselOrderError('');
@@ -695,14 +700,14 @@ export default function FeaturedAppPage() {
           <Card className="rounded-xl border border-border bg-white shadow-sm w-full min-w-0 max-w-full">
         <CardHeader className="flex flex-row items-center justify-between px-6 pt-6 pb-4">
           <div>
-            <CardTitle className="text-lg font-medium text-foreground">Carousel Images</CardTitle>
+            <CardTitle className="text-lg font-medium text-foreground">Carousel Media</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">
-              Manage images displayed in the horizontal carousel
+              Manage images and videos displayed in the horizontal carousel
             </p>
           </div>
           <Button onClick={handleOpenAddCarouselDialog} className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
-            Add Carousel Image
+            Add Carousel Media
           </Button>
         </CardHeader>
         <CardContent className="px-6 pb-6">
@@ -710,13 +715,14 @@ export default function FeaturedAppPage() {
             <div className="text-center py-8 border-2 border-dashed border-border rounded-lg bg-muted/20">
               <p className="text-sm text-muted-foreground mb-4">No carousel images yet. Add images to the carousel.</p>
               <Button onClick={handleOpenAddCarouselDialog} variant="outline">
-                <Plus className="h-4 w-4 mr-2" /> Add First Image
+                <Plus className="h-4 w-4 mr-2" /> Add First Media
               </Button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {carouselImages.map((img) => {
                 const imageUrl = getImageUrl(img.image);
+                const isVideo = img.mediaType === 'video' || (img.image && (img.image.endsWith('.mp4') || img.image.endsWith('.webm') || img.image.endsWith('.mov')));
                 return (
                   <Card key={img.id} className="group relative rounded-xl border border-border bg-white shadow-sm transition-all hover:shadow-lg hover:scale-[1.02]">
                     <div className="absolute top-2 right-2 z-10">
@@ -727,13 +733,23 @@ export default function FeaturedAppPage() {
 
                     <div className="relative aspect-video w-full bg-gradient-to-br from-muted/50 to-muted overflow-hidden rounded-t-xl">
                       {imageUrl ? (
-                        <Image
-                          src={imageUrl}
-                          alt={img.alt}
-                          fill
-                          className="object-cover transition-transform duration-300 group-hover:scale-105"
-                          unoptimized
-                        />
+                        isVideo ? (
+                          <video
+                            src={imageUrl}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            muted
+                            playsInline
+                            preload="metadata"
+                          />
+                        ) : (
+                          <Image
+                            src={imageUrl}
+                            alt={img.alt}
+                            fill
+                            className="object-cover transition-transform duration-300 group-hover:scale-105"
+                            unoptimized
+                          />
+                        )
                       ) : (
                         <div className="flex h-full items-center justify-center bg-muted/30">
                           <div className="text-center">
@@ -917,15 +933,29 @@ export default function FeaturedAppPage() {
       <Dialog
         open={isCarouselDialogOpen}
         onOpenChange={setIsCarouselDialogOpen}
-        title={editingCarouselImage ? 'Edit Carousel Image' : 'Add Carousel Image'}
+        title={editingCarouselImage ? 'Edit Carousel Media' : 'Add Carousel Media'}
       >
         <div className="space-y-4 mb-6">
           <HtmlTips />
           <div className="space-y-2">
-            <Label htmlFor="carousel-image-upload">Image</Label>
+            <Label htmlFor="carousel-media-type">Media Type</Label>
+            <select
+              id="carousel-media-type"
+              value={formCarouselImage.mediaType}
+              onChange={(e) => setFormCarouselImage({ ...formCarouselImage, mediaType: e.target.value })}
+              className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <option value="image">Image</option>
+              <option value="video">Video</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="carousel-image-upload">{formCarouselImage.mediaType === 'video' ? 'Video' : 'Image'}</Label>
             <ImageUpload
               value={formCarouselImage.image}
               onChange={(imageId) => setFormCarouselImage({ ...formCarouselImage, image: imageId })}
+              acceptVideo={formCarouselImage.mediaType === 'video'}
+              mediaType={formCarouselImage.mediaType as 'image' | 'video'}
             />
           </div>
           <div className="space-y-2">
@@ -935,7 +965,7 @@ export default function FeaturedAppPage() {
               type="text"
               value={formCarouselImage.alt}
               onChange={(e) => setFormCarouselImage({ ...formCarouselImage, alt: e.target.value })}
-              placeholder="Featured app carousel image"
+              placeholder={formCarouselImage.mediaType === 'video' ? 'Featured app carousel video' : 'Featured app carousel image'}
             />
           </div>
           <div className="space-y-2">

@@ -12,11 +12,25 @@ export async function GET() {
       .from(featuredAppCarouselImages)
       .orderBy(asc(featuredAppCarouselImages.displayOrder));
     
-    return NextResponse.json(images);
-  } catch (error) {
+    // Map results to ensure mediaType has a default value if null/undefined
+    const mappedImages = images.map((img: any) => ({
+      id: img.id,
+      image: img.image,
+      alt: img.alt,
+      displayOrder: img.displayOrder,
+      mediaType: img.mediaType || img.media_type || 'image', // Handle both camelCase and snake_case
+    }));
+    
+    return NextResponse.json(mappedImages);
+  } catch (error: any) {
     console.error('Error fetching carousel images:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      sql: error.sql,
+    });
     return NextResponse.json(
-      { error: 'Failed to fetch images' },
+      { error: 'Failed to fetch images', details: error.message },
       { status: 500 }
     );
   }
@@ -29,18 +43,22 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { image, alt, displayOrder } = body;
+    const { image, alt, displayOrder, mediaType } = body;
 
     if (!image || (typeof image === 'string' && image.trim() === '')) {
       return NextResponse.json(
-        { error: 'Image is required' },
+        { error: 'Image/Video is required' },
         { status: 400 }
       );
     }
 
+    // Determine media type if not provided
+    const detectedMediaType = mediaType || (typeof image === 'string' && (image.endsWith('.mp4') || image.endsWith('.webm') || image.endsWith('.mov')) ? 'video' : 'image');
+
     const result = await db.insert(featuredAppCarouselImages).values({
       image: typeof image === 'string' ? image.trim() : image,
-      alt: alt?.trim() || 'Featured app carousel image',
+      alt: alt?.trim() || 'Featured app carousel media',
+      mediaType: detectedMediaType,
       displayOrder: displayOrder ?? 0,
     });
 

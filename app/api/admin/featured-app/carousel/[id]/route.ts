@@ -14,7 +14,7 @@ export async function PUT(
 
   try {
     const body = await request.json();
-    const { image, alt, displayOrder } = body;
+    const { image, alt, displayOrder, mediaType } = body;
     const { id: idParam } = await params;
     const id = parseInt(idParam);
 
@@ -27,16 +27,20 @@ export async function PUT(
 
     if (!image || (typeof image === 'string' && image.trim() === '')) {
       return NextResponse.json(
-        { error: 'Image is required' },
+        { error: 'Image/Video is required' },
         { status: 400 }
       );
     }
+
+    // Determine media type if not provided
+    const detectedMediaType = mediaType || (typeof image === 'string' && (image.endsWith('.mp4') || image.endsWith('.webm') || image.endsWith('.mov')) ? 'video' : 'image');
 
     await db
       .update(featuredAppCarouselImages)
       .set({
         image: typeof image === 'string' ? image.trim() : image,
-        alt: alt?.trim() || 'Featured app carousel image',
+        alt: alt?.trim() || 'Featured app carousel media',
+        mediaType: detectedMediaType,
         displayOrder: displayOrder ?? 0,
       })
       .where(eq(featuredAppCarouselImages.id, id));
