@@ -82,13 +82,10 @@ export default function FeaturedApp() {
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        await Promise.all([fetchContent(), fetchCarouselImages(), fetchFeatures()]);
-      } catch (error) {
-        console.error('Error fetching Featured App data:', error);
-      } finally {
-        setLoading(false);
-      }
+      // Use Promise.allSettled so each fetch can fail independently
+      // This way if one fails, the others can still load
+      await Promise.allSettled([fetchContent(), fetchCarouselImages(), fetchFeatures()]);
+      setLoading(false);
     };
     fetchData();
   }, []);
@@ -116,11 +113,14 @@ export default function FeaturedApp() {
           bannerHeight: data.bannerHeight || data.banner_height || 'h-60',
         });
       } else {
-        console.error('Failed to fetch content:', response.status, response.statusText);
+        // Don't throw - just log the error and continue
+        // The component will use default/empty values
+        console.warn('Failed to fetch featured app content:', response.status, response.statusText);
       }
     } catch (error) {
-      console.error('Error fetching featured app content:', error);
-      throw error;
+      // Don't throw - just log the error
+      // This allows other fetches to continue
+      console.warn('Error fetching featured app content:', error);
     }
   };
 
@@ -134,11 +134,12 @@ export default function FeaturedApp() {
         console.log('Sorted carousel images:', sortedData);
         setCarouselImages(sortedData);
       } else {
-        console.error('Failed to fetch carousel images:', response.status, response.statusText);
+        // Don't throw - just log and continue
+        console.warn('Failed to fetch carousel images:', response.status, response.statusText);
       }
     } catch (error) {
-      console.error('Error fetching carousel images:', error);
-      throw error;
+      // Don't throw - just log the error
+      console.warn('Error fetching carousel images:', error);
     }
   };
 
@@ -150,11 +151,12 @@ export default function FeaturedApp() {
         const sortedData = data.sort((a: FeaturedAppFeature, b: FeaturedAppFeature) => a.displayOrder - b.displayOrder);
         setFeatures(sortedData);
       } else {
-        console.error('Failed to fetch features:', response.status, response.statusText);
+        // Don't throw - just log and continue
+        console.warn('Failed to fetch features:', response.status, response.statusText);
       }
     } catch (error) {
-      console.error('Error fetching features:', error);
-      throw error;
+      // Don't throw - just log the error
+      console.warn('Error fetching features:', error);
     }
   };
 

@@ -70,21 +70,21 @@ export default function ServicesPage() {
     displayOrder: 0,
   });
 
-  const usedOrders = statistics.filter(s => s.id !== editingStat?.id).map(s => s.displayOrder);
+  const usedOrders = (Array.isArray(statistics) ? statistics : []).filter(s => s.id !== editingStat?.id).map(s => s.displayOrder);
   const getNextAvailableOrder = () => {
     let order = 0;
     while (usedOrders.includes(order)) { order++; }
     return order;
   };
 
-  const tickerUsedOrders = tickerItems.filter(t => t.id !== editingTicker?.id).map(t => t.displayOrder);
+  const tickerUsedOrders = (Array.isArray(tickerItems) ? tickerItems : []).filter(t => t.id !== editingTicker?.id).map(t => t.displayOrder);
   const getNextAvailableTickerOrder = () => {
     let order = 0;
     while (tickerUsedOrders.includes(order)) { order++; }
     return order;
   };
 
-  const serviceUsedOrders = services.filter(s => s.id !== editingService?.id).map(s => s.displayOrder);
+  const serviceUsedOrders = (Array.isArray(services) ? services : []).filter(s => s.id !== editingService?.id).map(s => s.displayOrder);
   const getNextAvailableServiceOrder = () => {
     let order = 0;
     while (serviceUsedOrders.includes(order)) { order++; }
@@ -100,10 +100,17 @@ export default function ServicesPage() {
   const fetchStatistics = async () => {
     try {
       const response = await fetch('/api/admin/statistics');
-      const data = await response.json();
-      setStatistics(data);
+      if (response.ok) {
+        const data = await response.json();
+        // Ensure data is an array
+        setStatistics(Array.isArray(data) ? data : []);
+      } else {
+        console.error('Error fetching statistics:', response.status, response.statusText);
+        setStatistics([]);
+      }
     } catch (error) {
       console.error('Error fetching statistics:', error);
+      setStatistics([]);
     } finally {
       setLoading(false);
     }
@@ -112,20 +119,34 @@ export default function ServicesPage() {
   const fetchTickerItems = async () => {
     try {
       const response = await fetch('/api/admin/ticker');
-      const data = await response.json();
-      setTickerItems(data);
+      if (response.ok) {
+        const data = await response.json();
+        // Ensure data is an array
+        setTickerItems(Array.isArray(data) ? data : []);
+      } else {
+        console.error('Error fetching ticker items:', response.status, response.statusText);
+        setTickerItems([]);
+      }
     } catch (error) {
       console.error('Error fetching ticker items:', error);
+      setTickerItems([]);
     }
   };
 
   const fetchServices = async () => {
     try {
       const response = await fetch('/api/admin/services');
-      const data = await response.json();
-      setServices(data);
+      if (response.ok) {
+        const data = await response.json();
+        // Ensure data is an array
+        setServices(Array.isArray(data) ? data : []);
+      } else {
+        console.error('Error fetching services:', response.status, response.statusText);
+        setServices([]);
+      }
     } catch (error) {
       console.error('Error fetching services:', error);
+      setServices([]);
     }
   };
 

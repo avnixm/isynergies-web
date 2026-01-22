@@ -19,29 +19,30 @@ export default function AdminDashboard() {
   }, []);
 
   const fetchStats = async () => {
-    try {
-      const token = localStorage.getItem('admin_token');
-      const headers = { 'Authorization': `Bearer ${token}` };
+    const token = localStorage.getItem('admin_token');
+    const headers = { 'Authorization': `Bearer ${token}` };
 
-      const [boardRes, projectsRes, teamRes] = await Promise.all([
-        fetch('/api/admin/board-members', { headers }),
-        fetch('/api/admin/projects', { headers }),
-        fetch('/api/admin/team', { headers }),
-      ]);
+    // Fetch all stats in parallel, but handle each one independently
+    // This way if one fails, the others can still load
+    const [boardResult, projectsResult, teamResult, servicesResult] = await Promise.allSettled([
+      fetch('/api/admin/board-members', { headers }).then(res => res.ok ? res.json() : []),
+      fetch('/api/admin/projects', { headers }).then(res => res.ok ? res.json() : []),
+      fetch('/api/admin/team', { headers }).then(res => res.ok ? res.json() : []),
+      fetch('/api/admin/services', { headers }).then(res => res.ok ? res.json() : []),
+    ]);
 
-      const board = await boardRes.json();
-      const projects = await projectsRes.json();
-      const team = await teamRes.json();
+    // Extract results, defaulting to empty array on failure
+    const board = boardResult.status === 'fulfilled' ? boardResult.value : [];
+    const projects = projectsResult.status === 'fulfilled' ? projectsResult.value : [];
+    const team = teamResult.status === 'fulfilled' ? teamResult.value : [];
+    const services = servicesResult.status === 'fulfilled' ? servicesResult.value : [];
 
-      setStats({
-        boardMembers: Array.isArray(board) ? board.length : 0,
-        projects: Array.isArray(projects) ? projects.length : 0,
-        teamMembers: Array.isArray(team) ? team.length : 0,
-        services: 4,
-      });
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-    }
+    setStats({
+      boardMembers: Array.isArray(board) ? board.length : 0,
+      projects: Array.isArray(projects) ? projects.length : 0,
+      teamMembers: Array.isArray(team) ? team.length : 0,
+      services: Array.isArray(services) ? services.length : 0,
+    });
   };
 
   const statCards = [

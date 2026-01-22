@@ -14,9 +14,11 @@ type HexImageProps = {
 function HexImage({ src, alt, className, emphasized }: HexImageProps) {
   const getImageUrl = (imageId: string | null): string | null => {
     if (!imageId) return null;
+    // Handle different formats
     if (imageId.startsWith('/api/images/') || imageId.startsWith('http') || imageId.startsWith('/')) {
       return imageId;
     }
+    // Assume it's an image ID and construct the URL
     return `/api/images/${imageId}`;
   };
 
@@ -43,6 +45,12 @@ function HexImage({ src, alt, className, emphasized }: HexImageProps) {
             sizes="(min-width: 768px) 180px, 150px"
             priority={false}
             unoptimized
+            onError={(e) => {
+              console.error(`Failed to load image: ${imageUrl}`, e);
+            }}
+            onLoad={() => {
+              console.log(`Successfully loaded image: ${imageUrl}`);
+            }}
           />
         ) : (
           <>
@@ -162,6 +170,8 @@ export default function Services() {
             icon3: sortedServices[2]?.icon || null,
             icon4: sortedServices[3]?.icon || null,
           });
+        } else {
+          console.error('Failed to fetch services:', servicesResponse.status, servicesResponse.statusText);
         }
       } catch (error) {
         console.error('Error fetching data:', error);

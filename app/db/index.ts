@@ -2,8 +2,12 @@ import { drizzle } from 'drizzle-orm/mysql2';
 import mysql from 'mysql2/promise';
 import * as schema from './schema';
 
+// Determine if we're in development mode
+const isDevelopment = process.env.NODE_ENV === 'development';
+
 // Create the connection pool optimized for serverless environments (Vercel production)
-// These settings apply to both development and production
+// In development, allow more connections for parallel requests
+// In production, each serverless function instance gets its own pool
 const connection = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '3306'),
@@ -15,15 +19,15 @@ const connection = mysql.createPool({
     rejectUnauthorized: false, // For cloud databases with self-signed certificates
   } : undefined,
   // Connection pool settings optimized for serverless (Vercel production)
-  // Each serverless function instance gets its own pool, so we need very low limits
-  // This prevents "Too many connections" errors in production
-  connectionLimit: 1, // Single connection per instance to minimize total connections
-  queueLimit: 3, // Reduced queue limit to fail fast when pool is exhausted
+  // In development, allow more connections for parallel requests
+  // In production, each serverless function instance gets its own pool
+  connectionLimit: isDevelopment ? 5 : 1, // More connections in dev for parallel requests, single in production
+  queueLimit: isDevelopment ? 10 : 3, // Allow more queued requests in development
   idleTimeout: 5000, // Close idle connections after 5 seconds (very aggressive for serverless - Vercel recommendation)
   // Timeout settings (in milliseconds)
   connectTimeout: 3000, // 3 seconds for initial connection (faster timeout)
   // Enable connection reuse
-  waitForConnections: false, // Don't queue - fail fast if connection unavailable (prevents connection buildup)
+  waitForConnections: true, // Queue requests when pool is busy (allows parallel requests to wait)
   // Automatically close idle connections
   enableKeepAlive: true,
   keepAliveInitialDelay: 0,
@@ -50,6 +54,7 @@ export async function withRetry<T>(
       const isConnectionError = 
         error?.code === 'ER_CON_COUNT_ERROR' ||
         error?.sqlMessage?.includes('Too many connections') ||
+        error?.message?.includes('No connections available') ||
         error?.code === 'ECONNRESET' ||
         error?.code === 'ETIMEDOUT' ||
         error?.code === 'PROTOCOL_CONNECTION_LOST';
