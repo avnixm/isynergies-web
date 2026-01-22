@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     // If the base64 data is larger than chunk size, split it into chunks
     if (base64Length > CHUNK_SIZE) {
       // Create the main image record with chunked flag
-      let result;
+      let result: { id: number }[];
       try {
         result = await db.insert(images).values({
           filename,
@@ -60,7 +60,8 @@ export async function POST(request: Request) {
         throw new Error(`Failed to create image record: ${insertError.message || insertError.sqlMessage || 'Unknown error'}`);
       }
 
-      const imageId = result[0]?.id || result?.id;
+      // $returningId() returns an array, so we need to access the first element
+      const imageId = result[0]?.id;
       if (!imageId) {
         console.error('No ID returned from insert:', result);
         throw new Error('Failed to get image ID from database');
@@ -107,7 +108,7 @@ export async function POST(request: Request) {
       }, { status: 200 });
     } else {
       // Small file - store directly (non-chunked)
-      let result;
+      let result: { id: number }[];
       try {
         result = await db.insert(images).values({
           filename,
@@ -122,7 +123,8 @@ export async function POST(request: Request) {
         throw new Error(`Failed to save image: ${insertError.message || insertError.sqlMessage || 'Unknown error'}`);
       }
 
-      const imageId = result[0]?.id || result?.id;
+      // $returningId() returns an array, so we need to access the first element
+      const imageId = result[0]?.id;
       if (!imageId) {
         console.error('No ID returned from insert:', result);
         throw new Error('Failed to get image ID from database');
