@@ -30,10 +30,14 @@ export async function GET(
     const isChunked = (image as any).isChunked === 1 || (image as any).is_chunked === 1;
     
     let base64Data: string;
+    let chunks: any[] = [];
     
     if (isChunked) {
+      // Get expected chunk count from image record
+      const expectedChunks = (image as any).chunkCount || (image as any).chunk_count || 0;
+      
       // Fetch all chunks and reassemble
-      const chunks = await db
+      chunks = await db
         .select()
         .from(imageChunks)
         .where(eq(imageChunks.imageId, imageId))
@@ -47,10 +51,32 @@ export async function GET(
         );
       }
 
-      console.log(`Reassembling ${chunks.length} chunks for image ${imageId}`);
+      console.log(`Reassembling ${chunks.length} chunks for image ${imageId} (expected: ${expectedChunks})`);
+      
+      // Verify we have all chunks
+      if (expectedChunks > 0 && chunks.length !== expectedChunks) {
+        console.error(`Incomplete chunks for image ${imageId}: got ${chunks.length}, expected ${expectedChunks}`);
+        return NextResponse.json(
+          { error: `Incomplete video data: ${chunks.length}/${expectedChunks} chunks available` },
+          { status: 500 }
+        );
+      }
+      
+      // Verify chunk indices are sequential (0, 1, 2, ...)
+      for (let i = 0; i < chunks.length; i++) {
+        if (chunks[i].chunkIndex !== i) {
+          console.error(`Missing chunk ${i} for image ${imageId}. Found indices: ${chunks.map(c => c.chunkIndex).join(', ')}`);
+          return NextResponse.json(
+            { error: `Missing chunk ${i} in video data` },
+            { status: 500 }
+          );
+        }
+      }
       
       // Reassemble chunks in order
       base64Data = chunks.map(chunk => chunk.data).join('');
+      
+      console.log(`Reassembled ${imageId}: ${chunks.length} chunks, ${base64Data.length} base64 chars`);
       
       if (!base64Data || base64Data.length === 0) {
         console.error(`Empty base64 data after reassembly for image ${imageId}`);
@@ -99,6 +125,8 @@ export async function GET(
     if (isVideo) {
       const firstBytes = buffer.slice(0, 12);
       const hexSignature = firstBytes.toString('hex');
+      const lastBytes = buffer.slice(-12);
+      const lastHexSignature = lastBytes.toString('hex');
       
       // Check for common video file signatures
       const isValidVideo = 
@@ -112,14 +140,23 @@ export async function GET(
         size: buffer.length,
         filename: image.filename,
         isChunked,
+        expectedChunks: isChunked ? ((image as any).chunkCount || (image as any).chunk_count || 0) : 1,
+        actualChunks: isChunked ? (chunks?.length || 0) : 1,
         base64Length: base64Data.length,
         bufferLength: buffer.length,
         firstBytes: hexSignature,
+        lastBytes: lastHexSignature,
         isValidVideoSignature: isValidVideo,
       });
       
       if (!isValidVideo && buffer.length > 0) {
         console.warn(`Warning: Video ${imageId} may have invalid file signature. First bytes: ${hexSignature}`);
+      }
+      
+      // Check if buffer size matches expected file size
+      const expectedSize = (image as any).size || 0;
+      if (expectedSize > 0 && Math.abs(buffer.length - expectedSize) > 1000) {
+        console.warn(`Warning: Video ${imageId} buffer size (${buffer.length}) doesn't match expected size (${expectedSize})`);
       }
     }
     
