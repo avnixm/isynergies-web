@@ -178,6 +178,23 @@ export async function GET(
       
       // Check if buffer size matches expected file size
       const expectedSize = (image as any).size || 0;
+      const CHUNK_SIZE = 4 * 1024 * 1024; // 4 MB
+      
+      // Special check: if video is exactly 4MB (chunk size) and expected size is larger, it's incomplete
+      if (buffer.length === CHUNK_SIZE && expectedSize > CHUNK_SIZE) {
+        console.error(`ERROR: Video ${imageId} is exactly ${CHUNK_SIZE} bytes (one chunk) but expected size is ${expectedSize}. Video is incomplete - only first chunk was stored.`);
+        return NextResponse.json(
+          { 
+            error: 'Video file is incomplete. Only the first chunk (4MB) was stored. The full video file was not properly uploaded.',
+            imageId,
+            expectedSize,
+            actualSize: buffer.length,
+            suggestion: 'This video was uploaded using the old chunked system and failed to complete. Please delete this video and re-upload it using the new Vercel Blob system.'
+          },
+          { status: 500 }
+        );
+      }
+      
       if (expectedSize > 0 && Math.abs(buffer.length - expectedSize) > 1000) {
         console.error(`ERROR: Video ${imageId} buffer size (${buffer.length}) doesn't match expected size (${expectedSize}). Video may be incomplete.`);
         return NextResponse.json(
