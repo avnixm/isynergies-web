@@ -25,12 +25,35 @@ export async function GET() {
   } catch (error: any) {
     console.error('Error fetching carousel images:', error);
     console.error('Error details:', {
-      message: error.message,
-      code: error.code,
-      sql: error.sql,
+      message: error?.message,
+      code: error?.code,
+      errno: error?.errno,
+      sqlState: error?.sqlState,
+      sqlMessage: error?.sqlMessage,
+      sql: error?.sql,
+      stack: error?.stack,
     });
+    
+    // Provide more specific error messages
+    let errorMessage = 'Failed to fetch images';
+    if (error?.code === 'ER_CON_COUNT_ERROR' || error?.sqlMessage?.includes('Too many connections')) {
+      errorMessage = 'Database connection limit reached. Please try again in a moment.';
+    } else if (error?.code === 'ECONNREFUSED' || error?.code === 'ENOTFOUND') {
+      errorMessage = 'Database connection failed. Please check your database configuration.';
+    } else if (error?.sqlMessage) {
+      errorMessage = `Database error: ${error.sqlMessage}`;
+    } else if (error?.message) {
+      errorMessage = error.message;
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to fetch images', details: error.message },
+      { 
+        error: errorMessage,
+        ...(process.env.NODE_ENV === 'development' && {
+          details: error?.message,
+          code: error?.code,
+        })
+      },
       { status: 500 }
     );
   }
@@ -72,8 +95,35 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     console.error('Error creating carousel image:', error);
+    console.error('Error details:', {
+      message: error?.message,
+      code: error?.code,
+      errno: error?.errno,
+      sqlState: error?.sqlState,
+      sqlMessage: error?.sqlMessage,
+      stack: error?.stack,
+    });
+    
+    // Provide more specific error messages
+    let errorMessage = 'Failed to create image';
+    if (error?.code === 'ER_CON_COUNT_ERROR' || error?.sqlMessage?.includes('Too many connections')) {
+      errorMessage = 'Database connection limit reached. Please try again in a moment.';
+    } else if (error?.code === 'ECONNREFUSED' || error?.code === 'ENOTFOUND') {
+      errorMessage = 'Database connection failed. Please check your database configuration.';
+    } else if (error?.sqlMessage) {
+      errorMessage = `Database error: ${error.sqlMessage}`;
+    } else if (error?.message) {
+      errorMessage = error.message;
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to create image' },
+      { 
+        error: errorMessage,
+        ...(process.env.NODE_ENV === 'development' && {
+          details: error?.message,
+          code: error?.code,
+        })
+      },
       { status: 500 }
     );
   }

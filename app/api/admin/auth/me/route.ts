@@ -55,7 +55,9 @@ export async function GET(request: Request) {
     
     // Provide more specific error messages
     let errorMessage = 'Internal server error';
-    if (error?.code === 'ECONNREFUSED' || error?.code === 'ENOTFOUND') {
+    if (error?.code === 'ER_CON_COUNT_ERROR' || error?.sqlMessage?.includes('Too many connections')) {
+      errorMessage = 'Database connection limit reached. Please try again in a moment.';
+    } else if (error?.code === 'ECONNREFUSED' || error?.code === 'ENOTFOUND') {
       errorMessage = 'Database connection failed. Please check your database configuration.';
     } else if (error?.code === 'ER_ACCESS_DENIED_ERROR') {
       errorMessage = 'Database access denied. Please check your credentials.';
