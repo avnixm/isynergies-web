@@ -23,79 +23,154 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
     const file = acceptedFiles[0];
     setUploading(true);
 
-    // Create AbortController for timeout handling
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 600000); // 10 minutes timeout
+    const token = localStorage.getItem('admin_token');
+    if (!token) {
+      setUploading(false);
+      alert('No authentication token found. Please log in again.');
+      return;
+    }
+
+    // Vercel has a 4.5 MB hard limit for request body
+    // For files larger than 4 MB, we need to chunk them client-side
+    const MAX_CHUNK_SIZE = 4 * 1024 * 1024; // 4 MB per chunk (safe margin under 4.5 MB limit)
+    const fileSize = file.size;
+
+    let timeoutId: NodeJS.Timeout | null = null;
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
+      let imageId: string | null = null;
 
-      const token = localStorage.getItem('admin_token');
-      if (!token) {
-        throw new Error('No authentication token found. Please log in again.');
-      }
+      if (fileSize > MAX_CHUNK_SIZE) {
+        // Large file: chunk it client-side and upload in pieces
+        const totalChunks = Math.ceil(fileSize / MAX_CHUNK_SIZE);
+        const uploadId = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
+        
+        console.log(`Uploading large file in ${totalChunks} chunks...`);
 
-      const response = await fetch('/api/admin/upload', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formData,
-        signal: controller.signal,
-      });
-      
-      clearTimeout(timeoutId);
+        // Upload chunks sequentially
+        for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+          const start = chunkIndex * MAX_CHUNK_SIZE;
+          const end = Math.min(start + MAX_CHUNK_SIZE, fileSize);
+          const chunk = file.slice(start, end);
 
-      if (!response.ok) {
-        let errorMessage = 'Upload failed';
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error || errorData.message || `Upload failed with status ${response.status}`;
-          console.error('Upload API error:', {
-            status: response.status,
-            statusText: response.statusText,
-            error: errorData,
+          const chunkFormData = new FormData();
+          chunkFormData.append('file', chunk);
+          chunkFormData.append('uploadId', uploadId);
+          chunkFormData.append('chunkIndex', chunkIndex.toString());
+          chunkFormData.append('totalChunks', totalChunks.toString());
+          chunkFormData.append('fileName', file.name);
+          chunkFormData.append('fileType', file.type);
+          chunkFormData.append('fileSize', fileSize.toString());
+
+          const response = await fetch('/api/admin/upload-chunk', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+            body: chunkFormData,
           });
-        } catch (parseError) {
-          let text = 'Unknown error';
-          try {
-            text = await response.text();
-          } catch (textError) {
-            // If we can't read the text, use status text
-            text = response.statusText || 'Unknown error';
-          }
-          
-          // Handle common HTTP status codes with better messages
-          if (response.status === 403) {
-            errorMessage = 'Access forbidden. Please log in again.';
-          } else if (response.status === 401) {
-            errorMessage = 'Unauthorized. Please log in again.';
-          } else if (response.status === 500) {
-            errorMessage = `Server error: ${text}`;
-          } else {
-            errorMessage = `Upload failed: ${response.status} ${response.statusText} - ${text}`;
-          }
-          
-          console.error('Failed to parse error response:', parseError, 'Response text:', text);
-        }
-        throw new Error(errorMessage);
-      }
 
-      const data = await response.json();
-      
-      // Return the image ID (which is part of the URL path)
-      const rawId = data.id ?? (data.url ? data.url.split('/').pop() : null);
-      const imageId = rawId != null ? String(rawId) : null;
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Upload failed' }));
+            throw new Error(errorData.error || `Failed to upload chunk ${chunkIndex + 1}/${totalChunks}`);
+          }
+
+          const data = await response.json();
+          if (data.id) {
+            imageId = String(data.id);
+          }
+
+          console.log(`Chunk ${chunkIndex + 1}/${totalChunks} uploaded`);
+        }
+
+        // Finalize the upload
+        if (imageId) {
+          const finalizeResponse = await fetch('/api/admin/upload-finalize', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ uploadId, imageId }),
+          });
+
+          if (!finalizeResponse.ok) {
+            throw new Error('Failed to finalize upload');
+          }
+        }
+      } else {
+        // Small file: upload directly
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const controller = new AbortController();
+        timeoutId = setTimeout(() => controller.abort(), 600000); // 10 minutes timeout
+
+        const response = await fetch('/api/admin/upload', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+          body: formData,
+          signal: controller.signal,
+        });
+        
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          let errorMessage = 'Upload failed';
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorData.message || `Upload failed with status ${response.status}`;
+            console.error('Upload API error:', {
+              status: response.status,
+              statusText: response.statusText,
+              error: errorData,
+            });
+          } catch (parseError) {
+            let text = 'Unknown error';
+            try {
+              text = await response.text();
+            } catch (textError) {
+              text = response.statusText || 'Unknown error';
+            }
+            
+            if (response.status === 403) {
+              errorMessage = 'File too large. Maximum size is 4.5 MB per upload.';
+            } else if (response.status === 401) {
+              errorMessage = 'Unauthorized. Please log in again.';
+            } else if (response.status === 500) {
+              errorMessage = `Server error: ${text}`;
+            } else {
+              errorMessage = `Upload failed: ${response.status} ${response.statusText} - ${text}`;
+            }
+            
+            console.error('Failed to parse error response:', parseError, 'Response text:', text);
+          }
+          throw new Error(errorMessage);
+        }
+
+        const data = await response.json();
+        
+        // Return the image ID (which is part of the URL path)
+        const rawId = data.id ?? (data.url ? data.url.split('/').pop() : null);
+        imageId = rawId != null ? String(rawId) : null;
+        
+        if (!imageId) {
+          console.error('No image ID found in response:', data);
+          throw new Error('No image ID returned from server');
+        }
+      }
       
       if (!imageId) {
-        console.error('No image ID found in response:', data);
-        throw new Error('No image ID returned from server');
+        throw new Error('Failed to get image ID from upload');
       }
       
       onChange(imageId);
     } catch (error) {
-      clearTimeout(timeoutId);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       console.error('Upload error:', error);
       console.error('Error details:', {
         name: error instanceof Error ? error.name : 'Unknown',
