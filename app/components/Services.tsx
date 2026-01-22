@@ -237,7 +237,7 @@ export default function Services() {
                   </div>
 
                   {/* bottom row (offset upward for honeycomb) */}
-                  <div className={`col-start-1 row-start-2 -mt-4 md:-mt-[120px] translate-x-[90px] md:translate-x-[110px] slide-up-slow ${
+                  <div className={`col-start-1 row-start-2 -mt-4 md:-mt-[100px] translate-x-[90px] md:translate-x-[110px] slide-up-slow ${
                     isVisible ? 'animate' : 'opacity-0'
                   }`}>
                     <HexImage
@@ -246,7 +246,7 @@ export default function Services() {
                       className=""
                     />
                   </div>
-                  <div className={`col-start-2 row-start-2 -mt-4 md:-mt-[120px] translate-x-[80px] md:translate-x-[100px] slide-up-slow ${
+                  <div className={`col-start-2 row-start-2 -mt-4 md:-mt-[100px] translate-x-[80px] md:translate-x-[105px] slide-up-slow ${
                     isVisible ? 'animate' : 'opacity-0'
                   }`}
                   style={{ animationDelay: isVisible ? '0.2s' : '0s' }}>
