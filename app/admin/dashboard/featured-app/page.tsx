@@ -8,6 +8,7 @@ import { Label } from '@/app/components/ui/label';
 import { Input } from '@/app/components/ui/input';
 import { Dialog, DialogFooter } from '@/app/components/ui/dialog';
 import { ImageUpload } from '@/app/components/ui/image-upload';
+import { VideoUrlInput } from '@/app/components/ui/video-url-input';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
@@ -239,7 +240,7 @@ export default function FeaturedAppPage() {
     setCarouselOrderError('');
 
     if (!formCarouselImage.image || (typeof formCarouselImage.image === 'string' && formCarouselImage.image.trim() === '')) {
-      toast.error('Please select an image');
+      toast.error(formCarouselImage.mediaType === 'video' ? 'Please enter a video URL' : 'Please select an image');
       return;
     }
 
@@ -256,24 +257,38 @@ export default function FeaturedAppPage() {
         : '/api/admin/featured-app/carousel';
       const method = editingCarouselImage ? 'PUT' : 'POST';
 
+      // Prepare the data to send
+      const dataToSend = {
+        image: formCarouselImage.image, // This will be either image ID or video URL
+        alt: formCarouselImage.alt,
+        mediaType: formCarouselImage.mediaType,
+        displayOrder: formCarouselImage.displayOrder,
+      };
+
+      console.log('Saving carousel item:', dataToSend);
+
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(formCarouselImage),
+        body: JSON.stringify(dataToSend),
       });
 
       if (response.ok) {
-        toast.success(editingCarouselImage ? 'Carousel image updated successfully!' : 'Carousel image added successfully!');
+        const result = await response.json();
+        console.log('Save response:', result);
+        toast.success(editingCarouselImage ? 'Carousel item updated successfully!' : 'Carousel item added successfully!');
         handleCloseCarouselDialog();
         fetchCarouselImages();
       } else {
-        toast.error('Failed to save carousel image');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Save failed:', errorData);
+        toast.error(errorData.error || 'Failed to save carousel item');
       }
     } catch (error) {
-      console.error('Error saving carousel image:', error);
+      console.error('Error saving carousel item:', error);
       toast.error('An error occurred while saving');
     } finally {
       setSavingCarouselImage(false);
@@ -950,13 +965,25 @@ export default function FeaturedAppPage() {
             </select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="carousel-image-upload">{formCarouselImage.mediaType === 'video' ? 'Video' : 'Image'}</Label>
-            <ImageUpload
-              value={formCarouselImage.image}
-              onChange={(imageId) => setFormCarouselImage({ ...formCarouselImage, image: imageId })}
-              acceptVideo={formCarouselImage.mediaType === 'video'}
-              mediaType={formCarouselImage.mediaType as 'image' | 'video'}
-            />
+            <Label htmlFor="carousel-image-upload">{formCarouselImage.mediaType === 'video' ? 'Video URL' : 'Image'}</Label>
+            {formCarouselImage.mediaType === 'video' ? (
+              <VideoUrlInput
+                value={formCarouselImage.image}
+                onChange={(url) => {
+                  console.log('Video URL changed:', url);
+                  setFormCarouselImage({ ...formCarouselImage, image: url });
+                }}
+                label=""
+              />
+            ) : (
+              <ImageUpload
+                value={formCarouselImage.image}
+                onChange={(imageId) => {
+                  console.log('Image ID changed:', imageId);
+                  setFormCarouselImage({ ...formCarouselImage, image: imageId });
+                }}
+              />
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="carousel-image-alt">Alt Text</Label>

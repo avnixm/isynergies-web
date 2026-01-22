@@ -5,7 +5,6 @@ import { useDropzone } from 'react-dropzone';
 import { Upload, Trash2, Image as ImageIcon } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/app/lib/utils';
-import { upload } from '@vercel/blob/client';
 
 interface ImageUploadProps {
   value: string;
@@ -32,87 +31,34 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
     }
 
     try {
-      // Use Vercel Blob for direct client-side upload
-      // This bypasses Vercel's 4.5 MB serverless limit and avoids database connection issues
-      const timestamp = Date.now();
-      const sanitizedFilename = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-      const pathname = `uploads/${timestamp}-${sanitizedFilename}`;
+      // Use the old direct upload system that worked before
+      // This uploads directly to the database using base64 encoding and chunking
+      console.log(`Uploading file: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
 
-      console.log(`Uploading file to Vercel Blob: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
+      const formData = new FormData();
+      formData.append('file', file);
 
-      // Upload directly to Vercel Blob using client-side upload
-      // This supports multipart uploads for large files (up to 5 TB)
-      const blob = await upload(pathname, file, {
-        access: 'public',
-        handleUploadUrl: '/api/admin/upload-blob',
-        multipart: file.size > 10 * 1024 * 1024, // Use multipart for files > 10 MB
-        clientPayload: JSON.stringify({
-          filename: file.name,
-          contentType: file.type,
-          size: file.size,
-        }),
+      const uploadResponse = await fetch('/api/admin/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
       });
 
-      console.log('File uploaded to Vercel Blob:', blob.url);
+      if (!uploadResponse.ok) {
+        const errorData = await uploadResponse.json().catch(() => ({ error: 'Upload failed' }));
+        throw new Error(errorData.error || `Upload failed with status ${uploadResponse.status}`);
+      }
 
-      // The onUploadCompleted callback in the API route should have saved the blob URL to the database
-      // Wait a moment for the database save to complete, then query for the image ID
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Query the database to find the image by URL (with retries)
-      let imageId: string | null = null;
-      let retries = 3;
+      const uploadData = await uploadResponse.json();
       
-      while (!imageId && retries > 0) {
-        const findImageResponse = await fetch(`/api/admin/find-image-by-url?url=${encodeURIComponent(blob.url)}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-
-        if (findImageResponse.ok) {
-          const imageData = await findImageResponse.json();
-          imageId = imageData.id ? String(imageData.id) : null;
-        }
-
-        if (!imageId) {
-          retries--;
-          if (retries > 0) {
-            console.log(`Image not found, retrying... (${retries} attempts left)`);
-            await new Promise(resolve => setTimeout(resolve, 500));
-          }
-        }
+      if (!uploadData.id) {
+        throw new Error('Upload succeeded but no image ID was returned');
       }
 
-      // If we still couldn't find it, create it manually (fallback)
-      if (!imageId) {
-        console.warn('Image not found in database after upload, creating record...');
-        const createResponse = await fetch('/api/admin/create-image-from-blob', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            filename: file.name,
-            mimeType: file.type,
-            size: file.size,
-            url: blob.url,
-          }),
-        });
-
-        if (createResponse.ok) {
-          const createData = await createResponse.json();
-          imageId = createData.id ? String(createData.id) : null;
-        }
-      }
-
-      if (!imageId) {
-        throw new Error('Failed to get image ID after upload. The file was uploaded but could not be saved to the database.');
-      }
-
-      onChange(imageId);
+      // Return the image ID (not the URL)
+      onChange(String(uploadData.id));
     } catch (error) {
       console.error('Upload error:', error);
       console.error('Error details:', {

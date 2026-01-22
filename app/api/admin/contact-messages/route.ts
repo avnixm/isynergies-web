@@ -5,7 +5,10 @@ import { requireAuth } from '@/app/lib/auth-middleware';
 import { desc } from 'drizzle-orm';
 
 // GET /api/admin/contact-messages - Get all contact messages
-export async function GET() {
+export async function GET(request: Request) {
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     const messages = await db.select().from(contactMessages).orderBy(desc(contactMessages.createdAt));
     
@@ -65,10 +68,37 @@ export async function GET() {
     });
     
     return NextResponse.json(serializedMessages);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching contact messages:', error);
+    console.error('Error details:', {
+      message: error?.message,
+      code: error?.code,
+      errno: error?.errno,
+      sqlState: error?.sqlState,
+      sqlMessage: error?.sqlMessage,
+      stack: error?.stack,
+    });
+    
+    // Provide more specific error messages
+    let errorMessage = 'Failed to fetch messages';
+    if (error?.code === 'ER_CON_COUNT_ERROR' || error?.sqlMessage?.includes('Too many connections') || error?.message?.includes('No connections available')) {
+      errorMessage = 'Database connection limit reached. Please try again in a moment.';
+    } else if (error?.code === 'ECONNREFUSED' || error?.code === 'ENOTFOUND') {
+      errorMessage = 'Database connection failed. Please check your database configuration.';
+    } else if (error?.sqlMessage) {
+      errorMessage = `Database error: ${error.sqlMessage}`;
+    } else if (error?.message) {
+      errorMessage = error.message;
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to fetch messages' },
+      { 
+        error: errorMessage,
+        ...(process.env.NODE_ENV === 'development' && {
+          details: error?.message,
+          code: error?.code,
+        })
+      },
       { status: 500 }
     );
   }

@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import Loading from './ui/loading';
-import { Star, Play, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Star, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CustomVideoPlayer } from './ui/custom-video-player';
 
 type FeaturedAppContent = {
   headerImage: string; // Kept for backward compatibility
@@ -49,13 +50,10 @@ export default function FeaturedApp() {
   const [showRightArrow, setShowRightArrow] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalIndex, setModalIndex] = useState(0);
-  const [hoveredVideoIndex, setHoveredVideoIndex] = useState<number | null>(null);
-  const [playingVideoIndex, setPlayingVideoIndex] = useState<number | null>(null);
-  const videoRefs = useRef<{ [key: number]: HTMLVideoElement | null }>({});
-  const hoverTimeoutRef = useRef<{ [key: number]: NodeJS.Timeout | null }>({});
   const modalCarouselRef = useRef<HTMLDivElement>(null);
   const [modalShowLeftArrow, setModalShowLeftArrow] = useState(false);
   const [modalShowRightArrow, setModalShowRightArrow] = useState(true);
+  const [pauseCarouselVideos, setPauseCarouselVideos] = useState(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -193,6 +191,8 @@ export default function FeaturedApp() {
 
   // Open modal at specific index
   const openModal = (index: number) => {
+    // Pause all carousel videos before opening modal
+    setPauseCarouselVideos(true);
     setModalIndex(index);
     setIsModalOpen(true);
     // Update modal arrow visibility after opening
@@ -401,6 +401,8 @@ export default function FeaturedApp() {
         navigateModal('right');
       } else if (e.key === 'Escape') {
         setIsModalOpen(false);
+        // Allow carousel videos to play again when modal closes
+        setPauseCarouselVideos(false);
       }
     };
 
@@ -422,6 +424,47 @@ export default function FeaturedApp() {
       return imageId;
     }
     return `/api/images/${imageId}`;
+  };
+
+  // Helper to convert video URLs to embed URLs
+  const convertToEmbedUrl = (url: string): string => {
+    if (!url) return '';
+
+    // Google Drive video
+    const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if (driveMatch) {
+      return `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
+    }
+
+    // YouTube
+    const youtubeMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    if (youtubeMatch) {
+      return `https://www.youtube.com/embed/${youtubeMatch[1]}`;
+    }
+
+    // Vimeo
+    const vimeoMatch = url.match(/(?:vimeo\.com\/|player\.vimeo\.com\/video\/)(\d+)/);
+    if (vimeoMatch) {
+      return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+    }
+
+    // If it's already an embed URL, return as is
+    if (url.includes('/embed/') || url.includes('iframe')) {
+      return url;
+    }
+
+    return url;
+  };
+
+  // Check if URL is a video embed URL
+  const isVideoEmbedUrl = (url: string): boolean => {
+    if (!url) return false;
+    return (
+      url.includes('youtube.com') ||
+      url.includes('youtu.be') ||
+      url.includes('vimeo.com') ||
+      url.includes('drive.google.com')
+    );
   };
 
   // Convert gradient direction from Tailwind format to CSS format
@@ -586,18 +629,8 @@ export default function FeaturedApp() {
                   {carouselImages.map((item, index) => {
                     const mediaUrl = getImageUrl(item.image);
                     const isFirst = index === 0;
-                    const isVideo = item.mediaType === 'video' || (item.image && (item.image.endsWith('.mp4') || item.image.endsWith('.webm') || item.image.endsWith('.mov')));
-                    const isHovered = hoveredVideoIndex === index;
-                    
-                    // Debug logging for videos
-                    if (isVideo) {
-                      console.log(`Video item ${item.id}:`, {
-                        mediaType: item.mediaType,
-                        image: item.image,
-                        mediaUrl,
-                        isVideo,
-                      });
-                    }
+                    const isVideo = item.mediaType === 'video' || isVideoEmbedUrl(item.image);
+                    const embedUrl = isVideo && item.image ? convertToEmbedUrl(item.image) : '';
                     
                     return (
                       <div
@@ -609,140 +642,16 @@ export default function FeaturedApp() {
                             ? 'w-[350px] h-[180px] md:w-[450px] md:h-[220px]'
                             : 'w-[250px] h-[180px] md:w-[350px] md:h-[220px]'
                         }`}
-                        onMouseEnter={() => {
-                          if (isVideo) {
-                            setHoveredVideoIndex(index);
-                            // Start playing after 0.8 seconds of hover
-                            hoverTimeoutRef.current[index] = setTimeout(() => {
-                              const video = videoRefs.current[index];
-                              if (video && !video.paused) {
-                                // Video is already playing, do nothing
-                                return;
-                              }
-                              if (video) {
-                                video.play().catch(() => {
-                                  // Ignore play errors (e.g., if user interaction required)
-                                });
-                                setPlayingVideoIndex(index);
-                              }
-                            }, 100);
-                          }
-                        }}
-                        onMouseLeave={() => {
-                          setHoveredVideoIndex(null);
-                          // Clear timeout if user stops hovering
-                          if (hoverTimeoutRef.current[index]) {
-                            clearTimeout(hoverTimeoutRef.current[index]!);
-                            hoverTimeoutRef.current[index] = null;
-                          }
-                          // Pause video when not hovering
-                          const video = videoRefs.current[index];
-                          if (video && playingVideoIndex === index) {
-                            video.pause();
-                            video.currentTime = 0; // Reset to start
-                            setPlayingVideoIndex(null);
-                          }
-                        }}
                         onClick={() => openModal(index)}
                       >
                         {mediaUrl ? (
-                          isVideo ? (
-                            <>
-                              <video
-                                ref={(el) => {
-                                  if (el) videoRefs.current[index] = el;
-                                }}
-                                src={mediaUrl}
-                                className="w-full h-full object-cover"
-                                controls={false}
-                                muted
-                                loop
-                                playsInline
-                                onError={(e) => {
-                                  const video = e.currentTarget;
-                                  const error = video.error;
-                                  
-                                  // Extract detailed error information
-                                  let errorDetails: any = {
-                                    mediaUrl,
-                                    networkState: video.networkState,
-                                    readyState: video.readyState,
-                                  };
-                                  
-                                  if (error) {
-                                    errorDetails.errorCode = error.code;
-                                    errorDetails.errorMessage = error.message;
-                                    
-                                    // Map error codes to human-readable messages
-                                    const errorMessages: Record<number, string> = {
-                                      1: 'MEDIA_ERR_ABORTED - The video download was aborted',
-                                      2: 'MEDIA_ERR_NETWORK - A network error occurred',
-                                      3: 'MEDIA_ERR_DECODE - The video playback was aborted due to a corruption problem or because the video used features your browser did not support',
-                                      4: 'MEDIA_ERR_SRC_NOT_SUPPORTED - The video could not be loaded, either because the server or network failed or because the format is not supported',
-                                    };
-                                    errorDetails.errorDescription = errorMessages[error.code] || 'Unknown error';
-                                  }
-                                  
-                                  console.error(`Video load error for item ${item.id}:`, errorDetails);
-                                  
-                                  // Check if this is a corrupted video from the old system
-                                  if (error?.code === 4 && mediaUrl.includes('/api/images/')) {
-                                    console.warn(`Video ${item.id} appears to be corrupted. This may be an old video uploaded with the previous system. Please re-upload it using the new Vercel Blob system.`);
-                                    // You could show a user-friendly message here
-                                    // For now, we'll just log it
-                                  }
-                                  
-                                  // Try to fetch the URL directly to see what's wrong
-                                  fetch(mediaUrl)
-                                    .then(res => {
-                                      console.log(`Direct fetch response for ${mediaUrl}:`, {
-                                        status: res.status,
-                                        statusText: res.statusText,
-                                        contentType: res.headers.get('content-type'),
-                                        contentLength: res.headers.get('content-length'),
-                                        ok: res.ok,
-                                      });
-                                      if (!res.ok) {
-                                        return res.text().then(text => {
-                                          console.error(`Error response body:`, text);
-                                          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-                                        });
-                                      }
-                                      return res.blob();
-                                    })
-                                    .then(blob => {
-                                      console.log(`Blob info for ${mediaUrl}:`, {
-                                        size: blob.size,
-                                        type: blob.type,
-                                      });
-                                      // Try to create object URL and test if it's valid
-                                      const objectUrl = URL.createObjectURL(blob);
-                                      console.log(`Created object URL: ${objectUrl}`);
-                                      // Clean up after a delay
-                                      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-                                    })
-                                    .catch(fetchError => {
-                                      console.error(`Direct fetch error for ${mediaUrl}:`, fetchError);
-                                    });
-                                }}
-                                onLoadStart={() => {
-                                  console.log(`Video load started for item ${item.id}:`, mediaUrl);
-                                }}
-                                onLoadedData={() => {
-                                  console.log(`Video loaded for item ${item.id}`);
-                                }}
-                              />
-                              {/* Permanent play button overlay for videos - always visible, hides when playing */}
-                              {playingVideoIndex !== index && (
-                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                  <div className={`w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/90 flex items-center justify-center shadow-lg transition-all ${
-                                    isHovered ? 'scale-110 bg-white' : ''
-                                  }`}>
-                                    <Play className="w-8 h-8 md:w-10 md:h-10 text-gray-800 ml-1" fill="currentColor" />
-                                  </div>
-                                </div>
-                              )}
-                            </>
+                          isVideo && embedUrl ? (
+                            <CustomVideoPlayer
+                              src={item.image}
+                              title={item.alt || 'Video'}
+                              className="w-full h-full"
+                              shouldPause={pauseCarouselVideos}
+                            />
                           ) : (
                             <img
                               src={mediaUrl}
@@ -806,11 +715,19 @@ export default function FeaturedApp() {
       {isModalOpen && (
         <div 
           className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 md:p-8"
-          onClick={() => setIsModalOpen(false)}
+          onClick={() => {
+            setIsModalOpen(false);
+            // Allow carousel videos to play again when modal closes
+            setPauseCarouselVideos(false);
+          }}
         >
           {/* Close button */}
           <button
-            onClick={() => setIsModalOpen(false)}
+            onClick={() => {
+              setIsModalOpen(false);
+              // Allow carousel videos to play again when modal closes
+              setPauseCarouselVideos(false);
+            }}
             className="absolute top-4 right-4 z-60 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110"
             aria-label="Close"
           >
@@ -854,18 +771,9 @@ export default function FeaturedApp() {
               }}>
                 {carouselImages.map((item, index) => {
                   const mediaUrl = getImageUrl(item.image);
-                  const isVideo = item.mediaType === 'video' || (item.image && (item.image.endsWith('.mp4') || item.image.endsWith('.webm') || item.image.endsWith('.mov')));
+                  const isVideo = item.mediaType === 'video' || isVideoEmbedUrl(item.image);
                   const isActive = index === modalIndex;
-                  
-                  // Debug logging for videos in modal
-                  if (isVideo && isActive) {
-                    console.log(`Modal video item ${item.id}:`, {
-                      mediaType: item.mediaType,
-                      image: item.image,
-                      mediaUrl,
-                      isVideo,
-                    });
-                  }
+                  const embedUrl = isVideo && item.image ? convertToEmbedUrl(item.image) : '';
                   
                   return (
                     <div
@@ -878,46 +786,11 @@ export default function FeaturedApp() {
                       }`}
                     >
                       {mediaUrl ? (
-                        isVideo ? (
-                          <video
-                            src={mediaUrl}
-                            className="w-full h-full object-contain rounded-lg"
-                            controls={isActive}
-                            autoPlay={isActive}
-                            muted={!isActive}
-                            loop
-                            playsInline
-                            onError={(e) => {
-                              const video = e.currentTarget;
-                              const error = video.error;
-                              
-                              let errorDetails: any = {
-                                mediaUrl,
-                                networkState: video.networkState,
-                                readyState: video.readyState,
-                              };
-                              
-                              if (error) {
-                                errorDetails.errorCode = error.code;
-                                errorDetails.errorMessage = error.message;
-                                
-                                const errorMessages: Record<number, string> = {
-                                  1: 'MEDIA_ERR_ABORTED - The video download was aborted',
-                                  2: 'MEDIA_ERR_NETWORK - A network error occurred',
-                                  3: 'MEDIA_ERR_DECODE - The video playback was aborted due to a corruption problem or because the video used features your browser did not support',
-                                  4: 'MEDIA_ERR_SRC_NOT_SUPPORTED - The video could not be loaded, either because the server or network failed or because the format is not supported',
-                                };
-                                errorDetails.errorDescription = errorMessages[error.code] || 'Unknown error';
-                              }
-                              
-                              console.error(`Modal video load error for item ${item.id}:`, errorDetails);
-                            }}
-                            onLoadStart={() => {
-                              console.log(`Modal video load started for item ${item.id}:`, mediaUrl);
-                            }}
-                            onLoadedData={() => {
-                              console.log(`Modal video loaded for item ${item.id}`);
-                            }}
+                        isVideo && embedUrl ? (
+                          <CustomVideoPlayer
+                            src={item.image}
+                            title={item.alt || 'Video'}
+                            className="w-full h-full rounded-lg"
                           />
                         ) : (
                           <img
