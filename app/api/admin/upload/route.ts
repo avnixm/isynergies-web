@@ -5,8 +5,8 @@ import { requireAuth } from '@/app/lib/auth-middleware';
 import { sql } from 'drizzle-orm';
 import { eq, asc } from 'drizzle-orm';
 
-// Increase max duration for large file uploads
-export const maxDuration = 300; // 5 minutes
+// Increase max duration for large file uploads (videos can be very large)
+export const maxDuration = 600; // 10 minutes
 export const runtime = 'nodejs';
 
 export async function POST(request: Request) {

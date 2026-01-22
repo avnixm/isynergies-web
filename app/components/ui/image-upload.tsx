@@ -23,6 +23,10 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
     const file = acceptedFiles[0];
     setUploading(true);
 
+    // Create AbortController for timeout handling
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 600000); // 10 minutes timeout
+
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -33,7 +37,10 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
           'Authorization': `Bearer ${localStorage.getItem('admin_token')}`,
         },
         body: formData,
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Upload failed' }));
@@ -53,8 +60,16 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
       
       onChange(imageId);
     } catch (error) {
+      clearTimeout(timeoutId);
       console.error('Upload error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to upload image';
+      let errorMessage = 'Failed to upload file';
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorMessage = 'Upload timed out. The file may be too large. Please try a smaller file or check your connection.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
       alert(`Upload failed: ${errorMessage}`);
     } finally {
       setUploading(false);

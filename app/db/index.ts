@@ -16,9 +16,9 @@ const connection = mysql.createPool({
   // Connection pool settings for handling large uploads
   connectionLimit: 10, // Maximum number of connections in the pool
   queueLimit: 0, // Unlimited queue for connection requests
-  idleTimeout: 60000, // Close idle connections after 60 seconds
-  // Timeout settings (in milliseconds)
-  connectTimeout: 60000, // 60 seconds for initial connection
+  idleTimeout: 300000, // Close idle connections after 5 minutes
+  // Timeout settings (in milliseconds) - increased for large video uploads
+  connectTimeout: 120000, // 2 minutes for initial connection
   // Enable connection reuse
   waitForConnections: true, // Queue connection requests when pool is exhausted
 });
