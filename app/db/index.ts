@@ -18,12 +18,12 @@ const connection = mysql.createPool({
   // Each serverless function instance gets its own pool, so we need very low limits
   // This prevents "Too many connections" errors in production
   connectionLimit: 1, // Single connection per instance to minimize total connections
-  queueLimit: 10, // Limit queue to prevent memory issues
-  idleTimeout: 20000, // Close idle connections after 20 seconds (faster cleanup for production)
+  queueLimit: 3, // Reduced queue limit to fail fast when pool is exhausted
+  idleTimeout: 5000, // Close idle connections after 5 seconds (very aggressive for serverless - Vercel recommendation)
   // Timeout settings (in milliseconds)
-  connectTimeout: 5000, // 5 seconds for initial connection
+  connectTimeout: 3000, // 3 seconds for initial connection (faster timeout)
   // Enable connection reuse
-  waitForConnections: true, // Queue connection requests when pool is exhausted
+  waitForConnections: false, // Don't queue - fail fast if connection unavailable (prevents connection buildup)
   // Automatically close idle connections
   enableKeepAlive: true,
   keepAliveInitialDelay: 0,
@@ -31,6 +31,42 @@ const connection = mysql.createPool({
 
 // Create the Drizzle instance
 export const db = drizzle(connection, { schema, mode: 'default' });
+
+// Helper function to execute queries with retry logic for connection errors
+export async function withRetry<T>(
+  operation: () => Promise<T>,
+  maxRetries: number = 3,
+  delay: number = 1000
+): Promise<T> {
+  let lastError: any;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error: any) {
+      lastError = error;
+      
+      // Only retry on connection-related errors
+      const isConnectionError = 
+        error?.code === 'ER_CON_COUNT_ERROR' ||
+        error?.sqlMessage?.includes('Too many connections') ||
+        error?.code === 'ECONNRESET' ||
+        error?.code === 'ETIMEDOUT' ||
+        error?.code === 'PROTOCOL_CONNECTION_LOST';
+      
+      if (!isConnectionError || attempt === maxRetries) {
+        throw error;
+      }
+      
+      // Exponential backoff: wait longer between retries
+      const waitTime = delay * Math.pow(2, attempt - 1);
+      console.warn(`Database connection error (attempt ${attempt}/${maxRetries}), retrying in ${waitTime}ms...`, error?.message);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
+  }
+  
+  throw lastError;
+}
 
 // Graceful shutdown function to close all connections
 export async function closeDatabaseConnections() {
