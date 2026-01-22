@@ -54,6 +54,7 @@ export default function FeaturedApp() {
   const [modalShowLeftArrow, setModalShowLeftArrow] = useState(false);
   const [modalShowRightArrow, setModalShowRightArrow] = useState(true);
   const [pauseCarouselVideos, setPauseCarouselVideos] = useState(false);
+  const [playingVideoIndex, setPlayingVideoIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -197,6 +198,7 @@ export default function FeaturedApp() {
     setPauseCarouselVideos(true);
     setModalIndex(index);
     setIsModalOpen(true);
+    setPlayingVideoIndex(null); // Reset playing video when opening modal
     // Update modal arrow visibility after opening
     setTimeout(() => {
       updateModalArrowVisibility();
@@ -207,9 +209,16 @@ export default function FeaturedApp() {
   const navigateModal = (direction: 'left' | 'right') => {
     if (direction === 'left' && modalIndex > 0) {
       setModalIndex(modalIndex - 1);
+      setPlayingVideoIndex(null); // Reset playing video when navigating
     } else if (direction === 'right' && modalIndex < carouselImages.length - 1) {
       setModalIndex(modalIndex + 1);
+      setPlayingVideoIndex(null); // Reset playing video when navigating
     }
+  };
+
+  // Handle video play - pause all other videos
+  const handleVideoPlay = (index: number) => {
+    setPlayingVideoIndex(index);
   };
 
   // Update arrow visibility when carousel images change
@@ -315,6 +324,13 @@ export default function FeaturedApp() {
     }
   }, [carouselImages, updateArrowVisibility]); // Re-run when images change to re-check visibility
 
+  // Reset playing video when modal index changes
+  useEffect(() => {
+    if (isModalOpen) {
+      setPlayingVideoIndex(null);
+    }
+  }, [modalIndex, isModalOpen]);
+
   // Update modal carousel scroll position when modalIndex changes
   useEffect(() => {
     if (isModalOpen && modalCarouselRef.current) {
@@ -405,6 +421,7 @@ export default function FeaturedApp() {
         setIsModalOpen(false);
         // Allow carousel videos to play again when modal closes
         setPauseCarouselVideos(false);
+        setPlayingVideoIndex(null); // Reset playing video when modal closes
       }
     };
 
@@ -608,9 +625,7 @@ export default function FeaturedApp() {
                   className="absolute left-4 z-20 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110"
                   aria-label="Scroll left"
                 >
-                  <svg className="w-6 h-6 md:w-7 md:h-7 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
+                  <ChevronLeft className="w-6 h-6 md:w-7 md:h-7 text-gray-800" />
                 </button>
               )}
 
@@ -703,9 +718,7 @@ export default function FeaturedApp() {
                   className="absolute right-4 z-20 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110"
                   aria-label="Scroll right"
                 >
-                  <svg className="w-6 h-6 md:w-7 md:h-7 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+                  <ChevronRight className="w-6 h-6 md:w-7 md:h-7 text-gray-800" />
                 </button>
               )}
             </div>
@@ -721,6 +734,7 @@ export default function FeaturedApp() {
             setIsModalOpen(false);
             // Allow carousel videos to play again when modal closes
             setPauseCarouselVideos(false);
+            setPlayingVideoIndex(null); // Reset playing video when modal closes
           }}
         >
           {/* Close button */}
@@ -729,6 +743,7 @@ export default function FeaturedApp() {
               setIsModalOpen(false);
               // Allow carousel videos to play again when modal closes
               setPauseCarouselVideos(false);
+              setPlayingVideoIndex(null); // Reset playing video when modal closes
             }}
             className="absolute top-4 right-4 z-60 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110"
             aria-label="Close"
@@ -793,6 +808,9 @@ export default function FeaturedApp() {
                             src={item.image}
                             title={item.alt || 'Video'}
                             className="w-full h-full rounded-lg"
+                            onPlay={() => handleVideoPlay(index)}
+                            playerId={index}
+                            shouldPause={playingVideoIndex !== null && playingVideoIndex !== index}
                           />
                         ) : (
                           <img

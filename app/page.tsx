@@ -6,7 +6,6 @@ const navLinks = [
   { label: "Projects", href: "#projects" },
   { label: "Shop", href: "#shop" },
   { label: "About Us", href: "#about" },
-  { label: "Login", href: "/admin/login" },
 ];
 
 import Hero from './components/Hero';
@@ -35,7 +34,7 @@ export default function Home() {
       {/* Services Section */}
       <Services />
 
-      {/* What We Do Section */}
+      {/* What We Do Sectin */}
       <WhatWeDo />
 
       {/* Projects Section */}
