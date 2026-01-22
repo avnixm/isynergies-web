@@ -659,11 +659,64 @@ export default function FeaturedApp() {
                                 loop
                                 playsInline
                                 onError={(e) => {
-                                  console.error(`Video load error for item ${item.id}:`, {
+                                  const video = e.currentTarget;
+                                  const error = video.error;
+                                  
+                                  // Extract detailed error information
+                                  let errorDetails: any = {
                                     mediaUrl,
-                                    error: e,
-                                    videoElement: e.currentTarget,
-                                  });
+                                    networkState: video.networkState,
+                                    readyState: video.readyState,
+                                  };
+                                  
+                                  if (error) {
+                                    errorDetails.errorCode = error.code;
+                                    errorDetails.errorMessage = error.message;
+                                    
+                                    // Map error codes to human-readable messages
+                                    const errorMessages: Record<number, string> = {
+                                      1: 'MEDIA_ERR_ABORTED - The video download was aborted',
+                                      2: 'MEDIA_ERR_NETWORK - A network error occurred',
+                                      3: 'MEDIA_ERR_DECODE - The video playback was aborted due to a corruption problem or because the video used features your browser did not support',
+                                      4: 'MEDIA_ERR_SRC_NOT_SUPPORTED - The video could not be loaded, either because the server or network failed or because the format is not supported',
+                                    };
+                                    errorDetails.errorDescription = errorMessages[error.code] || 'Unknown error';
+                                  }
+                                  
+                                  console.error(`Video load error for item ${item.id}:`, errorDetails);
+                                  
+                                  // Try to fetch the URL directly to see what's wrong
+                                  fetch(mediaUrl)
+                                    .then(res => {
+                                      console.log(`Direct fetch response for ${mediaUrl}:`, {
+                                        status: res.status,
+                                        statusText: res.statusText,
+                                        contentType: res.headers.get('content-type'),
+                                        contentLength: res.headers.get('content-length'),
+                                        ok: res.ok,
+                                      });
+                                      if (!res.ok) {
+                                        return res.text().then(text => {
+                                          console.error(`Error response body:`, text);
+                                          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                                        });
+                                      }
+                                      return res.blob();
+                                    })
+                                    .then(blob => {
+                                      console.log(`Blob info for ${mediaUrl}:`, {
+                                        size: blob.size,
+                                        type: blob.type,
+                                      });
+                                      // Try to create object URL and test if it's valid
+                                      const objectUrl = URL.createObjectURL(blob);
+                                      console.log(`Created object URL: ${objectUrl}`);
+                                      // Clean up after a delay
+                                      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+                                    })
+                                    .catch(fetchError => {
+                                      console.error(`Direct fetch error for ${mediaUrl}:`, fetchError);
+                                    });
                                 }}
                                 onLoadStart={() => {
                                   console.log(`Video load started for item ${item.id}:`, mediaUrl);
@@ -828,11 +881,29 @@ export default function FeaturedApp() {
                             loop
                             playsInline
                             onError={(e) => {
-                              console.error(`Modal video load error for item ${item.id}:`, {
+                              const video = e.currentTarget;
+                              const error = video.error;
+                              
+                              let errorDetails: any = {
                                 mediaUrl,
-                                error: e,
-                                videoElement: e.currentTarget,
-                              });
+                                networkState: video.networkState,
+                                readyState: video.readyState,
+                              };
+                              
+                              if (error) {
+                                errorDetails.errorCode = error.code;
+                                errorDetails.errorMessage = error.message;
+                                
+                                const errorMessages: Record<number, string> = {
+                                  1: 'MEDIA_ERR_ABORTED - The video download was aborted',
+                                  2: 'MEDIA_ERR_NETWORK - A network error occurred',
+                                  3: 'MEDIA_ERR_DECODE - The video playback was aborted due to a corruption problem or because the video used features your browser did not support',
+                                  4: 'MEDIA_ERR_SRC_NOT_SUPPORTED - The video could not be loaded, either because the server or network failed or because the format is not supported',
+                                };
+                                errorDetails.errorDescription = errorMessages[error.code] || 'Unknown error';
+                              }
+                              
+                              console.error(`Modal video load error for item ${item.id}:`, errorDetails);
                             }}
                             onLoadStart={() => {
                               console.log(`Modal video load started for item ${item.id}:`, mediaUrl);
