@@ -11,8 +11,24 @@ export const maxDuration = 300; // 5 minutes (max for Vercel hobby plan)
 export const runtime = 'nodejs';
 
 export async function POST(request: Request) {
+  // Log request details for debugging
+  console.log('Upload request received:', {
+    method: request.method,
+    url: request.url,
+    hasAuthHeader: !!request.headers.get('authorization'),
+    contentType: request.headers.get('content-type'),
+  });
+
   const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
+  if (authResult instanceof NextResponse) {
+    console.error('Auth failed:', {
+      status: authResult.status,
+      statusText: authResult.statusText,
+    });
+    return authResult;
+  }
+  
+  console.log('Auth successful, user:', authResult.username);
 
   try {
     const formData = await request.formData();

@@ -31,10 +31,15 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
       const formData = new FormData();
       formData.append('file', file);
 
+      const token = localStorage.getItem('admin_token');
+      if (!token) {
+        throw new Error('No authentication token found. Please log in again.');
+      }
+
       const response = await fetch('/api/admin/upload', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`,
+          'Authorization': `Bearer ${token}`,
         },
         body: formData,
         signal: controller.signal,
@@ -53,8 +58,25 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
             error: errorData,
           });
         } catch (parseError) {
-          const text = await response.text().catch(() => 'Unknown error');
-          errorMessage = `Upload failed: ${response.status} ${response.statusText} - ${text}`;
+          let text = 'Unknown error';
+          try {
+            text = await response.text();
+          } catch (textError) {
+            // If we can't read the text, use status text
+            text = response.statusText || 'Unknown error';
+          }
+          
+          // Handle common HTTP status codes with better messages
+          if (response.status === 403) {
+            errorMessage = 'Access forbidden. Please log in again.';
+          } else if (response.status === 401) {
+            errorMessage = 'Unauthorized. Please log in again.';
+          } else if (response.status === 500) {
+            errorMessage = `Server error: ${text}`;
+          } else {
+            errorMessage = `Upload failed: ${response.status} ${response.statusText} - ${text}`;
+          }
+          
           console.error('Failed to parse error response:', parseError, 'Response text:', text);
         }
         throw new Error(errorMessage);
