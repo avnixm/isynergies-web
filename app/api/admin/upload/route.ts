@@ -140,6 +140,7 @@ export async function POST(request: Request) {
       }, { status: 200 });
     }
   } catch (error: any) {
+    // Log comprehensive error details
     console.error('Upload error:', error);
     console.error('Error details:', {
       message: error?.message,
@@ -148,6 +149,8 @@ export async function POST(request: Request) {
       sqlState: error?.sqlState,
       sqlMessage: error?.sqlMessage,
       stack: error?.stack,
+      name: error?.name,
+      cause: error?.cause,
     });
     
     // Provide more specific error messages
@@ -160,16 +163,26 @@ export async function POST(request: Request) {
       errorMessage = 'Database connection failed. Please check your database configuration.';
     } else if (error.code === 'ER_NO_SUCH_TABLE') {
       errorMessage = 'Database table not found. Please run database migrations.';
+    } else if (error.code === 'ECONNREFUSED') {
+      errorMessage = 'Database connection refused. Please check your database is running and accessible.';
+    } else if (error.code === 'ER_BAD_DB_ERROR') {
+      errorMessage = 'Database does not exist. Please check your database name.';
     } else if (error.sqlMessage) {
       errorMessage = `Database error: ${error.sqlMessage}`;
     } else if (error.message) {
       errorMessage = error.message;
     }
     
+    // Always return the error message, even in production
     return NextResponse.json(
       { 
         error: errorMessage,
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        code: error?.code,
+        // Include more details in development
+        ...(process.env.NODE_ENV === 'development' && {
+          details: error.message,
+          sqlMessage: error?.sqlMessage,
+        })
       },
       { status: 500 }
     );

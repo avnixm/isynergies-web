@@ -43,8 +43,21 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Upload failed' }));
-        throw new Error(errorData.error || 'Upload failed');
+        let errorMessage = 'Upload failed';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.message || `Upload failed with status ${response.status}`;
+          console.error('Upload API error:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorData,
+          });
+        } catch (parseError) {
+          const text = await response.text().catch(() => 'Unknown error');
+          errorMessage = `Upload failed: ${response.status} ${response.statusText} - ${text}`;
+          console.error('Failed to parse error response:', parseError, 'Response text:', text);
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -62,14 +75,25 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
     } catch (error) {
       clearTimeout(timeoutId);
       console.error('Upload error:', error);
+      console.error('Error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+      
       let errorMessage = 'Failed to upload file';
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
           errorMessage = 'Upload timed out. The file may be too large. Please try a smaller file or check your connection.';
-        } else {
+        } else if (error.message && error.message !== 'Upload failed') {
           errorMessage = error.message;
+        } else {
+          errorMessage = `Upload failed: ${error.message || 'Unknown error'}`;
         }
+      } else {
+        errorMessage = `Upload failed: ${String(error)}`;
       }
+      
       alert(`Upload failed: ${errorMessage}`);
     } finally {
       setUploading(false);
