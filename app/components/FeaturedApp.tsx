@@ -100,6 +100,7 @@ export default function FeaturedApp() {
   const [videoIndex, setVideoIndex] = useState(0);
   const [videoSlideDir, setVideoSlideDir] = useState<'next' | 'prev'>('next');
   const [isVideoSliding, setIsVideoSliding] = useState(false);
+  const [isLeftVideoPlaying, setIsLeftVideoPlaying] = useState(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -690,43 +691,47 @@ export default function FeaturedApp() {
             {/* Left: Video Section (30% width on desktop) */}
             <div className="w-full md:w-[30%] flex items-center justify-center">
               {primaryVideoItem && (
-                <div className="relative w-full h-[180px] md:h-[220px] rounded-lg overflow-hidden bg-gray-200 shadow-md">
-                  {/* Video content with slide transition */}
-                  <div
-                    key={`featured-video-${primaryVideoItem.id}-${videoIndex}`}
-                    className={`w-full h-full ${isVideoSliding ? 'opacity-0' : 'opacity-100'}`}
-                    style={{
-                      transition: 'opacity 180ms ease-out, transform 320ms cubic-bezier(0.22, 1, 0.36, 1)',
-                      transform: isVideoSliding
-                        ? videoSlideDir === 'next'
-                          ? 'translateX(-24px)'
-                          : 'translateX(24px)'
-                        : 'translateX(0)',
-                    }}
-                  >
-                    {primaryVideoItem.mediaType === 'video' || isVideoEmbedUrl(primaryVideoItem.image) ? (
-                      <CustomVideoPlayer
-                        src={primaryVideoItem.image}
-                        title={primaryVideoItem.alt || 'Featured video'}
-                        className="w-full h-full"
-                        shouldPause={pauseCarouselVideos}
-                      />
-                    ) : (
-                      <img
-                        src={getImageUrl(primaryVideoItem.image)}
-                        alt={primaryVideoItem.alt}
-                        className="w-full h-full object-cover"
-                      />
-                    )}
+                <div className="relative w-full h-[180px] md:h-[220px]">
+                  {/* Inner frame: rounded, clips video only */}
+                  <div className="w-full h-full rounded-lg overflow-hidden bg-gray-200 shadow-md">
+                    {/* Video content with slide transition */}
+                    <div
+                      key={`featured-video-${primaryVideoItem.id}-${videoIndex}`}
+                      className={`w-full h-full ${isVideoSliding ? 'opacity-0' : 'opacity-100'}`}
+                      style={{
+                        transition: 'opacity 180ms ease-out, transform 320ms cubic-bezier(0.22, 1, 0.36, 1)',
+                        transform: isVideoSliding
+                          ? videoSlideDir === 'next'
+                            ? 'translateX(-24px)'
+                            : 'translateX(24px)'
+                          : 'translateX(0)',
+                      }}
+                    >
+                      {primaryVideoItem.mediaType === 'video' || isVideoEmbedUrl(primaryVideoItem.image) ? (
+                        <CustomVideoPlayer
+                          src={primaryVideoItem.image}
+                          title={primaryVideoItem.alt || 'Featured video'}
+                          className="w-full h-full"
+                          shouldPause={pauseCarouselVideos}
+                          onPlay={() => setIsLeftVideoPlaying(true)}
+                        />
+                      ) : (
+                        <img
+                          src={getImageUrl(primaryVideoItem.image)}
+                          alt={primaryVideoItem.alt}
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                    </div>
                   </div>
 
-                  {/* Prev/Next buttons only if 2+ videos */}
+                  {/* Prev/Next buttons only if 2+ videos - overlayed at outer frame edge */}
                   {videoItems.length > 1 && (
                     <>
                       <button
                         type="button"
                         onClick={() => navigateVideo('prev')}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110"
+                        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-30 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110"
                         aria-label="Previous video"
                       >
                         <ChevronLeft className="w-5 h-5 text-gray-800" />
@@ -734,7 +739,7 @@ export default function FeaturedApp() {
                       <button
                         type="button"
                         onClick={() => navigateVideo('next')}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110"
+                        className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-30 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110"
                         aria-label="Next video"
                       >
                         <ChevronRight className="w-5 h-5 text-gray-800" />
