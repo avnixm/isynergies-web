@@ -193,23 +193,23 @@ export default function Services() {
           {/* Top area: Our Services - left copy + right hex cluster */}
           <div className="grid w-full items-center gap-2 md:grid-cols-2 md:gap-3">
             {/* Left copy */}
-            <div className={`pr-4 md:pr-6 font-sans ml-4 md:ml-12 -mt-8 md:-mt-30 slide-right-content ${
+            <div className={`pr-4 md:pr-6 font-sans ml-4 md:ml-12 -mt-8 md:-mt-10 slide-right-content ${
               isVisible ? 'animate' : 'opacity-0'
             }`}>
-              <h2 className="text-3xl md:text-4xl font-semibold text-white mb-0.5">
+              <h2 className="text-3xl md:text-4xl font-semibold text-white mb-6">
                 Our Services
               </h2>
 
-              <p className="text-xs leading-relaxed font-light text-white/85 max-w-xl mt-0.5">
+              <p className="text-xs leading-relaxed font-light text-white/85 max-w-xl mb-6">
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed
                 consequat quam. Sed vel lorem finibus enim consectetur eleifend sit
                 amet vel neque.
               </p>
 
-              <ul className="mt-0.5 space-y-0 text-sm md:text-base font-semibold text-white">
+              <ul className="space-y-3 text-sm md:text-base font-semibold text-white">
                 {['Development', 'Support', 'Analysis & Design', 'Sales'].map(
                   (t) => (
-                    <li key={t} className="flex items-center gap-2 mt-0.5">
+                    <li key={t} className="flex items-center gap-2">
                       <span className="text-[18px] leading-none text-white/90">
                         •
                       </span>
