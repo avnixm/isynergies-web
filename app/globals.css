@@ -847,3 +847,33 @@ body:not(.admin-dashboard-active) {
 .animate-fadeIn-slow {
   animation: fadeIn 1.2s ease-out both;
 }
+
+@keyframes featured-carousel-enter {
+  from {
+    transform: translateX(140px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Featured App: slide-left intro (starts further right) */
+@keyframes featured-carousel-slide-left {
+  0% {
+    transform: translateX(600px);
+    opacity: 0;
+  }
+  70% {
+    transform: translateX(-18px);
+    opacity: 1;
+  }
+  85% {
+    transform: translateX(8px);
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

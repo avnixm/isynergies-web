@@ -39,6 +39,47 @@ type FeaturedAppFeature = {
   displayOrder: number;
 };
 
+// Helper to convert video URLs to embed URLs
+function convertToEmbedUrl(url: string): string {
+  if (!url) return '';
+
+  // Google Drive video
+  const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (driveMatch) {
+    return `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
+  }
+
+  // YouTube
+  const youtubeMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  if (youtubeMatch) {
+    return `https://www.youtube.com/embed/${youtubeMatch[1]}`;
+  }
+
+  // Vimeo
+  const vimeoMatch = url.match(/(?:vimeo\.com\/|player\.vimeo\.com\/video\/)(\d+)/);
+  if (vimeoMatch) {
+    return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+  }
+
+  // If it's already an embed URL, return as is
+  if (url.includes('/embed/') || url.includes('iframe')) {
+    return url;
+  }
+
+  return url;
+}
+
+// Check if URL is a video embed URL
+function isVideoEmbedUrl(url: string): boolean {
+  if (!url) return false;
+  return (
+    url.includes('youtube.com') ||
+    url.includes('youtu.be') ||
+    url.includes('vimeo.com') ||
+    url.includes('drive.google.com')
+  );
+}
+
 export default function FeaturedApp() {
   const [content, setContent] = useState<FeaturedAppContent | null>(null);
   const [carouselImages, setCarouselImages] = useState<FeaturedAppCarouselImage[]>([]);
@@ -55,6 +96,10 @@ export default function FeaturedApp() {
   const [modalShowRightArrow, setModalShowRightArrow] = useState(true);
   const [pauseCarouselVideos, setPauseCarouselVideos] = useState(false);
   const [playingVideoIndex, setPlayingVideoIndex] = useState<number | null>(null);
+  const [didCarouselEnter, setDidCarouselEnter] = useState(false);
+  const [videoIndex, setVideoIndex] = useState(0);
+  const [videoSlideDir, setVideoSlideDir] = useState<'next' | 'prev'>('next');
+  const [isVideoSliding, setIsVideoSliding] = useState(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -162,6 +207,70 @@ export default function FeaturedApp() {
   };
 
   const carouselRef = useRef<HTMLDivElement>(null);
+  
+  // Continuous auto-scroll for the main carousel on the right side
+  const autoScrollAnimationFrame = useRef<number | null>(null);
+
+  const videoItems = useMemo(() => {
+    return carouselImages.filter((item) => item.mediaType === 'video' || isVideoEmbedUrl(item.image));
+  }, [carouselImages]);
+
+  // Reset video index when video list changes
+  useEffect(() => {
+    if (videoIndex >= videoItems.length) {
+      setVideoIndex(0);
+    }
+  }, [videoItems.length, videoIndex]);
+
+  // Determine primary video item for the left video section (fallback to first item)
+  const primaryVideoItem = useMemo(() => {
+    if (videoItems.length > 0) {
+      return videoItems[Math.min(videoIndex, videoItems.length - 1)] || videoItems[0];
+    }
+    if (carouselImages.length === 0) return null;
+    return carouselImages[0];
+  }, [carouselImages, videoItems, videoIndex]);
+
+  const navigateVideo = useCallback(
+    (direction: 'prev' | 'next') => {
+      if (videoItems.length <= 1) return;
+      setVideoSlideDir(direction);
+      setIsVideoSliding(true);
+
+      window.setTimeout(() => {
+        setVideoIndex((prev) => {
+          const total = videoItems.length;
+          if (direction === 'prev') return (prev - 1 + total) % total;
+          return (prev + 1) % total;
+        });
+        setIsVideoSliding(false);
+      }, 320);
+    },
+    [videoItems.length]
+  );
+
+  // Only show non-video items in the right-side image carousel (prevents "duplicate video")
+  const carouselDisplayItems = useMemo(() => {
+    const base = carouselImages
+      .map((item, originalIndex) => ({ item, originalIndex }))
+      .filter(({ item }) => !(item.mediaType === 'video' || isVideoEmbedUrl(item.image)));
+
+    // Duplicate list for seamless looping, similar to Projects marquee
+    return [...base, ...base];
+  }, [carouselImages]);
+
+  // One-time "slide in from the right" intro for the carousel track
+  useEffect(() => {
+    if (!isVisible) return;
+    if (didCarouselEnter) return;
+    if (carouselDisplayItems.length === 0) return;
+
+    const t = window.setTimeout(() => {
+      setDidCarouselEnter(true);
+    }, 700);
+
+    return () => window.clearTimeout(t);
+  }, [isVisible, didCarouselEnter, carouselDisplayItems.length]);
 
   // Function to check scroll position and update arrow visibility
   const updateArrowVisibility = useCallback(() => {
@@ -429,6 +538,14 @@ export default function FeaturedApp() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isModalOpen, modalIndex, carouselImages.length]);
 
+  // Continuous auto-scroll for the main carousel on the right side
+  // NOTE: The actual infinite scrolling is now handled via CSS keyframes
+  // (see .projects-marquee-track / projectsMarquee in globals.css).
+  // We keep this effect as a no-op so hook order remains stable.
+  useEffect(() => {
+    return;
+  }, [carouselDisplayItems.length, didCarouselEnter]);
+
   if (loading) {
     return (
       <section id="featured-app" ref={sectionRef} className="relative bg-white py-16">
@@ -446,45 +563,7 @@ export default function FeaturedApp() {
   };
 
   // Helper to convert video URLs to embed URLs
-  const convertToEmbedUrl = (url: string): string => {
-    if (!url) return '';
-
-    // Google Drive video
-    const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
-    if (driveMatch) {
-      return `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
-    }
-
-    // YouTube
-    const youtubeMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-    if (youtubeMatch) {
-      return `https://www.youtube.com/embed/${youtubeMatch[1]}`;
-    }
-
-    // Vimeo
-    const vimeoMatch = url.match(/(?:vimeo\.com\/|player\.vimeo\.com\/video\/)(\d+)/);
-    if (vimeoMatch) {
-      return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
-    }
-
-    // If it's already an embed URL, return as is
-    if (url.includes('/embed/') || url.includes('iframe')) {
-      return url;
-    }
-
-    return url;
-  };
-
-  // Check if URL is a video embed URL
-  const isVideoEmbedUrl = (url: string): boolean => {
-    if (!url) return false;
-    return (
-      url.includes('youtube.com') ||
-      url.includes('youtu.be') ||
-      url.includes('vimeo.com') ||
-      url.includes('drive.google.com')
-    );
-  };
+  // (moved to top-level helpers)
 
   // Convert gradient direction from Tailwind format to CSS format
   const getGradientDirection = (direction: string): string => {
@@ -607,120 +686,189 @@ export default function FeaturedApp() {
       {/* Block 2: Horizontal Carousel with Navigation */}
       {carouselImages.length > 0 && (
         <div className="w-full py-4 bg-[#D7E1E4] relative">
-          <div className="relative w-full">
-            <div className="relative flex items-center">
-              {/* Left Arrow Button - Only show when scrolled right */}
-              {showLeftArrow && (
-                <button
-                  onClick={() => {
-                    if (carouselRef.current) {
-                      const scrollAmount = 400;
-                      carouselRef.current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-                      // Check visibility after scroll animation
-                      setTimeout(() => {
-                        updateArrowVisibility();
-                      }, 500);
-                    }
-                  }}
-                  className="absolute left-4 z-20 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110"
-                  aria-label="Scroll left"
-                >
-                  <ChevronLeft className="w-6 h-6 md:w-7 md:h-7 text-gray-800" />
-                </button>
-              )}
+          <div className="relative w-full flex flex-col md:flex-row items-stretch gap-4 md:gap-6 px-4 md:px-6">
+            {/* Left: Video Section (30% width on desktop) */}
+            <div className="w-full md:w-[30%] flex items-center justify-center">
+              {primaryVideoItem && (
+                <div className="relative w-full h-[180px] md:h-[220px] rounded-lg overflow-hidden bg-gray-200 shadow-md">
+                  {/* Video content with slide transition */}
+                  <div
+                    key={`featured-video-${primaryVideoItem.id}-${videoIndex}`}
+                    className={`w-full h-full ${isVideoSliding ? 'opacity-0' : 'opacity-100'}`}
+                    style={{
+                      transition: 'opacity 180ms ease-out, transform 320ms cubic-bezier(0.22, 1, 0.36, 1)',
+                      transform: isVideoSliding
+                        ? videoSlideDir === 'next'
+                          ? 'translateX(-24px)'
+                          : 'translateX(24px)'
+                        : 'translateX(0)',
+                    }}
+                  >
+                    {primaryVideoItem.mediaType === 'video' || isVideoEmbedUrl(primaryVideoItem.image) ? (
+                      <CustomVideoPlayer
+                        src={primaryVideoItem.image}
+                        title={primaryVideoItem.alt || 'Featured video'}
+                        className="w-full h-full"
+                        shouldPause={pauseCarouselVideos}
+                      />
+                    ) : (
+                      <img
+                        src={getImageUrl(primaryVideoItem.image)}
+                        alt={primaryVideoItem.alt}
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                  </div>
 
-              {/* Scrollable Carousel */}
-              <div
-                ref={carouselRef}
-                className="overflow-x-auto scrollbar-hide scroll-smooth pl-0"
-                style={{
-                  scrollbarWidth: 'none',
-                  msOverflowStyle: 'none',
-                }}
-              >
-                <div className={`flex gap-[10px] pl-4 md:pl-6 ${isVisible ? 'animate-fadeIn-slow' : 'opacity-0'}`}
-                  style={{
-                    animationDelay: isVisible ? '0.3s' : '0s',
-                    paddingRight: 'clamp(60px, 8vw, 120px)', // Responsive padding: 60px mobile, scales up to 120px on larger screens
-                  }}>
-                  {carouselImages.map((item, index) => {
-                    const mediaUrl = getImageUrl(item.image);
-                    const isFirst = index === 0;
-                    const isVideo = item.mediaType === 'video' || isVideoEmbedUrl(item.image);
-                    const embedUrl = isVideo && item.image ? convertToEmbedUrl(item.image) : '';
-                    
-                    return (
-                      <div
-                        key={item.id}
-                        className={`group relative flex-shrink-0 overflow-hidden bg-gray-200 cursor-pointer ${
-                          isFirst ? 'rounded-lg' : ''
-                        } ${
-                          isFirst
-                            ? 'w-[350px] h-[180px] md:w-[450px] md:h-[220px]'
-                            : 'w-[250px] h-[180px] md:w-[350px] md:h-[220px]'
-                        }`}
-                        onClick={() => openModal(index)}
+                  {/* Prev/Next buttons only if 2+ videos */}
+                  {videoItems.length > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => navigateVideo('prev')}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110"
+                        aria-label="Previous video"
                       >
-                        {mediaUrl ? (
-                          isVideo && embedUrl ? (
-                            <CustomVideoPlayer
-                              src={item.image}
-                              title={item.alt || 'Video'}
-                              className="w-full h-full"
-                              shouldPause={pauseCarouselVideos}
-                            />
-                          ) : (
-                            <img
-                              src={mediaUrl}
-                              alt={item.alt}
-                              className="w-full h-full object-cover"
-                            />
-                          )
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200" />
-                        )}
-                      </div>
-                    );
-                  })}
+                        <ChevronLeft className="w-5 h-5 text-gray-800" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => navigateVideo('next')}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110"
+                        aria-label="Next video"
+                      >
+                        <ChevronRight className="w-5 h-5 text-gray-800" />
+                      </button>
+                    </>
+                  )}
                 </div>
-              </div>
-
-              {/* Right Arrow Button - Only show when there's more content to scroll */}
-              {showRightArrow && (
-                <button
-                  onClick={() => {
-                    if (carouselRef.current) {
-                      const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
-                      const remainingScroll = scrollWidth - clientWidth - scrollLeft;
-                      
-                      // If we're close to the end, scroll to the very end (accounting for padding)
-                      // Otherwise, scroll by the normal amount
-                      if (remainingScroll < 450) {
-                        // Scroll to end minus some padding to ensure space is visible
-                        carouselRef.current.scrollTo({ left: scrollWidth - clientWidth, behavior: 'smooth' });
-                      } else {
-                        carouselRef.current.scrollBy({ left: 400, behavior: 'smooth' });
-                      }
-                      
-                      // Immediately check (for instant scroll)
-                      updateArrowVisibility();
-                      // Check visibility during and after scroll animation
-                      const checkInterval = setInterval(() => {
-                        updateArrowVisibility();
-                      }, 50);
-                      // Clear interval after scroll animation completes
-                      setTimeout(() => {
-                        clearInterval(checkInterval);
-                        updateArrowVisibility();
-                      }, 600);
-                    }
-                  }}
-                  className="absolute right-4 z-20 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110"
-                  aria-label="Scroll right"
-                >
-                  <ChevronRight className="w-6 h-6 md:w-7 md:h-7 text-gray-800" />
-                </button>
               )}
+            </div>
+
+            {/* Right: Horizontal Carousel with Navigation (70% width on desktop) */}
+            <div className="w-full md:w-[70%] relative">
+              <div className="relative w-full h-full flex items-center">
+                {/* Left Arrow Button - disabled while using infinite auto-scroll */}
+                {false && showLeftArrow && (
+                  <button
+                    onClick={() => {
+                      if (carouselRef.current) {
+                        const scrollAmount = 400;
+                        carouselRef.current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+                        // Check visibility after scroll animation
+                        setTimeout(() => {
+                          updateArrowVisibility();
+                        }, 500);
+                      }
+                    }}
+                    className="absolute left-0 -ml-2 z-20 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110"
+                    aria-label="Scroll left"
+                  >
+                    <ChevronLeft className="w-6 h-6 md:w-7 md:h-7 text-gray-800" />
+                  </button>
+                )}
+
+                {/* Scrollable Carousel */}
+                <div ref={carouselRef} className="overflow-hidden pl-0">
+                  {/* Wrapper handles intro + fade without overriding marquee animation */}
+                  <div
+                    className={`${isVisible ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500`}
+                    style={{
+                      animationDelay: isVisible ? '0.3s' : '0s',
+                      animation:
+                        isVisible && !didCarouselEnter
+                          ? 'featured-carousel-slide-left 900ms cubic-bezier(0.22, 1, 0.36, 1) both'
+                          : undefined,
+                    }}
+                  >
+                    <div
+                      className="projects-marquee-track flex gap-[10px] pl-0"
+                      style={{
+                        paddingRight: 'clamp(60px, 8vw, 120px)', // Responsive padding: 60px mobile, scales up to 120px on larger screens
+                        ['--marquee-duration' as any]: '55s',
+                        animationPlayState: isVisible ? 'running' : 'paused',
+                      }}
+                    >
+                    {carouselDisplayItems.map(({ item, originalIndex }, displayIndex) => {
+                      const mediaUrl = getImageUrl(item.image);
+                      const isFirst = displayIndex === 0;
+                      const isVideo = item.mediaType === 'video' || isVideoEmbedUrl(item.image);
+                      const embedUrl = isVideo && item.image ? convertToEmbedUrl(item.image) : '';
+
+                      return (
+                        <div
+                          key={`${item.id}-${displayIndex}`}
+                          className={`group relative flex-shrink-0 overflow-hidden bg-gray-200 cursor-pointer ${
+                            isFirst ? 'rounded-lg' : ''
+                          } ${
+                            isFirst
+                              ? 'w-[350px] h-[180px] md:w-[450px] md:h-[220px]'
+                              : 'w-[250px] h-[180px] md:w-[350px] md:h-[220px]'
+                          }`}
+                          onClick={() => openModal(originalIndex)}
+                        >
+                          {mediaUrl ? (
+                            isVideo && embedUrl ? (
+                              <CustomVideoPlayer
+                                src={item.image}
+                                title={item.alt || 'Video'}
+                                className="w-full h-full"
+                                shouldPause={pauseCarouselVideos}
+                              />
+                            ) : (
+                              <img
+                                src={mediaUrl}
+                                alt={item.alt}
+                                className="w-full h-full object-cover"
+                              />
+                            )
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200" />
+                          )}
+                        </div>
+                      );
+                    })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Arrow Button - disabled while using infinite auto-scroll */}
+                {false && showRightArrow && (
+                  <button
+                    onClick={() => {
+                      if (carouselRef.current) {
+                        const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
+                        const remainingScroll = scrollWidth - clientWidth - scrollLeft;
+
+                        // If we're close to the end, scroll to the very end (accounting for padding)
+                        // Otherwise, scroll by the normal amount
+                        if (remainingScroll < 450) {
+                          // Scroll to end minus some padding to ensure space is visible
+                          carouselRef.current.scrollTo({ left: scrollWidth - clientWidth, behavior: 'smooth' });
+                        } else {
+                          carouselRef.current.scrollBy({ left: 400, behavior: 'smooth' });
+                        }
+
+                        // Immediately check (for instant scroll)
+                        updateArrowVisibility();
+                        // Check visibility during and after scroll animation
+                        const checkInterval = setInterval(() => {
+                          updateArrowVisibility();
+                        }, 50);
+                        // Clear interval after scroll animation completes
+                        setTimeout(() => {
+                          clearInterval(checkInterval);
+                          updateArrowVisibility();
+                        }, 600);
+                      }
+                    }}
+                    className="absolute right-0 -mr-2 z-20 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110"
+                    aria-label="Scroll right"
+                  >
+                    <ChevronRight className="w-6 h-6 md:w-7 md:h-7 text-gray-800" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
