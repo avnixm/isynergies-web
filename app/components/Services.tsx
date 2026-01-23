@@ -192,7 +192,6 @@ export default function Services() {
         <div className="container mx-auto flex max-w-7xl flex-col px-4 pt-1 pb-0 md:px-6 md:pt-2 md:pb-0 lg:px-12">
           {/* Top area: Our Services - left copy + right hex cluster */}
           <div className="grid w-full items-center gap-2 md:grid-cols-2 md:gap-3">
-            {/* Left copy */}
             <div className={`pr-4 md:pr-6 font-sans ml-4 md:ml-12 -mt-8 md:-mt-10 slide-right-content ${
               isVisible ? 'animate' : 'opacity-0'
             }`}>
