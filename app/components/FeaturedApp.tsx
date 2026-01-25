@@ -790,7 +790,7 @@ export default function FeaturedApp() {
                       className="projects-marquee-track flex gap-[10px] pl-0"
                       style={{
                         paddingRight: 'clamp(60px, 8vw, 120px)', // Responsive padding: 60px mobile, scales up to 120px on larger screens
-                        ['--marquee-duration' as any]: '55s',
+                        ['--marquee-duration' as any]: '22s', // shorter = faster scroll movement (px/s)
                         animationPlayState: isVisible ? 'running' : 'paused',
                       }}
                     >
