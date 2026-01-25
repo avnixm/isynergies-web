@@ -609,7 +609,7 @@ export default function FeaturedApp() {
             </div>
           </div>
 
-          {/* App Logo and Powered By Image - Left Side (Vertically Centered) */}
+         
           <div 
             className={`absolute left-8 top-1/2 -translate-y-1/2 z-10 h-full flex items-center gap-1 ${
               isVisible ? 'animate-fadeIn-slow' : 'opacity-0'
