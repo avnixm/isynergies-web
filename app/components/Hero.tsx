@@ -36,6 +36,7 @@ export default function Hero({ navLinks }: HeroProps) {
   const [heroTickerItems, setHeroTickerItems] = useState<HeroTickerItem[]>([]);
   const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
   const [loading, setLoading] = useState(true);
+  const [videoError, setVideoError] = useState(false);
 
   useEffect(() => {
     const fetchHeroData = async () => {
@@ -97,8 +98,8 @@ export default function Hero({ navLinks }: HeroProps) {
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0">
+      {/* Background - Load first, before video */}
+      <div className="absolute inset-0 z-0">
         {bgImage ? (
           <Image
             src={bgImage as string}
@@ -107,6 +108,7 @@ export default function Hero({ navLinks }: HeroProps) {
             priority
             sizes="100vw"
             className="object-cover"
+            loading="eager"
           />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-[#0D1E66] via-[#003C9D] to-[#001A4F]" />
@@ -114,7 +116,7 @@ export default function Hero({ navLinks }: HeroProps) {
       </div>
 
       {/* Background Video - above background image but under logos */}
-      {bgVideo && (
+      {bgVideo && !videoError && (
         <div className="absolute inset-0 z-[5] overflow-hidden">
           <video
             src={bgVideo as string}
@@ -124,11 +126,48 @@ export default function Hero({ navLinks }: HeroProps) {
             playsInline
             className="w-full h-full object-cover opacity-40 scale-110"
             style={{ objectFit: 'cover', transform: 'scale(1.1)' }}
+            onError={() => {
+              console.warn('Background video failed to load, falling back to images');
+              setVideoError(true);
+            }}
+            onLoadStart={() => {
+              // Video is attempting to load, but don't block other content
+            }}
           />
-          {/* Blur gradient overlays at top and bottom */}
+          {/* Linear blur gradient overlays at all edges - gradual fade to hide video edges */}
           <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/20 to-transparent backdrop-blur-sm" />
-            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/20 to-transparent backdrop-blur-sm" />
+            {/* Top gradient - linear gradual fade */}
+            <div 
+              className="absolute top-0 left-0 right-0 backdrop-blur-sm"
+              style={{
+                height: '200px',
+                background: 'linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.3) 25%, rgba(0,0,0,0.15) 50%, rgba(0,0,0,0.05) 75%, transparent 100%)'
+              }}
+            />
+            {/* Bottom gradient - linear gradual fade */}
+            <div 
+              className="absolute bottom-0 left-0 right-0 backdrop-blur-sm"
+              style={{
+                height: '200px',
+                background: 'linear-gradient(to top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.3) 25%, rgba(0,0,0,0.15) 50%, rgba(0,0,0,0.05) 75%, transparent 100%)'
+              }}
+            />
+            {/* Left gradient - linear gradual fade */}
+            <div 
+              className="absolute top-0 bottom-0 left-0 backdrop-blur-sm"
+              style={{
+                width: '200px',
+                background: 'linear-gradient(to right, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.25) 25%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.04) 75%, transparent 100%)'
+              }}
+            />
+            {/* Right gradient - linear gradual fade */}
+            <div 
+              className="absolute top-0 bottom-0 right-0 backdrop-blur-sm"
+              style={{
+                width: '200px',
+                background: 'linear-gradient(to left, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.25) 25%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.04) 75%, transparent 100%)'
+              }}
+            />
           </div>
         </div>
       )}
@@ -172,7 +211,7 @@ export default function Hero({ navLinks }: HeroProps) {
         </nav>
       )}
 
-      {/* We make IT possible logo - Left side - only show if exists in database */}
+      {/* We make IT possible logo - Left side - only show if exists in database - Load with priority */}
       {weMakeItImage && (
         <div className="slide-right absolute left-8 md:left-11 top-[200px] -translate-y-1/2 z-20">
           <Image
@@ -182,12 +221,13 @@ export default function Hero({ navLinks }: HeroProps) {
             height={500}
             className="w-[480px] h-[292px] md:w-[580px] md:h-[355px] object-contain"
             priority
+            loading="eager"
             unoptimized
           />
         </div>
       )}
 
-      {/* iS logo - Right side, large graphic - only show if exists in database */}
+      {/* iS logo - Right side, large graphic - only show if exists in database - Load with priority */}
       {isLogoImage && (
         <div className="fade-in absolute right-0 md:right-0 top-[100px] -translate-y-1/4 z-10">
           <Image
@@ -197,12 +237,13 @@ export default function Hero({ navLinks }: HeroProps) {
             height={1200}
             className="w-[500px] h-[500px] md:w-[750px] md:h-[750px] opacity-90 object-contain"
             priority
+            loading="eager"
             unoptimized
           />
         </div>
       )}
 
-      {/* Full iSynergies logo - Right side, below iS logo - only show if exists in database */}
+      {/* Full iSynergies logo - Right side, below iS logo - only show if exists in database - Load with priority */}
       {fullLogoImage && (
         <div className="fade-in absolute right-2 md:right-[-40px] top-[45%] -translate-y-1/3 z-20 w-[600px] h-[300px] md:w-[700px] md:h-[350px]">
           <Image
@@ -212,6 +253,7 @@ export default function Hero({ navLinks }: HeroProps) {
             height={375}
             className="w-full h-full object-contain"
             priority
+            loading="eager"
             unoptimized
           />
         </div>

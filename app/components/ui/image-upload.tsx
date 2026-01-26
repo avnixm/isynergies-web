@@ -16,6 +16,7 @@ interface ImageUploadProps {
 
 export function ImageUpload({ value, onChange, disabled, acceptVideo = false, mediaType }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<string>('');
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
@@ -31,34 +32,108 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
     }
 
     try {
-      // Use the old direct upload system that worked before
-      // This uploads directly to the database using base64 encoding and chunking
       console.log(`Uploading file: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
 
-      const formData = new FormData();
-      formData.append('file', file);
+      // Vercel has a 4.5MB limit, so chunk files larger than 4MB
+      const CHUNK_SIZE = 3 * 1024 * 1024; // 3MB chunks (safe margin under 4.5MB limit)
+      const useChunkedUpload = file.size > 4 * 1024 * 1024; // 4MB threshold
 
-      const uploadResponse = await fetch('/api/admin/upload', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formData,
-      });
+      if (useChunkedUpload) {
+        // Chunked upload for large files
+        const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+        const uploadId = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
+        let imageId: number | null = null;
 
-      if (!uploadResponse.ok) {
-        const errorData = await uploadResponse.json().catch(() => ({ error: 'Upload failed' }));
-        throw new Error(errorData.error || `Upload failed with status ${uploadResponse.status}`);
+        console.log(`File is large (${(file.size / 1024 / 1024).toFixed(2)} MB), using chunked upload (${totalChunks} chunks)`);
+        setUploadProgress(`Uploading chunk 1/${totalChunks}...`);
+
+        for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+          setUploadProgress(`Uploading chunk ${chunkIndex + 1}/${totalChunks}...`);
+          const start = chunkIndex * CHUNK_SIZE;
+          const end = Math.min(start + CHUNK_SIZE, file.size);
+          const chunk = file.slice(start, end);
+
+          const chunkFormData = new FormData();
+          chunkFormData.append('file', chunk);
+          chunkFormData.append('uploadId', uploadId);
+          chunkFormData.append('chunkIndex', chunkIndex.toString());
+          chunkFormData.append('totalChunks', totalChunks.toString());
+          chunkFormData.append('fileName', file.name);
+          chunkFormData.append('fileType', file.type);
+          chunkFormData.append('fileSize', file.size.toString());
+
+          const chunkResponse = await fetch('/api/admin/upload-chunk', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+            body: chunkFormData,
+          });
+
+          if (!chunkResponse.ok) {
+            const errorData = await chunkResponse.json().catch(() => ({ error: 'Chunk upload failed' }));
+            throw new Error(errorData.error || `Chunk ${chunkIndex + 1}/${totalChunks} upload failed with status ${chunkResponse.status}`);
+          }
+
+          const chunkData = await chunkResponse.json();
+          if (chunkIndex === 0) {
+            imageId = chunkData.id;
+          }
+
+          console.log(`Uploaded chunk ${chunkIndex + 1}/${totalChunks}`);
+        }
+
+        if (!imageId) {
+          throw new Error('Upload succeeded but no image ID was returned');
+        }
+
+        // Finalize the upload to clean up filename and verify all chunks
+        const finalizeResponse = await fetch('/api/admin/upload-finalize', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            uploadId,
+            imageId,
+          }),
+        });
+
+        if (!finalizeResponse.ok) {
+          const errorData = await finalizeResponse.json().catch(() => ({ error: 'Finalization failed' }));
+          throw new Error(errorData.error || 'Failed to finalize upload');
+        }
+
+        console.log('Upload finalized successfully');
+        setUploadProgress('');
+        onChange(String(imageId));
+      } else {
+        // Direct upload for small files
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const uploadResponse = await fetch('/api/admin/upload', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+          body: formData,
+        });
+
+        if (!uploadResponse.ok) {
+          const errorData = await uploadResponse.json().catch(() => ({ error: 'Upload failed' }));
+          throw new Error(errorData.error || `Upload failed with status ${uploadResponse.status}`);
+        }
+
+        const uploadData = await uploadResponse.json();
+        
+        if (!uploadData.id) {
+          throw new Error('Upload succeeded but no image ID was returned');
+        }
+
+        onChange(String(uploadData.id));
       }
-
-      const uploadData = await uploadResponse.json();
-      
-      if (!uploadData.id) {
-        throw new Error('Upload succeeded but no image ID was returned');
-      }
-
-      // Return the image ID (not the URL)
-      onChange(String(uploadData.id));
     } catch (error) {
       console.error('Upload error:', error);
       console.error('Error details:', {
@@ -83,6 +158,7 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
       alert(`Upload failed: ${errorMessage}`);
     } finally {
       setUploading(false);
+      setUploadProgress('');
     }
   }, [onChange]);
 
@@ -163,7 +239,7 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
             {uploading ? (
               <>
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
-                <p className="text-sm text-gray-600">Uploading...</p>
+                <p className="text-sm text-gray-600">{uploadProgress || 'Uploading...'}</p>
               </>
             ) : (
               <>
