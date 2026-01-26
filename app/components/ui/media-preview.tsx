@@ -42,13 +42,48 @@ export function MediaPreview({
           controls={controls}
           playsInline
           preload="metadata"
-          crossOrigin="anonymous"
           className={`w-full h-full object-contain ${loading ? 'opacity-0' : 'opacity-100'} transition-opacity`}
-          onLoadedMetadata={() => setLoading(false)}
+          onLoadedMetadata={() => {
+            console.log('Video metadata loaded successfully:', url);
+            setLoading(false);
+            setError(false);
+          }}
+          onCanPlay={() => {
+            console.log('Video can play:', url);
+            setLoading(false);
+            setError(false);
+          }}
           onError={(e) => {
-            console.error('Video preview error:', e);
+            const video = e.target as HTMLVideoElement;
+            const errorDetails = {
+              error: video.error,
+              code: video.error?.code,
+              message: video.error?.message,
+              networkState: video.networkState,
+              readyState: video.readyState,
+              src: url,
+            };
+            console.error('Video preview error:', errorDetails);
+            console.error('Video element error code:', video.error?.code);
+            console.error('Video element error message:', video.error?.message);
+            
+            // Error code meanings:
+            // 1 = MEDIA_ERR_ABORTED - fetching aborted
+            // 2 = MEDIA_ERR_NETWORK - network error
+            // 3 = MEDIA_ERR_DECODE - decoding error
+            // 4 = MEDIA_ERR_SRC_NOT_SUPPORTED - format not supported
+            
+            if (video.error?.code === 4) {
+              console.error('Video format not supported. URL:', url);
+            } else if (video.error?.code === 2) {
+              console.error('Network error loading video. Check CORS and URL accessibility.');
+            }
+            
             setError(true);
             setLoading(false);
+          }}
+          onLoadStart={() => {
+            console.log('Video load started:', url);
           }}
         >
           Your browser does not support the video tag.

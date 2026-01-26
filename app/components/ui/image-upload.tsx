@@ -271,16 +271,18 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
 
   // Fetch media record if value is a numeric ID (media table)
   useEffect(() => {
-    if (value && value.match(/^\d+$/) && !resolvedMediaUrl) {
+    if (value && value.match(/^\d+$/)) {
       // Value is a numeric ID - fetch from media table
       const fetchMediaRecord = async () => {
         try {
           const token = localStorage.getItem('admin_token');
           if (!token) {
             // No token - fall back to /api/images/ route
+            console.log('No auth token, falling back to /api/images/ route');
             return;
           }
 
+          console.log(`Fetching media record for ID: ${value}`);
           const response = await fetch(`/api/admin/media/${value}`, {
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -292,14 +294,18 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
             
             if (mediaRecord && mediaRecord.url) {
               // Found media record - use the blob URL directly
+              console.log(`Resolved media ID ${value} to URL: ${mediaRecord.url.substring(0, 50)}...`);
               setResolvedMediaUrl(mediaRecord.url);
               setResolvedMediaType(mediaRecord.type);
-              console.log(`Resolved media ID ${value} to URL: ${mediaRecord.url.substring(0, 50)}...`);
+            } else {
+              console.warn(`Media record ${value} found but has no URL`);
             }
           } else if (response.status === 404) {
             // Media record not found - might be an old images table ID, fall back to /api/images/
             console.log(`Media ID ${value} not found in media table, falling back to images table`);
             // Don't set resolvedMediaUrl, so it falls back to /api/images/${value}
+          } else {
+            console.error(`Failed to fetch media record: ${response.status} ${response.statusText}`);
           }
         } catch (e) {
           console.error('Error fetching media record:', e);
