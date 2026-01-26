@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, ReactNode } from 'react';
+import { useEffect, useState, useRef, ReactNode } from 'react';
 import Image from 'next/image';
 import Loading from './ui/loading';
 
@@ -37,6 +37,8 @@ export default function Hero({ navLinks }: HeroProps) {
   const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [videoError, setVideoError] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const heroRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchHeroData = async () => {
@@ -96,8 +98,41 @@ export default function Hero({ navLinks }: HeroProps) {
   // Use ticker items from database only (no hardcoded fallbacks)
   const tickerItems = heroTickerItems;
 
+  // Intersection Observer to play video only when hero section is visible
+  useEffect(() => {
+    if (!videoRef.current || !heroRef.current || !bgVideo || videoError) return;
+
+    const video = videoRef.current;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            // Hero section is visible - play video
+            video.play().catch((error) => {
+              console.warn('Video autoplay failed:', error);
+              // Autoplay might be blocked by browser, but video will play when user interacts
+            });
+          } else {
+            // Hero section is not visible - pause video
+            video.pause();
+          }
+        });
+      },
+      {
+        threshold: 0.25, // Trigger when 25% of the hero section is visible
+      }
+    );
+
+    observer.observe(heroRef.current);
+
+    // Cleanup
+    return () => {
+      observer.disconnect();
+    };
+  }, [bgVideo, videoError]);
+
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div ref={heroRef} className="relative min-h-screen overflow-hidden">
       {/* Background - Load first, before video */}
       <div className="absolute inset-0 z-0">
         {bgImage ? (
@@ -119,12 +154,12 @@ export default function Hero({ navLinks }: HeroProps) {
       {bgVideo && !videoError && (
         <div className="absolute inset-0 z-[5] overflow-hidden">
           <video
+            ref={videoRef}
             src={bgVideo as string}
-            autoPlay
             loop
             muted
             playsInline
-            preload="auto"
+            preload="metadata"
             className="w-full h-full object-cover opacity-40 scale-110"
             style={{ objectFit: 'cover', transform: 'scale(1.1)' }}
             onError={(e) => {
@@ -161,7 +196,9 @@ export default function Hero({ navLinks }: HeroProps) {
               console.warn('Background video stalled during loading');
             }}
             onSuspend={() => {
-              console.warn('Background video loading suspended');
+              // Browser suspended video loading - this is normal behavior to save bandwidth
+              // The video will resume loading when needed (when user scrolls to it or it becomes visible)
+              // No action needed - this is expected browser optimization
             }}
           />
           {/* TOP GRADUAL BLUR - mask-based blur effect */}
@@ -279,7 +316,7 @@ export default function Hero({ navLinks }: HeroProps) {
               {tickerItems.map((item, index) => {
               // Parse markdown-style links [text](url)
               const parseTextWithLinks = (text: string): ReactNode[] => {
-                const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+                const linkRegex = /\[([^\z]]+)\]\(([^)]+)\)/g;
                 const parts: ReactNode[] = [];
                 let lastIndex = 0;
                 let match;

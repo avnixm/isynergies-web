@@ -17,8 +17,6 @@ interface ImageUploadProps {
 export function ImageUpload({ value, onChange, disabled, acceptVideo = false, mediaType }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string>('');
-  const [videoLoading, setVideoLoading] = useState(false);
-  const [videoError, setVideoError] = useState<string | null>(null);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
@@ -265,88 +263,18 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
     : '';
 
   // Check if it's a video file - use mediaType prop if available, otherwise check URL
-  const isVideo = mediaType === 'video' || (displayUrl && (
-    displayUrl.endsWith('.mp4') || 
-    displayUrl.endsWith('.webm') || 
-    displayUrl.endsWith('.mov') || 
-    displayUrl.includes('video') || 
-    displayUrl.includes('blob.vercel-storage.com')
-  ));
+  const isVideo = mediaType === 'video' || (displayUrl && (displayUrl.endsWith('.mp4') || displayUrl.endsWith('.webm') || displayUrl.endsWith('.mov') || displayUrl.includes('video')));
 
   return (
     <div className="space-y-4">
       {value ? (
         <div className="relative w-full h-64 rounded-lg overflow-hidden border border-border bg-muted/30">
           {isVideo ? (
-            <>
-              {videoLoading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2" />
-                    <p className="text-xs text-white">Loading video...</p>
-                  </div>
-                </div>
-              )}
-              {videoError && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-10 p-4">
-                  <div className="text-center text-white">
-                    <p className="text-sm mb-2">Video preview error</p>
-                    <p className="text-xs text-gray-300">{videoError}</p>
-                    <p className="text-xs text-gray-400 mt-2">The video may still work on the website</p>
-                  </div>
-                </div>
-              )}
-              <video
-                src={displayUrl}
-                controls
-                preload="metadata"
-                playsInline
-                className="w-full h-full object-contain"
-                onLoadStart={() => {
-                  setVideoLoading(true);
-                  setVideoError(null);
-                }}
-                onLoadedMetadata={() => {
-                  setVideoLoading(false);
-                  console.log('Video metadata loaded successfully');
-                }}
-                onCanPlay={() => {
-                  setVideoLoading(false);
-                  console.log('Video can play');
-                }}
-                onError={(e) => {
-                  setVideoLoading(false);
-                  const video = e.target as HTMLVideoElement;
-                  const error = video.error;
-                  let errorMsg = 'Failed to load video preview';
-                  
-                  if (error) {
-                    switch (error.code) {
-                      case error.MEDIA_ERR_ABORTED:
-                        errorMsg = 'Video loading aborted';
-                        break;
-                      case error.MEDIA_ERR_NETWORK:
-                        errorMsg = 'Network error loading video';
-                        break;
-                      case error.MEDIA_ERR_DECODE:
-                        errorMsg = 'Video decode error';
-                        break;
-                      case error.MEDIA_ERR_SRC_NOT_SUPPORTED:
-                        errorMsg = 'Video format not supported';
-                        break;
-                    }
-                  }
-                  
-                  setVideoError(errorMsg);
-                  console.error('Video preview error:', {
-                    error: error,
-                    networkState: video.networkState,
-                    readyState: video.readyState,
-                    src: displayUrl,
-                  });
-                }}
-              />
-            </>
+            <video
+              src={displayUrl}
+              controls
+              className="w-full h-full object-contain"
+            />
           ) : (
             <Image
               src={displayUrl}
