@@ -289,3 +289,15 @@ export const featuredAppFeatures = mysqlTable('featured_app_features', {
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
 });
+
+// Videos (stored in Vercel Blob, metadata in MySQL)
+export const videos = mysqlTable('videos', {
+  id: int('id').primaryKey().autoincrement(),
+  userId: int('user_id').notNull(), // References admin_users.id
+  title: varchar('title', { length: 255 }).notNull(),
+  blobUrl: varchar('blob_url', { length: 500 }).notNull(), // Vercel Blob URL
+  contentType: varchar('content_type', { length: 100 }).notNull(), // e.g., 'video/mp4'
+  sizeBytes: int('size_bytes').notNull(), // File size in bytes
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
+});

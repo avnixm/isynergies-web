@@ -34,8 +34,77 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
     try {
       console.log(`Uploading file: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
 
-      // Vercel has a 4.5MB limit, so chunk files larger than 4MB
-      const CHUNK_SIZE = 3 * 1024 * 1024; // 3MB chunks (safe margin under 4.5MB limit)
+      // For videos, use Vercel Blob direct upload via handleUpload pattern
+      const isVideo = file.type.startsWith('video/');
+      
+      if (isVideo && acceptVideo) {
+        // Use Vercel Blob client upload pattern
+        setUploadProgress('Uploading to Vercel Blob...');
+        
+        // Import the upload function dynamically to avoid SSR issues
+        const { upload } = await import('@vercel/blob/client');
+        
+        // Upload directly to Vercel Blob using the client upload endpoint
+        const blob = await upload(file.name, file, {
+          access: 'public',
+          handleUploadUrl: '/api/videos/upload',
+          clientPayload: JSON.stringify({
+            filename: file.name,
+            contentType: file.type,
+            size: file.size,
+          }),
+          onUploadProgress: (progress) => {
+            const percentage = progress.percentage || 0;
+            setUploadProgress(`Uploading: ${Math.round(percentage)}%`);
+          },
+        });
+
+        if (!blob || !blob.url) {
+          throw new Error('Upload failed: No blob URL returned');
+        }
+
+        // The blob URL is automatically saved to the database in the onUploadCompleted callback
+        // We need to find the image ID that was created by querying for the blob URL
+        setUploadProgress('Saving metadata...');
+        
+        // Retry logic to find the image ID (database write might take a moment)
+        let imageId: string | null = null;
+        for (let attempt = 0; attempt < 5; attempt++) {
+          await new Promise(resolve => setTimeout(resolve, 300 * (attempt + 1)));
+          
+          const findImageResponse = await fetch(`/api/admin/find-image-by-url?url=${encodeURIComponent(blob.url)}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          });
+
+          if (findImageResponse.ok) {
+            const imageData = await findImageResponse.json();
+            if (imageData.id) {
+              imageId = String(imageData.id);
+              break;
+            }
+          }
+        }
+
+        if (imageId) {
+          // Store the image ID (compatible with existing system)
+          onChange(imageId);
+        } else {
+          // Fallback: store blob URL directly (Hero component handles http URLs)
+          console.warn('Could not find image ID for blob URL, storing URL directly:', blob.url);
+          onChange(blob.url);
+        }
+        
+        setUploadProgress('');
+        return;
+      }
+
+      // For images, use the existing upload flow
+      // Vercel has a 4.5MB limit, and MySQL has max_allowed_packet limits
+      // Base64 encoding increases size by ~33%, so we need smaller chunks
+      // Use 1MB raw chunks = ~1.33MB base64 (safe for both Vercel and MySQL)
+      const CHUNK_SIZE = 1 * 1024 * 1024; // 1MB raw chunks (~1.33MB base64)
       const useChunkedUpload = file.size > 4 * 1024 * 1024; // 4MB threshold
 
       if (useChunkedUpload) {

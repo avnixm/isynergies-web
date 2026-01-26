@@ -87,8 +87,21 @@ export async function GET(
         }
       }
       
-      // Reassemble chunks in order
-      base64Data = chunks.map(chunk => chunk.data).join('');
+      // Reassemble chunks in order - verify each chunk has data
+      const chunkDataArray: string[] = [];
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        if (!chunk.data || chunk.data.length === 0) {
+          console.error(`Chunk ${i} for image ${imageId} is empty`);
+          return NextResponse.json(
+            { error: `Chunk ${i} is empty or missing data` },
+            { status: 500 }
+          );
+        }
+        chunkDataArray.push(chunk.data);
+      }
+      
+      base64Data = chunkDataArray.join('');
       
       console.log(`Reassembled ${imageId}: ${chunks.length} chunks, ${base64Data.length} base64 chars`);
       
@@ -96,6 +109,24 @@ export async function GET(
         console.error(`Empty base64 data after reassembly for image ${imageId}`);
         return NextResponse.json(
           { error: 'Failed to reassemble image data' },
+          { status: 500 }
+        );
+      }
+      
+      // Validate base64 data is valid
+      try {
+        const testBuffer = Buffer.from(base64Data.substring(0, Math.min(100, base64Data.length)), 'base64');
+        if (testBuffer.length === 0) {
+          console.error(`Invalid base64 data for image ${imageId} - cannot decode first 100 chars`);
+          return NextResponse.json(
+            { error: 'Invalid base64 data in chunks' },
+            { status: 500 }
+          );
+        }
+      } catch (base64Error) {
+        console.error(`Base64 validation error for image ${imageId}:`, base64Error);
+        return NextResponse.json(
+          { error: 'Invalid base64 encoding in chunks' },
           { status: 500 }
         );
       }
@@ -161,19 +192,26 @@ export async function GET(
         firstBytes: hexSignature,
         lastBytes: lastHexSignature,
         isValidVideoSignature: isValidVideo,
+        first16Bytes: buffer.slice(0, 16).toString('hex'),
       });
       
-      // If video signature is invalid, the video is likely corrupted
-      if (!isValidVideo && buffer.length > 0) {
-        console.error(`ERROR: Video ${imageId} has invalid file signature. First bytes: ${hexSignature}. This video may be corrupted.`);
+      // Additional validation: Check if buffer has reasonable size
+      if (buffer.length < 100) {
+        console.error(`ERROR: Video ${imageId} buffer is too small (${buffer.length} bytes). Video is likely corrupted.`);
         return NextResponse.json(
           { 
-            error: 'Video file appears to be corrupted or incomplete. Please re-upload this video using the new upload system.',
+            error: 'Video file appears to be corrupted or empty.',
             imageId,
-            suggestion: 'This video was uploaded using the old system. Please delete it and re-upload using the new Vercel Blob system.'
+            bufferSize: buffer.length,
           },
           { status: 500 }
         );
+      }
+      
+      // If video signature is invalid, log warning but don't fail - let the browser decide
+      if (!isValidVideo && buffer.length > 0) {
+        console.warn(`WARNING: Video ${imageId} has unexpected file signature. First bytes: ${hexSignature}. Attempting to serve anyway - browser will validate.`);
+        // Don't fail - some video formats might not match our signature checks
       }
       
       // Check if buffer size matches expected file size
@@ -195,53 +233,82 @@ export async function GET(
         );
       }
       
-      if (expectedSize > 0 && Math.abs(buffer.length - expectedSize) > 1000) {
-        console.error(`ERROR: Video ${imageId} buffer size (${buffer.length}) doesn't match expected size (${expectedSize}). Video may be incomplete.`);
-        return NextResponse.json(
-          { 
-            error: 'Video file appears to be incomplete. The file size does not match the expected size.',
-            imageId,
-            expectedSize,
-            actualSize: buffer.length,
-            suggestion: 'Please re-upload this video using the new Vercel Blob system.'
-          },
-          { status: 500 }
-        );
+      // More lenient size check - allow up to 1MB difference (for metadata variations)
+      if (expectedSize > 0 && Math.abs(buffer.length - expectedSize) > 1024 * 1024) {
+        console.warn(`WARNING: Video ${imageId} buffer size (${buffer.length}) doesn't match expected size (${expectedSize}). Difference: ${Math.abs(buffer.length - expectedSize)} bytes. Continuing anyway.`);
+        // Don't fail - just log a warning, as some video files may have slight size variations
       }
     }
     
-    if (range && isVideo) {
-      const parts = range.replace(/bytes=/, '').split('-');
-      const start = parseInt(parts[0], 10);
-      const end = parts[1] ? parseInt(parts[1], 10) : buffer.length - 1;
-      const chunkSize = (end - start) + 1;
-      const chunk = buffer.slice(start, end + 1);
+    // For videos, always support range requests
+    if (isVideo) {
+      // Check if this is a HEAD request (browser checking for range support)
+      if (request.method === 'HEAD') {
+        return new NextResponse(null, {
+          status: 200,
+          headers: {
+            'Content-Type': image.mimeType || 'video/mp4',
+            'Content-Length': buffer.length.toString(),
+            'Accept-Ranges': 'bytes',
+            'Cache-Control': 'public, max-age=31536000, immutable',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, HEAD',
+            'Access-Control-Expose-Headers': 'Content-Range, Accept-Ranges, Content-Length',
+          },
+        });
+      }
       
-      console.log(`Range request for video ${imageId}: ${start}-${end}/${buffer.length}`);
-      
-      return new NextResponse(new Uint8Array(chunk), {
-        status: 206, // Partial Content
-        headers: {
-          'Content-Range': `bytes ${start}-${end}/${buffer.length}`,
-          'Accept-Ranges': 'bytes',
-          'Content-Length': chunkSize.toString(),
-          'Content-Type': image.mimeType || 'video/mp4',
-          'Cache-Control': 'public, max-age=31536000, immutable',
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET',
-        },
-      });
+      if (range) {
+        // Handle range request
+        const parts = range.replace(/bytes=/, '').split('-');
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : buffer.length - 1;
+        const chunkSize = (end - start) + 1;
+        const chunk = buffer.slice(start, end + 1);
+        
+        console.log(`Range request for video ${imageId}: ${start}-${end}/${buffer.length}`);
+        
+        return new NextResponse(new Uint8Array(chunk), {
+          status: 206, // Partial Content
+          headers: {
+            'Content-Range': `bytes ${start}-${end}/${buffer.length}`,
+            'Accept-Ranges': 'bytes',
+            'Content-Length': chunkSize.toString(),
+            'Content-Type': image.mimeType || 'video/mp4',
+            'Cache-Control': 'public, max-age=31536000, immutable',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, HEAD',
+            'Access-Control-Expose-Headers': 'Content-Range, Accept-Ranges, Content-Length',
+          },
+        });
+      } else {
+        // No range request - return full video but indicate range support
+        // For large videos, browsers will make range requests automatically after seeing Accept-Ranges
+        // However, for very large videos, we should still return the full file on initial request
+        // The browser will then make range requests for seeking/streaming
+        return new NextResponse(new Uint8Array(buffer), {
+          status: 200,
+          headers: {
+            'Content-Type': image.mimeType || 'video/mp4',
+            'Content-Length': buffer.length.toString(),
+            'Accept-Ranges': 'bytes',
+            'Cache-Control': 'public, max-age=31536000, immutable',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, HEAD',
+            'Access-Control-Expose-Headers': 'Content-Range, Accept-Ranges, Content-Length',
+          },
+        });
+      }
     }
     
-    // Return full image/video with proper headers
+    // Return full image with proper headers (non-video)
     return new NextResponse(new Uint8Array(buffer), {
       status: 200,
       headers: {
         'Content-Type': image.mimeType || 'application/octet-stream',
         'Content-Length': buffer.length.toString(),
-        'Accept-Ranges': isVideo ? 'bytes' : 'none',
+        'Accept-Ranges': 'none',
         'Cache-Control': 'public, max-age=31536000, immutable',
-        // Add CORS headers for video streaming
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET',
       },

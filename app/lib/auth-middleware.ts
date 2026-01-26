@@ -22,3 +22,12 @@ export async function requireAuth(request: Request) {
   return payload;
 }
 
+// Helper to get user ID from request - returns userId or throws 401
+export async function requireUser(request: Request): Promise<{ userId: number; username: string }> {
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    throw new Error('Unauthorized');
+  }
+  return authResult;
+}
+

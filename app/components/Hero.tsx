@@ -77,9 +77,9 @@ export default function Hero({ navLinks }: HeroProps) {
   // Helper function to get image URL from database
   const getImageUrl = (value: string | null, fallback?: string): string | null => {
     if (!value) return fallback || null;
-    // If already a full path, use it as is
+    // If already a full path (including blob URLs), use it as is
     if (value.startsWith('/api/images/') || value.startsWith('http')) return value;
-    // Otherwise construct the URL
+    // Otherwise construct the URL (assumes value is an image ID)
     return `/api/images/${value}`;
   };
 
@@ -124,14 +124,44 @@ export default function Hero({ navLinks }: HeroProps) {
             loop
             muted
             playsInline
+            preload="auto"
             className="w-full h-full object-cover opacity-40 scale-110"
             style={{ objectFit: 'cover', transform: 'scale(1.1)' }}
-            onError={() => {
+            onError={(e) => {
+              const video = e.target as HTMLVideoElement;
+              const error = video.error;
+              console.error('Background video failed to load:', {
+                errorCode: error?.code,
+                errorMessage: error?.message,
+                networkState: video.networkState,
+                readyState: video.readyState,
+                src: bgVideo,
+                error: error ? {
+                  code: error.code,
+                  message: error.message,
+                  MEDIA_ERR_ABORTED: error.MEDIA_ERR_ABORTED,
+                  MEDIA_ERR_NETWORK: error.MEDIA_ERR_NETWORK,
+                  MEDIA_ERR_DECODE: error.MEDIA_ERR_DECODE,
+                  MEDIA_ERR_SRC_NOT_SUPPORTED: error.MEDIA_ERR_SRC_NOT_SUPPORTED,
+                } : null,
+              });
               console.warn('Background video failed to load, falling back to images');
               setVideoError(true);
             }}
             onLoadStart={() => {
-              // Video is attempting to load, but don't block other content
+              console.log('Background video load started:', bgVideo);
+            }}
+            onLoadedMetadata={() => {
+              console.log('Background video metadata loaded');
+            }}
+            onCanPlay={() => {
+              console.log('Background video loaded successfully and can play');
+            }}
+            onStalled={() => {
+              console.warn('Background video stalled during loading');
+            }}
+            onSuspend={() => {
+              console.warn('Background video loading suspended');
             }}
           />
           {/* Linear blur gradient overlays at all edges - gradual fade to hide video edges */}
