@@ -166,36 +166,36 @@ export default function Hero({ navLinks }: HeroProps) {
           />
           {/* Linear blur gradient overlays at all edges - gradual fade to hide video edges */}
           <div className="absolute inset-0 pointer-events-none">
-            {/* Top gradient - linear gradual fade */}
+            {/* Top gradient - linear gradual fade (smaller height) */}
             <div 
               className="absolute top-0 left-0 right-0 backdrop-blur-sm"
               style={{
-                height: '200px',
-                background: 'linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.3) 25%, rgba(0,0,0,0.15) 50%, rgba(0,0,0,0.05) 75%, transparent 100%)'
+                height: '80px',
+                background: 'linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.25) 30%, rgba(0,0,0,0.12) 60%, rgba(0,0,0,0.04) 85%, transparent 100%)'
               }}
             />
-            {/* Bottom gradient - linear gradual fade */}
+            {/* Bottom gradient - linear gradual fade (smaller height) */}
             <div 
               className="absolute bottom-0 left-0 right-0 backdrop-blur-sm"
               style={{
-                height: '200px',
-                background: 'linear-gradient(to top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.3) 25%, rgba(0,0,0,0.15) 50%, rgba(0,0,0,0.05) 75%, transparent 100%)'
+                height: '120px',
+                background: 'linear-gradient(to top, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.25) 30%, rgba(0,0,0,0.12) 60%, rgba(0,0,0,0.04) 85%, transparent 100%)'
               }}
             />
-            {/* Left gradient - linear gradual fade */}
+            {/* Left gradient - linear gradual fade (smaller width) */}
             <div 
               className="absolute top-0 bottom-0 left-0 backdrop-blur-sm"
               style={{
-                width: '200px',
-                background: 'linear-gradient(to right, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.25) 25%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.04) 75%, transparent 100%)'
+                width: '120px',
+                background: 'linear-gradient(to right, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.22) 30%, rgba(0,0,0,0.1) 60%, rgba(0,0,0,0.03) 85%, transparent 100%)'
               }}
             />
-            {/* Right gradient - linear gradual fade */}
+            {/* Right gradient - linear gradual fade (smaller width) */}
             <div 
               className="absolute top-0 bottom-0 right-0 backdrop-blur-sm"
               style={{
-                width: '200px',
-                background: 'linear-gradient(to left, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.25) 25%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.04) 75%, transparent 100%)'
+                width: '120px',
+                background: 'linear-gradient(to left, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.22) 30%, rgba(0,0,0,0.1) 60%, rgba(0,0,0,0.03) 85%, transparent 100%)'
               }}
             />
           </div>
