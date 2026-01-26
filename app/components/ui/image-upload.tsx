@@ -268,17 +268,20 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
   // State to store resolved media URL and type
   const [resolvedMediaUrl, setResolvedMediaUrl] = useState<string>('');
   const [resolvedMediaType, setResolvedMediaType] = useState<'image' | 'video' | null>(null);
+  const [isFetchingMedia, setIsFetchingMedia] = useState(false);
 
   // Fetch media record if value is a numeric ID (media table)
   useEffect(() => {
     if (value && value.match(/^\d+$/)) {
       // Value is a numeric ID - fetch from media table
+      setIsFetchingMedia(true);
       const fetchMediaRecord = async () => {
         try {
           const token = localStorage.getItem('admin_token');
           if (!token) {
             // No token - fall back to /api/images/ route
             console.log('No auth token, falling back to /api/images/ route');
+            setIsFetchingMedia(false);
             return;
           }
 
@@ -310,6 +313,8 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
         } catch (e) {
           console.error('Error fetching media record:', e);
           // Fall back to legacy /api/images/ route
+        } finally {
+          setIsFetchingMedia(false);
         }
       };
       fetchMediaRecord();
@@ -317,17 +322,21 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
       // Reset resolved values when value is cleared
       setResolvedMediaUrl('');
       setResolvedMediaType(null);
+      setIsFetchingMedia(false);
     }
   }, [value]);
 
   // Construct proper image/video URL for display
   // Priority: resolvedMediaUrl > direct URL > /api/images/ fallback
+  // BUT: Don't use /api/images/ fallback until we've confirmed media record doesn't exist
   const displayUrl = value
     ? (resolvedMediaUrl 
         ? resolvedMediaUrl // Use resolved blob URL from media table
         : typeof value === 'string' && (value.startsWith('/api/images/') || value.startsWith('http'))
         ? value // Already a full URL
-        : `/api/images/${value}`) // Fallback to images table
+        : isFetchingMedia 
+        ? '' // Wait for fetch to complete before falling back
+        : `/api/images/${value}`) // Fallback to images table only after fetch completes
     : '';
 
   // Check if it's a video file - prioritize resolved type, then mediaType prop, then URL-based detection
