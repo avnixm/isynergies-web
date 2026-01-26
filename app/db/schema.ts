@@ -301,3 +301,16 @@ export const videos = mysqlTable('videos', {
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
 });
+
+// Media (unified table for images and videos stored in Vercel Blob)
+export const media = mysqlTable('media', {
+  id: int('id').primaryKey().autoincrement(),
+  userId: int('user_id').notNull(), // References admin_users.id
+  url: text('url').notNull(), // Vercel Blob URL (stored exactly as returned)
+  type: varchar('type', { length: 20 }).notNull(), // 'image' or 'video'
+  contentType: varchar('content_type', { length: 100 }).notNull(), // e.g., 'video/mp4', 'image/png'
+  sizeBytes: int('size_bytes').notNull(), // File size in bytes
+  title: varchar('title', { length: 255 }), // Optional title/filename
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
+});

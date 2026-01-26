@@ -5,6 +5,7 @@ import { useDropzone } from 'react-dropzone';
 import { Upload, Trash2, Image as ImageIcon } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/app/lib/utils';
+import { MediaPreview } from './media-preview';
 
 interface ImageUploadProps {
   value: string;
@@ -64,55 +65,45 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
           throw new Error('Upload failed: No blob URL returned');
         }
 
-        // Check if imageId was returned directly in the upload response
-        const imageId = (blob as any).imageId;
+        // Phase 1: For videos, DO NOT call find-image-by-url
+        // Instead, create a media record via POST /api/admin/media
+        setUploadProgress('Creating media record...');
         
-        if (imageId) {
-          // Image ID was returned directly - use it immediately
-          console.log(`Image ID returned from upload: ${imageId}`);
-          onChange(String(imageId));
-        } else {
-          // Fallback: Try to find the media ID by querying for the blob URL
-          // The onUploadCompleted callback runs asynchronously, so we may need to wait
-          setUploadProgress('Saving metadata...');
+        try {
+          // Create media record in the new media table
+          const createMediaResponse = await fetch('/api/admin/media', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              url: blob.url, // Store exactly as returned (no encoding)
+              contentType: file.type,
+              sizeBytes: file.size,
+              title: file.name,
+            }),
+          });
+
+          if (!createMediaResponse.ok) {
+            const errorData = await createMediaResponse.json().catch(() => ({ error: 'Failed to create media record' }));
+            throw new Error(errorData.error || `Failed to create media record: ${createMediaResponse.status}`);
+          }
+
+          const mediaData = await createMediaResponse.json();
           
-          let foundMediaId: string | null = null;
-          const maxAttempts = 10; // Increase attempts for large file uploads
-          for (let attempt = 0; attempt < maxAttempts; attempt++) {
-            // Exponential backoff: 500ms, 1s, 2s, 4s, etc. (max 5s)
-            const delay = Math.min(500 * Math.pow(2, attempt), 5000);
-            await new Promise(resolve => setTimeout(resolve, delay));
-            
-            // Use the unified find-media-by-url endpoint (handles both images and videos)
-            // Don't double-encode: blob.url is already a proper URL
-            const findMediaResponse = await fetch(`/api/admin/find-media-by-url?url=${encodeURIComponent(blob.url)}`, {
-              headers: {
-                'Authorization': `Bearer ${token}`,
-              },
-            });
-
-            if (findMediaResponse.ok) {
-              const mediaData = await findMediaResponse.json();
-              if (mediaData.id && mediaData.exists) {
-                foundMediaId = String(mediaData.id);
-                console.log(`Found media ID ${foundMediaId} (${mediaData.mediaType}) for blob URL after ${attempt + 1} attempts`);
-                break;
-              }
-            } else if (findMediaResponse.status !== 404) {
-              // If it's not a 404, there might be a different error - log it
-              const errorText = await findMediaResponse.text().catch(() => 'Unknown error');
-              console.warn(`Unexpected error finding media: ${findMediaResponse.status} - ${errorText}`);
-            }
-          }
-
-          if (foundMediaId) {
-            // Store the media ID (compatible with existing system)
-            onChange(foundMediaId);
+          if (mediaData.id) {
+            // Store the media ID
+            console.log(`Created media record: ID ${mediaData.id}, type ${mediaData.type}`);
+            onChange(String(mediaData.id));
           } else {
-            // Fallback: store blob URL directly (Hero component handles http URLs)
-            console.warn('Could not find media ID for blob URL, storing URL directly:', blob.url);
-            onChange(blob.url);
+            throw new Error('Media record created but no ID returned');
           }
+        } catch (mediaError: any) {
+          console.error('Error creating media record:', mediaError);
+          // Fallback: store blob URL directly (Hero component handles http URLs)
+          console.warn('Falling back to storing blob URL directly:', blob.url);
+          onChange(blob.url);
         }
         
         setUploadProgress('');
@@ -311,41 +302,24 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
     (displayUrl.includes('blob.vercel-storage.com') && (displayUrl.includes('.mp4') || displayUrl.includes('.webm') || displayUrl.includes('.mov')))
   ));
 
+  // Determine media type for preview
+  const previewType: 'image' | 'video' = isVideo ? 'video' : 'image';
+
   return (
     <div className="space-y-4">
       {value ? (
         <div className="relative w-full h-64 rounded-lg overflow-hidden border border-border bg-muted/30">
-          {isVideo ? (
-            <video
-              src={displayUrl}
-              controls
-              preload="metadata"
-              playsInline
-              crossOrigin="anonymous"
-              className="w-full h-full object-contain"
-              onError={(e) => {
-                const video = e.target as HTMLVideoElement;
-                console.error('Video preview error:', {
-                  error: video.error,
-                  networkState: video.networkState,
-                  readyState: video.readyState,
-                  src: displayUrl,
-                });
-              }}
-            />
-          ) : (
-            <Image
-              src={displayUrl}
-              alt="Upload"
-              fill
-              className="object-contain"
-              unoptimized
-            />
-          )}
+          <MediaPreview
+            url={displayUrl}
+            type={previewType}
+            className="h-full"
+            alt="Media preview"
+            controls={true}
+          />
           <button
             type="button"
             onClick={() => onChange('')}
-            className="absolute top-2 right-2 p-1.5 rounded-lg bg-white border border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="absolute top-2 right-2 p-1.5 rounded-lg bg-white border border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed z-20"
             disabled={disabled}
             aria-label="Delete media"
           >
