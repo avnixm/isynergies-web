@@ -65,19 +65,21 @@ export async function POST(request: Request) {
         };
       },
       onUploadCompleted: async ({ blob, tokenPayload }) => {
-        // Save blob URL to database (images table for compatibility with existing system)
+        // Save blob URL to database (images table stores both images and videos)
         try {
           const payload = JSON.parse(tokenPayload || '{}');
           const filename = payload.filename || blob.pathname;
           const contentType = payload.contentType || blob.contentType || 'video/mp4';
           const fileSize = payload.size || 0;
 
+          // Store the blob URL exactly as returned by Vercel (no double encoding)
+          // blob.url is already properly formatted
           const result: { id: number }[] = await db.insert(images).values({
             filename,
             mimeType: contentType,
             size: fileSize,
             data: '', // Empty - we're using URL instead
-            url: blob.url, // Store Vercel Blob URL
+            url: blob.url, // Store Vercel Blob URL (already properly encoded)
             isChunked: 0,
             chunkCount: 0,
           }).$returningId();
@@ -87,6 +89,7 @@ export async function POST(request: Request) {
         } catch (dbError: any) {
           console.error('Error saving blob URL to database:', dbError);
           // Don't throw - upload succeeded, just DB save failed
+          // The client will retry finding the media record
         }
       },
     });

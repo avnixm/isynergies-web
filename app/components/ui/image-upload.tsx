@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, Trash2, Image as ImageIcon } from 'lucide-react';
 import Image from 'next/image';
@@ -17,6 +17,7 @@ interface ImageUploadProps {
 export function ImageUpload({ value, onChange, disabled, acceptVideo = false, mediaType }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string>('');
+  const [detectedMediaType, setDetectedMediaType] = useState<'image' | 'video' | null>(null);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
@@ -71,43 +72,45 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
           console.log(`Image ID returned from upload: ${imageId}`);
           onChange(String(imageId));
         } else {
-          // Fallback: Try to find the image ID by querying for the blob URL
+          // Fallback: Try to find the media ID by querying for the blob URL
           // The onUploadCompleted callback runs asynchronously, so we may need to wait
           setUploadProgress('Saving metadata...');
           
-          let foundImageId: string | null = null;
+          let foundMediaId: string | null = null;
           const maxAttempts = 10; // Increase attempts for large file uploads
           for (let attempt = 0; attempt < maxAttempts; attempt++) {
             // Exponential backoff: 500ms, 1s, 2s, 4s, etc. (max 5s)
             const delay = Math.min(500 * Math.pow(2, attempt), 5000);
             await new Promise(resolve => setTimeout(resolve, delay));
             
-            // Try to find the image by blob URL
-            const findImageResponse = await fetch(`/api/admin/find-image-by-url?url=${encodeURIComponent(blob.url)}`, {
+            // Use the unified find-media-by-url endpoint (handles both images and videos)
+            // Don't double-encode: blob.url is already a proper URL
+            const findMediaResponse = await fetch(`/api/admin/find-media-by-url?url=${encodeURIComponent(blob.url)}`, {
               headers: {
                 'Authorization': `Bearer ${token}`,
               },
             });
 
-            if (findImageResponse.ok) {
-              const imageData = await findImageResponse.json();
-              if (imageData.id) {
-                foundImageId = String(imageData.id);
-                console.log(`Found image ID ${foundImageId} for blob URL after ${attempt + 1} attempts`);
+            if (findMediaResponse.ok) {
+              const mediaData = await findMediaResponse.json();
+              if (mediaData.id && mediaData.exists) {
+                foundMediaId = String(mediaData.id);
+                console.log(`Found media ID ${foundMediaId} (${mediaData.mediaType}) for blob URL after ${attempt + 1} attempts`);
                 break;
               }
-            } else if (findImageResponse.status !== 404) {
+            } else if (findMediaResponse.status !== 404) {
               // If it's not a 404, there might be a different error - log it
-              console.warn(`Unexpected error finding image: ${findImageResponse.status}`);
+              const errorText = await findMediaResponse.text().catch(() => 'Unknown error');
+              console.warn(`Unexpected error finding media: ${findMediaResponse.status} - ${errorText}`);
             }
           }
 
-          if (foundImageId) {
-            // Store the image ID (compatible with existing system)
-            onChange(foundImageId);
+          if (foundMediaId) {
+            // Store the media ID (compatible with existing system)
+            onChange(foundMediaId);
           } else {
             // Fallback: store blob URL directly (Hero component handles http URLs)
-            console.warn('Could not find image ID for blob URL, storing URL directly:', blob.url);
+            console.warn('Could not find media ID for blob URL, storing URL directly:', blob.url);
             onChange(blob.url);
           }
         }
@@ -278,8 +281,35 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
         : `/api/images/${value}`)
     : '';
 
-  // Check if it's a video file - use mediaType prop if available, otherwise check URL
-  const isVideo = mediaType === 'video' || (displayUrl && (displayUrl.endsWith('.mp4') || displayUrl.endsWith('.webm') || displayUrl.endsWith('.mov') || displayUrl.includes('video')));
+  // Fetch media type from database if we have an ID and haven't detected it yet
+  useEffect(() => {
+    if (value && !mediaType && !detectedMediaType && value.match(/^\d+$/)) {
+      // Value is a numeric ID, fetch media info
+      const fetchMediaType = async () => {
+        try {
+          const response = await fetch(`/api/images/${value}`, { method: 'HEAD' });
+          const contentType = response.headers.get('content-type');
+          if (contentType?.startsWith('video/')) {
+            setDetectedMediaType('video');
+          } else if (contentType?.startsWith('image/')) {
+            setDetectedMediaType('image');
+          }
+        } catch (e) {
+          // Silently fail - will fall back to URL-based detection
+        }
+      };
+      fetchMediaType();
+    }
+  }, [value, mediaType, detectedMediaType]);
+
+  // Check if it's a video file - prioritize mediaType prop, then detected type, then URL-based detection
+  const isVideo = mediaType === 'video' || detectedMediaType === 'video' || (displayUrl && (
+    displayUrl.endsWith('.mp4') || 
+    displayUrl.endsWith('.webm') || 
+    displayUrl.endsWith('.mov') || 
+    displayUrl.includes('video') ||
+    (displayUrl.includes('blob.vercel-storage.com') && (displayUrl.includes('.mp4') || displayUrl.includes('.webm') || displayUrl.includes('.mov')))
+  ));
 
   return (
     <div className="space-y-4">

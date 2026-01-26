@@ -36,8 +36,10 @@ export async function GET() {
             .limit(1);
           
           // If the image has a blob URL, use it directly for better streaming
+          // This is especially important for large videos (39MB+) that need range requests
           if (videoImage?.url && videoImage.url.startsWith('https://')) {
             backgroundVideoUrl = videoImage.url;
+            console.log(`Resolved video ID ${videoId} to blob URL: ${backgroundVideoUrl}`);
           }
         }
       } catch (err) {
