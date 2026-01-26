@@ -168,6 +168,7 @@ export const heroSection = mysqlTable('hero_section', {
   isLogo: varchar('is_logo', { length: 255 }),
   fullLogo: varchar('full_logo', { length: 255 }),
   backgroundImage: varchar('background_image', { length: 255 }),
+  backgroundVideo: varchar('background_video', { length: 255 }),
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
 });
 

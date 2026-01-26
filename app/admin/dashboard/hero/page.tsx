@@ -19,6 +19,7 @@ type HeroSection = {
   isLogo: string | null;
   fullLogo: string | null;
   backgroundImage: string | null;
+  backgroundVideo: string | null;
 };
 
 type HeroTickerItem = {
@@ -36,6 +37,7 @@ export default function HeroManagementPage() {
     isLogo: null,
     fullLogo: null,
     backgroundImage: null,
+    backgroundVideo: null,
   });
   const [heroTickerItems, setHeroTickerItems] = useState<HeroTickerItem[]>([]);
   const [saving, setSaving] = useState(false);
@@ -275,6 +277,21 @@ export default function HeroManagementPage() {
                 setHeroSection({ ...heroSection, backgroundImage: imageId })
               }
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="backgroundVideo">Background Video</Label>
+            <ImageUpload
+              value={heroSection.backgroundVideo || ''}
+              onChange={(imageId) =>
+                setHeroSection({ ...heroSection, backgroundVideo: imageId })
+              }
+              acceptVideo={true}
+              mediaType="video"
+            />
+            <p className="text-xs text-muted-foreground">
+              
+            </p>
           </div>
         </div>
 

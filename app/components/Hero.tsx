@@ -9,6 +9,7 @@ type HeroSection = {
   isLogo: string | null;
   fullLogo: string | null;
   backgroundImage: string | null;
+  backgroundVideo: string | null;
 };
 
 type HeroTickerItem = {
@@ -83,6 +84,8 @@ export default function Hero({ navLinks }: HeroProps) {
 
   // Background image - from database only; if none, use a muted gradient background
   const bgImage = getImageUrl(heroSection?.backgroundImage ?? null);
+  // Background video - from database only
+  const bgVideo = getImageUrl(heroSection?.backgroundVideo ?? null);
   // Other images - only from database (no fallbacks)
   const weMakeItImage = getImageUrl(heroSection?.weMakeItLogo ?? null);
   const isLogoImage = getImageUrl(heroSection?.isLogo ?? null);
@@ -109,6 +112,26 @@ export default function Hero({ navLinks }: HeroProps) {
           <div className="absolute inset-0 bg-gradient-to-br from-[#0D1E66] via-[#003C9D] to-[#001A4F]" />
         )}
       </div>
+
+      {/* Background Video - above background image but under logos */}
+      {bgVideo && (
+        <div className="absolute inset-0 z-[5] overflow-hidden">
+          <video
+            src={bgVideo as string}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover opacity-40 scale-110"
+            style={{ objectFit: 'cover', transform: 'scale(1.1)' }}
+          />
+          {/* Blur gradient overlays at top and bottom */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/20 to-transparent backdrop-blur-sm" />
+            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/20 to-transparent backdrop-blur-sm" />
+          </div>
+        </div>
+      )}
 
       {/* Invisible anchor for home */}
       <div id="home" className="absolute top-0 h-0 w-0" aria-hidden />

@@ -15,6 +15,7 @@ export async function GET() {
         isLogo: null,
         fullLogo: null,
         backgroundImage: null,
+        backgroundVideo: null,
       });
     }
     
@@ -28,6 +29,7 @@ export async function GET() {
       isLogo: null,
       fullLogo: null,
       backgroundImage: null,
+      backgroundVideo: null,
     });
   }
 }
@@ -36,7 +38,7 @@ export async function GET() {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { weMakeItLogo, isLogo, fullLogo, backgroundImage } = body;
+    const { weMakeItLogo, isLogo, fullLogo, backgroundImage, backgroundVideo } = body;
 
     // Check if record exists
     const existing = await db.select().from(heroSection).limit(1);
@@ -48,6 +50,7 @@ export async function PUT(request: Request) {
         isLogo,
         fullLogo,
         backgroundImage,
+        backgroundVideo,
       });
     } else {
       // Update existing record (there should only be one)
@@ -58,6 +61,7 @@ export async function PUT(request: Request) {
           isLogo,
           fullLogo,
           backgroundImage,
+          backgroundVideo,
         });
     }
 
