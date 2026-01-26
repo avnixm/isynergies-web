@@ -594,7 +594,7 @@ export default function FeaturedApp() {
             background: `linear-gradient(${getGradientDirection(content.gradientDirection || 'to-r')}, ${content.gradientFrom || '#2563eb'}, ${content.gradientTo || '#1e40af'})`,
           }}
         >
-          {/* Featured Badge - Top Right */}
+         
           <div 
             className={`absolute top-4 right-4 z-10 ${
               isVisible ? 'animate-fadeIn-slow' : 'opacity-0'
