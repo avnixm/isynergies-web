@@ -159,6 +159,7 @@ export default function Hero({ navLinks }: HeroProps) {
             loop
             muted
             playsInline
+            autoPlay
             preload="metadata"
             crossOrigin="anonymous"
             className="w-full h-full object-cover opacity-40 scale-110"
