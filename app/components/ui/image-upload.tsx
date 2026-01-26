@@ -265,36 +265,56 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
     disabled: disabled || uploading,
   });
 
+  // State to store resolved media URL and type
+  const [resolvedMediaUrl, setResolvedMediaUrl] = useState<string>('');
+  const [resolvedMediaType, setResolvedMediaType] = useState<'image' | 'video' | null>(null);
+
+  // Fetch media record if value is a numeric ID (media table)
+  useEffect(() => {
+    if (value && value.match(/^\d+$/) && !resolvedMediaUrl) {
+      // Value is a numeric ID - fetch from media table
+      const fetchMediaRecord = async () => {
+        try {
+          const token = localStorage.getItem('admin_token');
+          if (!token) return;
+
+          const response = await fetch(`/api/admin/media/${value}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          });
+
+          if (response.ok) {
+            const mediaRecord = await response.json();
+            
+            if (mediaRecord && mediaRecord.url) {
+              // Found media record - use the blob URL directly
+              setResolvedMediaUrl(mediaRecord.url);
+              setResolvedMediaType(mediaRecord.type);
+              console.log(`Resolved media ID ${value} to URL: ${mediaRecord.url.substring(0, 50)}...`);
+            }
+          } else if (response.status === 404) {
+            // Media record not found - might be an old images table ID, fall back to /api/images/
+            console.log(`Media ID ${value} not found in media table, falling back to images table`);
+          }
+        } catch (e) {
+          console.error('Error fetching media record:', e);
+          // Fall back to legacy /api/images/ route
+        }
+      };
+      fetchMediaRecord();
+    }
+  }, [value, resolvedMediaUrl]);
+
   // Construct proper image/video URL for display
   const displayUrl = value
     ? (typeof value === 'string' && (value.startsWith('/api/images/') || value.startsWith('http'))
         ? value 
-        : `/api/images/${value}`)
+        : resolvedMediaUrl || `/api/images/${value}`) // Use resolved URL if available
     : '';
 
-  // Fetch media type from database if we have an ID and haven't detected it yet
-  useEffect(() => {
-    if (value && !mediaType && !detectedMediaType && value.match(/^\d+$/)) {
-      // Value is a numeric ID, fetch media info
-      const fetchMediaType = async () => {
-        try {
-          const response = await fetch(`/api/images/${value}`, { method: 'HEAD' });
-          const contentType = response.headers.get('content-type');
-          if (contentType?.startsWith('video/')) {
-            setDetectedMediaType('video');
-          } else if (contentType?.startsWith('image/')) {
-            setDetectedMediaType('image');
-          }
-        } catch (e) {
-          // Silently fail - will fall back to URL-based detection
-        }
-      };
-      fetchMediaType();
-    }
-  }, [value, mediaType, detectedMediaType]);
-
-  // Check if it's a video file - prioritize mediaType prop, then detected type, then URL-based detection
-  const isVideo = mediaType === 'video' || detectedMediaType === 'video' || (displayUrl && (
+  // Check if it's a video file - prioritize resolved type, then mediaType prop, then URL-based detection
+  const isVideo = resolvedMediaType === 'video' || mediaType === 'video' || (displayUrl && (
     displayUrl.endsWith('.mp4') || 
     displayUrl.endsWith('.webm') || 
     displayUrl.endsWith('.mov') || 
@@ -303,7 +323,7 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
   ));
 
   // Determine media type for preview
-  const previewType: 'image' | 'video' = isVideo ? 'video' : 'image';
+  const previewType: 'image' | 'video' = resolvedMediaType || (isVideo ? 'video' : 'image');
 
   return (
     <div className="space-y-4">
