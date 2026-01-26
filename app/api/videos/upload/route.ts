@@ -17,6 +17,9 @@ export async function POST(request: Request) {
 
     const body = await request.json() as HandleUploadBody;
 
+    // Store imageId to return in response
+    let savedImageId: number | null = null;
+
     const uploadResponse = await handleUpload({
       body,
       request,
@@ -79,8 +82,8 @@ export async function POST(request: Request) {
             chunkCount: 0,
           }).$returningId();
 
-          const imageId = result[0]?.id;
-          console.log(`Video uploaded to Blob and saved to database with ID: ${imageId}, URL: ${blob.url}`);
+          savedImageId = result[0]?.id || null;
+          console.log(`Video uploaded to Blob and saved to database with ID: ${savedImageId}, URL: ${blob.url}`);
         } catch (dbError: any) {
           console.error('Error saving blob URL to database:', dbError);
           // Don't throw - upload succeeded, just DB save failed
@@ -88,7 +91,11 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json(uploadResponse);
+    // Return upload response with imageId if available
+    return NextResponse.json({
+      ...uploadResponse,
+      imageId: savedImageId, // Include the imageId in the response
+    });
   } catch (error: any) {
     console.error('Video upload error:', error);
     

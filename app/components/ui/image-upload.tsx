@@ -63,37 +63,53 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
           throw new Error('Upload failed: No blob URL returned');
         }
 
-        // The blob URL is automatically saved to the database in the onUploadCompleted callback
-        // We need to find the image ID that was created by querying for the blob URL
-        setUploadProgress('Saving metadata...');
+        // Check if imageId was returned directly in the upload response
+        const imageId = (blob as any).imageId;
         
-        // Retry logic to find the image ID (database write might take a moment)
-        let imageId: string | null = null;
-        for (let attempt = 0; attempt < 5; attempt++) {
-          await new Promise(resolve => setTimeout(resolve, 300 * (attempt + 1)));
+        if (imageId) {
+          // Image ID was returned directly - use it immediately
+          console.log(`Image ID returned from upload: ${imageId}`);
+          onChange(String(imageId));
+        } else {
+          // Fallback: Try to find the image ID by querying for the blob URL
+          // The onUploadCompleted callback runs asynchronously, so we may need to wait
+          setUploadProgress('Saving metadata...');
           
-          const findImageResponse = await fetch(`/api/admin/find-image-by-url?url=${encodeURIComponent(blob.url)}`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
-          });
+          let foundImageId: string | null = null;
+          const maxAttempts = 10; // Increase attempts for large file uploads
+          for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            // Exponential backoff: 500ms, 1s, 2s, 4s, etc. (max 5s)
+            const delay = Math.min(500 * Math.pow(2, attempt), 5000);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            
+            // Try to find the image by blob URL
+            const findImageResponse = await fetch(`/api/admin/find-image-by-url?url=${encodeURIComponent(blob.url)}`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+              },
+            });
 
-          if (findImageResponse.ok) {
-            const imageData = await findImageResponse.json();
-            if (imageData.id) {
-              imageId = String(imageData.id);
-              break;
+            if (findImageResponse.ok) {
+              const imageData = await findImageResponse.json();
+              if (imageData.id) {
+                foundImageId = String(imageData.id);
+                console.log(`Found image ID ${foundImageId} for blob URL after ${attempt + 1} attempts`);
+                break;
+              }
+            } else if (findImageResponse.status !== 404) {
+              // If it's not a 404, there might be a different error - log it
+              console.warn(`Unexpected error finding image: ${findImageResponse.status}`);
             }
           }
-        }
 
-        if (imageId) {
-          // Store the image ID (compatible with existing system)
-          onChange(imageId);
-        } else {
-          // Fallback: store blob URL directly (Hero component handles http URLs)
-          console.warn('Could not find image ID for blob URL, storing URL directly:', blob.url);
-          onChange(blob.url);
+          if (foundImageId) {
+            // Store the image ID (compatible with existing system)
+            onChange(foundImageId);
+          } else {
+            // Fallback: store blob URL directly (Hero component handles http URLs)
+            console.warn('Could not find image ID for blob URL, storing URL directly:', blob.url);
+            onChange(blob.url);
+          }
         }
         
         setUploadProgress('');
