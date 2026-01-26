@@ -276,7 +276,10 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
       const fetchMediaRecord = async () => {
         try {
           const token = localStorage.getItem('admin_token');
-          if (!token) return;
+          if (!token) {
+            // No token - fall back to /api/images/ route
+            return;
+          }
 
           const response = await fetch(`/api/admin/media/${value}`, {
             headers: {
@@ -296,6 +299,7 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
           } else if (response.status === 404) {
             // Media record not found - might be an old images table ID, fall back to /api/images/
             console.log(`Media ID ${value} not found in media table, falling back to images table`);
+            // Don't set resolvedMediaUrl, so it falls back to /api/images/${value}
           }
         } catch (e) {
           console.error('Error fetching media record:', e);
@@ -303,14 +307,21 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
         }
       };
       fetchMediaRecord();
+    } else if (!value) {
+      // Reset resolved values when value is cleared
+      setResolvedMediaUrl('');
+      setResolvedMediaType(null);
     }
-  }, [value, resolvedMediaUrl]);
+  }, [value]);
 
   // Construct proper image/video URL for display
+  // Priority: resolvedMediaUrl > direct URL > /api/images/ fallback
   const displayUrl = value
-    ? (typeof value === 'string' && (value.startsWith('/api/images/') || value.startsWith('http'))
-        ? value 
-        : resolvedMediaUrl || `/api/images/${value}`) // Use resolved URL if available
+    ? (resolvedMediaUrl 
+        ? resolvedMediaUrl // Use resolved blob URL from media table
+        : typeof value === 'string' && (value.startsWith('/api/images/') || value.startsWith('http'))
+        ? value // Already a full URL
+        : `/api/images/${value}`) // Fallback to images table
     : '';
 
   // Check if it's a video file - prioritize resolved type, then mediaType prop, then URL-based detection
@@ -329,13 +340,19 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
     <div className="space-y-4">
       {value ? (
         <div className="relative w-full h-64 rounded-lg overflow-hidden border border-border bg-muted/30">
-          <MediaPreview
-            url={displayUrl}
-            type={previewType}
-            className="h-full"
-            alt="Media preview"
-            controls={true}
-          />
+          {displayUrl ? (
+            <MediaPreview
+              url={displayUrl}
+              type={previewType}
+              className="h-full"
+              alt="Media preview"
+              controls={true}
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+              <div className="text-sm text-gray-500">Loading media...</div>
+            </div>
+          )}
           <button
             type="button"
             onClick={() => onChange('')}
