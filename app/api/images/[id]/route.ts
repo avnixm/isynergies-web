@@ -31,11 +31,28 @@ export async function GET(
       console.log(`Redirecting to Vercel Blob URL for image ${imageId}: ${image.url}`);
       // For video files, we need to ensure proper headers for streaming
       const isVideo = image.mimeType?.startsWith('video/');
-      if (isVideo && range) {
-        // If there's a range request, we need to proxy it through
-        // For now, redirect and let Vercel Blob handle range requests
-        return NextResponse.redirect(image.url, 307); // 307 preserves method and body
+      
+      if (isVideo) {
+        // For videos, always redirect to Vercel Blob - it handles range requests natively
+        // Use 307 (Temporary Redirect) to preserve the request method and headers (including Range header)
+        const headers = new Headers();
+        headers.set('Location', image.url);
+        headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+        headers.set('Access-Control-Allow-Origin', '*');
+        headers.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+        headers.set('Access-Control-Expose-Headers', 'Content-Range, Accept-Ranges, Content-Length, Content-Type');
+        
+        // Preserve range header if present
+        if (range) {
+          headers.set('Range', range);
+        }
+        
+        return new NextResponse(null, {
+          status: 307,
+          headers,
+        });
       }
+      
       return NextResponse.redirect(image.url, 302);
     }
 

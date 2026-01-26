@@ -160,6 +160,7 @@ export default function Hero({ navLinks }: HeroProps) {
             muted
             playsInline
             preload="metadata"
+            crossOrigin="anonymous"
             className="w-full h-full object-cover opacity-40 scale-110"
             style={{ objectFit: 'cover', transform: 'scale(1.1)' }}
             onError={(e) => {

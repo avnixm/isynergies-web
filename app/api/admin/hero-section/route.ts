@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/app/db';
-import { heroSection } from '@/app/db/schema';
+import { heroSection, images } from '@/app/db/schema';
+import { eq } from 'drizzle-orm';
 
 // GET /api/admin/hero-section - Get hero section content
 export async function GET() {
@@ -19,7 +20,36 @@ export async function GET() {
       });
     }
     
-    return NextResponse.json(content[0]);
+    const heroData = content[0];
+    
+    // For background video, if it's an image ID, fetch the actual blob URL if available
+    // This avoids redirects for large videos and improves streaming performance
+    let backgroundVideoUrl = heroData.backgroundVideo;
+    if (backgroundVideoUrl && !backgroundVideoUrl.startsWith('http') && !backgroundVideoUrl.startsWith('/')) {
+      try {
+        const videoId = parseInt(backgroundVideoUrl);
+        if (!isNaN(videoId)) {
+          const [videoImage] = await db
+            .select({ url: images.url, mimeType: images.mimeType })
+            .from(images)
+            .where(eq(images.id, videoId))
+            .limit(1);
+          
+          // If the image has a blob URL, use it directly for better streaming
+          if (videoImage?.url && videoImage.url.startsWith('https://')) {
+            backgroundVideoUrl = videoImage.url;
+          }
+        }
+      } catch (err) {
+        // If lookup fails, fall back to original value
+        console.warn('Failed to resolve video URL:', err);
+      }
+    }
+    
+    return NextResponse.json({
+      ...heroData,
+      backgroundVideo: backgroundVideoUrl,
+    });
   } catch (error) {
     console.error('Error fetching hero section:', error);
     // Fail soft in production: return defaults so the homepage still renders even if DB is unreachable

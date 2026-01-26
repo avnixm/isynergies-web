@@ -273,7 +273,19 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
             <video
               src={displayUrl}
               controls
+              preload="metadata"
+              playsInline
+              crossOrigin="anonymous"
               className="w-full h-full object-contain"
+              onError={(e) => {
+                const video = e.target as HTMLVideoElement;
+                console.error('Video preview error:', {
+                  error: video.error,
+                  networkState: video.networkState,
+                  readyState: video.readyState,
+                  src: displayUrl,
+                });
+              }}
             />
           ) : (
             <Image
