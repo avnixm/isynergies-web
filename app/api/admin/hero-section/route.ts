@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/app/db';
-import { heroSection, images } from '@/app/db/schema';
+import { heroSection, images, media } from '@/app/db/schema';
 import { eq } from 'drizzle-orm';
 
 // GET /api/admin/hero-section - Get hero section content
@@ -22,24 +22,38 @@ export async function GET() {
     
     const heroData = content[0];
     
-    // For background video, if it's an image ID, fetch the actual blob URL if available
+    // For background video, if it's a media ID, fetch the actual blob URL if available
+    // Check media table first (new system), then fall back to images table (legacy)
     // This avoids redirects for large videos and improves streaming performance
     let backgroundVideoUrl = heroData.backgroundVideo;
     if (backgroundVideoUrl && !backgroundVideoUrl.startsWith('http') && !backgroundVideoUrl.startsWith('/')) {
       try {
         const videoId = parseInt(backgroundVideoUrl);
         if (!isNaN(videoId)) {
-          const [videoImage] = await db
-            .select({ url: images.url, mimeType: images.mimeType })
-            .from(images)
-            .where(eq(images.id, videoId))
+          // First, try to find in media table (new unified media system)
+          const [mediaRecord] = await db
+            .select({ url: media.url, type: media.type })
+            .from(media)
+            .where(eq(media.id, videoId))
             .limit(1);
           
-          // If the image has a blob URL, use it directly for better streaming
-          // This is especially important for large videos (39MB+) that need range requests
-          if (videoImage?.url && videoImage.url.startsWith('https://')) {
-            backgroundVideoUrl = videoImage.url;
-            console.log(`Resolved video ID ${videoId} to blob URL: ${backgroundVideoUrl}`);
+          if (mediaRecord?.url && mediaRecord.url.startsWith('https://')) {
+            backgroundVideoUrl = mediaRecord.url;
+            console.log(`Resolved video ID ${videoId} from media table to blob URL: ${backgroundVideoUrl.substring(0, 50)}...`);
+          } else {
+            // Fall back to images table (legacy system)
+            const [videoImage] = await db
+              .select({ url: images.url, mimeType: images.mimeType })
+              .from(images)
+              .where(eq(images.id, videoId))
+              .limit(1);
+            
+            // If the image has a blob URL, use it directly for better streaming
+            // This is especially important for large videos (39MB+) that need range requests
+            if (videoImage?.url && videoImage.url.startsWith('https://')) {
+              backgroundVideoUrl = videoImage.url;
+              console.log(`Resolved video ID ${videoId} from images table to blob URL: ${backgroundVideoUrl.substring(0, 50)}...`);
+            }
           }
         }
       } catch (err) {
