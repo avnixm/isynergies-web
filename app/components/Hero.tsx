@@ -164,41 +164,23 @@ export default function Hero({ navLinks }: HeroProps) {
               console.warn('Background video loading suspended');
             }}
           />
-          {/* Linear blur gradient overlays at all edges - gradual fade to hide video edges */}
-          <div className="absolute inset-0 pointer-events-none">
-            {/* Top gradient - linear gradual fade (smaller height) */}
-            <div 
-              className="absolute top-0 left-0 right-0 backdrop-blur-sm"
-              style={{
-                height: '80px',
-                background: 'linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.25) 30%, rgba(0,0,0,0.12) 60%, rgba(0,0,0,0.04) 85%, transparent 100%)'
-              }}
-            />
-            {/* Bottom gradient - linear gradual fade (smaller height) */}
-            <div 
-              className="absolute bottom-0 left-0 right-0 backdrop-blur-sm"
-              style={{
-                height: '120px',
-                background: 'linear-gradient(to top, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.25) 30%, rgba(0,0,0,0.12) 60%, rgba(0,0,0,0.04) 85%, transparent 100%)'
-              }}
-            />
-            {/* Left gradient - linear gradual fade (smaller width) */}
-            <div 
-              className="absolute top-0 bottom-0 left-0 backdrop-blur-sm"
-              style={{
-                width: '120px',
-                background: 'linear-gradient(to right, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.22) 30%, rgba(0,0,0,0.1) 60%, rgba(0,0,0,0.03) 85%, transparent 100%)'
-              }}
-            />
-            {/* Right gradient - linear gradual fade (smaller width) */}
-            <div 
-              className="absolute top-0 bottom-0 right-0 backdrop-blur-sm"
-              style={{
-                width: '120px',
-                background: 'linear-gradient(to left, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.22) 30%, rgba(0,0,0,0.1) 60%, rgba(0,0,0,0.03) 85%, transparent 100%)'
-              }}
-            />
-          </div>
+          {/* TOP GRADUAL BLUR - mask-based blur effect */}
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 h-28 backdrop-blur-[18px] bg-slate-950/20"
+            style={{
+              WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,0.95), rgba(0,0,0,0.65), rgba(0,0,0,0))",
+              maskImage: "linear-gradient(to bottom, rgba(0,0,0,0.95), rgba(0,0,0,0.65), rgba(0,0,0,0))",
+            }}
+          />
+
+          {/* BOTTOM GRADUAL BLUR - mask-based blur effect */}
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-28 backdrop-blur-[18px] bg-slate-950/20"
+            style={{
+              WebkitMaskImage: "linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.65), rgba(0,0,0,0))",
+              maskImage: "linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.65), rgba(0,0,0,0))",
+            }}
+          />
         </div>
       )}
 
