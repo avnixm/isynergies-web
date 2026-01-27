@@ -877,3 +877,34 @@ body:not(.admin-dashboard-active) {
     opacity: 1;
   }
 }
+
+/* Category Strip Responsive Styles - Strips fill available width evenly */
+@media (min-width: 640px) {
+  .category-strip-responsive {
+    min-width: 80px !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .category-strip-responsive {
+    min-width: 95px !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .category-strip-responsive {
+    min-width: 120px !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  .category-strip-responsive {
+    min-width: 140px !important;
+  }
+}
+
+@media (min-width: 1536px) {
+  .category-strip-responsive {
+    min-width: 160px !important;
+  }
+}

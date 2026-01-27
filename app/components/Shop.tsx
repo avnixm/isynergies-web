@@ -147,15 +147,20 @@ export default function Shop() {
         </div>
       </div>
 
-      {/* Fixed rigid layout: 48% left, 52% right */}
-      <div className="relative w-full flex items-stretch z-10" style={{ minHeight: '700px', height: '700px' }}>
-        {/* Left Panel (~48%) */}
-        <div className="relative w-[48%] flex flex-col" style={{ height: '100%' }}>
-          <div className="px-4 md:px-8 lg:px-16 py-8 md:py-10 flex flex-col h-full justify-between">
+      {/* Responsive container with max-width constraints */}
+      <div className="mx-auto w-full max-w-6xl px-4 md:px-8 2xl:max-w-7xl">
+        {/* Responsive 2-column grid layout */}
+        <div 
+          className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] 2xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:items-stretch lg:gap-16 xl:gap-20 2xl:gap-24 relative z-10"
+          style={{ minHeight: '700px', height: '700px' }}
+        >
+          {/* Left Panel */}
+          <div className="relative flex flex-col -ml-2 md:-ml-2 lg:-ml-4 xl:-ml-16" style={{ height: '100%' }}>
+            <div className="py-8 md:py-10 flex flex-col h-full justify-between">
             {/* Top Section: Title and Description */}
             <div className="flex flex-col relative">
               {/* Header with title and button */}
-              <div className="flex items-start justify-between gap-6 mb-6">
+              <div className="flex items-start justify-between gap-6 mb-4">
                 <h2 className={`font-sans text-4xl md:text-5xl font-semibold tracking-tight text-white slide-right-content ${
                   isVisible ? 'animate' : 'opacity-0'
                 }`}>
@@ -322,37 +327,40 @@ export default function Shop() {
               </div>
             </div>
           </div>
-        </div>
+          </div>
 
-        {/* Right Panel (~52%) - 4 vertical strips with custom images and text - Full height */}
-        <div className="relative w-[52%] flex gap-3" style={{ height: '100%' }}>
-          {categories.length > 0 ? (
-            categories.map((c, index) => {
-              // 1st and 3rd strips (index 0 and 2) = slide-down, 2nd and 4th (index 1 and 3) = slide-up
-              const animationClass = index % 2 === 0 ? 'slide-down-slow' : 'slide-up-slow';
-              return (
-                <div
-                  key={c.id}
-                  className={`${animationClass} ${
-                    isVisible ? 'animate' : 'opacity-0'
-                  }`}
-                  style={{
-                    animationDelay: isVisible ? `${0.3 + index * 0.1}s` : '0s',
-                  }}
-                >
-              <CategoryStrip
-                name={c.name}
-                text={c.text || c.name.toUpperCase()}
-                image={c.image || null}
-              />
-                </div>
-              );
-            })
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-white/50">
-              <p>No categories available</p>
+          {/* Right Panel - 4 vertical strips with custom images and text - Full height */}
+          <div className="relative flex flex-col" style={{ height: '100%' }}>
+            <div className="w-full h-full flex gap-3 md:gap-4 lg:gap-5 2xl:gap-6">
+            {categories.length > 0 ? (
+              categories.map((c, index) => {
+                // 1st and 3rd strips (index 0 and 2) = slide-down, 2nd and 4th (index 1 and 3) = slide-up
+                const animationClass = index % 2 === 0 ? 'slide-down-slow' : 'slide-up-slow';
+                return (
+                  <div
+                    key={c.id}
+                    className={`${animationClass} ${
+                      isVisible ? 'animate' : 'opacity-0'
+                    }`}
+                    style={{
+                      animationDelay: isVisible ? `${0.3 + index * 0.1}s` : '0s',
+                    }}
+                  >
+                <CategoryStrip
+                  name={c.name}
+                  text={c.text || c.name.toUpperCase()}
+                  image={c.image || null}
+                />
+                  </div>
+                );
+              })
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-white/50">
+                <p>No categories available</p>
+              </div>
+            )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </section>

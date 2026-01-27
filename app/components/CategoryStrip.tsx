@@ -12,13 +12,12 @@ type CategoryStripProps = {
 export default function CategoryStrip({ name, text, image, className = '' }: CategoryStripProps) {
   return (
     <div
-      className={`relative overflow-hidden group cursor-pointer bg-gray-300 ${className}`}
+      className={`relative overflow-hidden group cursor-pointer bg-gray-300 category-strip-responsive ${className}`}
       style={{
-        width: 'calc((52% - 9px) / 4)',
-        minWidth: '150px',
-        maxWidth: '100%',
+        flex: '1 1 0',
+        minWidth: '80px',
+        width: '100%',
         height: '100%',
-        flexShrink: 0,
       }}
     >
       {/* Background Image or Placeholder */}
@@ -52,8 +51,8 @@ export default function CategoryStrip({ name, text, image, className = '' }: Cat
       <div 
         className="absolute pointer-events-none z-10"
         style={{
-          bottom: '55px',
-          right: '5px',
+          bottom: 'clamp(20px, 8vh, 55px)',
+          right: 'clamp(2px, 1vw, 5px)',
           width: '1px',
           height: '1px',
         }}
@@ -71,12 +70,12 @@ export default function CategoryStrip({ name, text, image, className = '' }: Cat
           <span
             className={image ? 'text-white' : 'text-gray-600'}
             style={{
-              fontSize: 'clamp(2rem, 5vw, 4rem)',
-              textShadow: image ? '3px 3px 10px rgba(0,0,0,0.9)' : '1px 1px 3px rgba(0,0,0,0.1)',
-              fontWeight: 300,
+              fontSize: 'clamp(1.5rem, 4vw, 5rem)',
+              textShadow: image ? '4px 4px 12px rgba(0,0,0,0.9)' : '1px 1px 3px rgba(0,0,0,0.1)',
+              fontWeight: 600,
               fontFamily: '"Teko", sans-serif',
               textTransform: 'uppercase',
-              letterSpacing: '0.2em',
+              letterSpacing: 'clamp(0.05em, 0.2em, 0.2em)',
               lineHeight: '1.2',
               fontStretch: 'condensed',
               display: 'inline-block',
