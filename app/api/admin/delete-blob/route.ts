@@ -2,9 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireAuth } from '@/app/lib/auth-middleware';
 import { del } from '@vercel/blob';
 
-function getBlobToken(): string | undefined {
-  return process.env.BLOB_READ_WRITE_TOKEN || process.env.isyn_READ_WRITE_TOKEN;
-}
+import { getBlobToken } from '@/app/lib/blob-token';
 
 /**
  * DELETE /api/admin/delete-blob

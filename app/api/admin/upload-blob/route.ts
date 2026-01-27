@@ -4,6 +4,7 @@ import { requireAuth } from '@/app/lib/auth-middleware';
 import { db } from '@/app/db';
 import { images } from '@/app/db/schema';
 import { del } from '@vercel/blob';
+import { ensureBlobTokenEnv, getBlobToken } from '@/app/lib/blob-token';
 
 // Handle client-side uploads to Vercel Blob
 // This route generates upload tokens and handles post-upload callbacks
@@ -16,6 +17,9 @@ export async function POST(request: Request) {
   if (authResult instanceof NextResponse) return authResult;
 
   try {
+    // `handleUpload` reads BLOB_READ_WRITE_TOKEN internally
+    ensureBlobTokenEnv();
+
     const body = await request.json() as HandleUploadBody;
 
     const uploadResponse = await handleUpload({
@@ -106,7 +110,7 @@ export async function POST(request: Request) {
             try {
               console.log(`\n🗑️  [${timestamp}] DELETING OLD BLOB (replacement)`);
               console.log(`   Old URL: ${oldBlobUrl.substring(0, 80)}...`);
-              await del(oldBlobUrl);
+              await del(oldBlobUrl, { token: getBlobToken() });
               console.log(`   ✅ Successfully deleted old blob`);
             } catch (deleteError: any) {
               console.warn(`   ❌ Failed to delete old blob: ${deleteError?.message}`);

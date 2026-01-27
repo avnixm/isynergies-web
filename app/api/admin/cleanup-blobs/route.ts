@@ -4,9 +4,7 @@ import { list, del } from '@vercel/blob';
 import { db } from '@/app/db';
 import { images, media } from '@/app/db/schema';
 
-function getBlobToken(): string | undefined {
-  return process.env.BLOB_READ_WRITE_TOKEN || process.env.isyn_READ_WRITE_TOKEN;
-}
+import { getBlobToken } from '@/app/lib/blob-token';
 
 /**
  * POST /api/admin/cleanup-blobs

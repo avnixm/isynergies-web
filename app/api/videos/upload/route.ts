@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 import { requireUser } from '@/app/lib/auth-middleware';
 import { del } from '@vercel/blob';
+import { ensureBlobTokenEnv, getBlobToken } from '@/app/lib/blob-token';
 
 // Handle client-side uploads to Vercel Blob for videos
 // This follows Vercel's "Client Uploads" pattern using handleUpload
@@ -11,6 +12,9 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
+    // `handleUpload` reads BLOB_READ_WRITE_TOKEN internally
+    ensureBlobTokenEnv();
+
     // Get authenticated user
     const { userId } = await requireUser(request);
 
@@ -85,7 +89,7 @@ export async function POST(request: Request) {
             try {
               console.log(`\n🗑️  [${timestamp}] DELETING OLD BLOB (replacement)`);
               console.log(`   Old URL: ${oldBlobUrl.substring(0, 80)}...`);
-              await del(oldBlobUrl);
+              await del(oldBlobUrl, { token: getBlobToken() });
               console.log(`   ✅ Successfully deleted old blob`);
             } catch (deleteError: any) {
               console.warn(`   ❌ Failed to delete old blob: ${deleteError?.message}`);

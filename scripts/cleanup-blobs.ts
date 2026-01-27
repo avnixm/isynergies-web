@@ -25,6 +25,10 @@ import { list, del } from '@vercel/blob';
 import { db } from '../app/db';
 import { images, media } from '../app/db/schema';
 
+function getBlobToken(): string | undefined {
+  return process.env.BLOB_READ_WRITE_TOKEN || process.env.isyn_READ_WRITE_TOKEN;
+}
+
 async function cleanupBlobs(
   mode: 'orphaned' | 'all' | 'old' = 'orphaned',
   options: {
@@ -80,6 +84,7 @@ async function cleanupBlobs(
     const listResult = await list({
       cursor,
       limit: Math.min(100, limit - totalChecked),
+      token: getBlobToken(),
     });
 
     for (const blob of listResult.blobs) {
@@ -151,7 +156,7 @@ async function cleanupBlobs(
     await Promise.allSettled(
       batch.map(async (blob) => {
         try {
-          await del(blob.url);
+          await del(blob.url, { token: getBlobToken() });
           deleted++;
           process.stdout.write('.');
         } catch (error: any) {
