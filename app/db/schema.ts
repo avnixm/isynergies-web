@@ -167,8 +167,10 @@ export const heroSection = mysqlTable('hero_section', {
   weMakeItLogo: varchar('we_make_it_logo', { length: 255 }),
   isLogo: varchar('is_logo', { length: 255 }),
   fullLogo: varchar('full_logo', { length: 255 }),
-  backgroundImage: varchar('background_image', { length: 255 }),
-  backgroundVideo: varchar('background_video', { length: 255 }),
+  backgroundImage: varchar('background_image', { length: 255 }), // For Default Background Media mode
+  backgroundVideo: varchar('background_video', { length: 255 }), // For Default Background Media mode
+  heroImagesBackgroundImage: varchar('hero_images_background_image', { length: 255 }), // For Hero Images mode
+  useHeroImages: boolean('use_hero_images').default(false), // If true, show hero images; if false, show background image/video
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
 });
 
@@ -176,6 +178,16 @@ export const heroSection = mysqlTable('hero_section', {
 export const heroTickerItems = mysqlTable('hero_ticker_items', {
   id: int('id').primaryKey().autoincrement(),
   text: varchar('text', { length: 500 }).notNull(),
+  displayOrder: int('display_order').notNull().default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
+});
+
+// Hero Images (for hero image gallery/carousel mode)
+export const heroImages = mysqlTable('hero_images', {
+  id: int('id').primaryKey().autoincrement(),
+  image: varchar('image', { length: 255 }).notNull(),
+  alt: varchar('alt', { length: 255 }).notNull().default('Hero image'),
   displayOrder: int('display_order').notNull().default(0),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),

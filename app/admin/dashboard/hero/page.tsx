@@ -8,23 +8,33 @@ import { Label } from '@/app/components/ui/label';
 import { ImageUpload } from '@/app/components/ui/image-upload';
 import { Input } from '@/app/components/ui/input';
 import { Dialog, DialogFooter } from '@/app/components/ui/dialog';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Check, AlertCircle } from 'lucide-react';
 import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
 import { HtmlTips } from '@/app/components/ui/html-tips';
+import { MediaPreview } from '@/app/components/ui/media-preview';
 
 type HeroSection = {
   id: number;
   weMakeItLogo: string | null;
   isLogo: string | null;
   fullLogo: string | null;
-  backgroundImage: string | null;
-  backgroundVideo: string | null;
+  backgroundImage: string | null; // For Default Background Media mode
+  backgroundVideo: string | null; // For Default Background Media mode
+  heroImagesBackgroundImage: string | null; // For Hero Images mode
+  useHeroImages?: boolean;
 };
 
 type HeroTickerItem = {
   id: number;
   text: string;
+  displayOrder: number;
+};
+
+type HeroImage = {
+  id: number;
+  image: string;
+  alt: string;
   displayOrder: number;
 };
 
@@ -38,10 +48,16 @@ export default function HeroManagementPage() {
     fullLogo: null,
     backgroundImage: null,
     backgroundVideo: null,
+    heroImagesBackgroundImage: null,
+    useHeroImages: false,
   });
   const [heroTickerItems, setHeroTickerItems] = useState<HeroTickerItem[]>([]);
+  const [heroImages, setHeroImages] = useState<HeroImage[]>([]);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [initialHeroSection, setInitialHeroSection] = useState<HeroSection | null>(null);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [resolvedImageUrls, setResolvedImageUrls] = useState<Record<number, string>>({});
 
   // Dialog state management
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -50,9 +66,18 @@ export default function HeroManagementPage() {
   const [formDisplayOrder, setFormDisplayOrder] = useState(0);
   const [savingTickerItem, setSavingTickerItem] = useState(false);
 
+  // Hero Images dialog state
+  const [isHeroImageDialogOpen, setIsHeroImageDialogOpen] = useState(false);
+  const [editingHeroImage, setEditingHeroImage] = useState<HeroImage | null>(null);
+  const [heroImageFormImage, setHeroImageFormImage] = useState('');
+  const [heroImageFormAlt, setHeroImageFormAlt] = useState('');
+  const [heroImageFormDisplayOrder, setHeroImageFormDisplayOrder] = useState(0);
+  const [savingHeroImage, setSavingHeroImage] = useState(false);
+
   useEffect(() => {
     fetchHeroSection();
     fetchHeroTickerItems();
+    fetchHeroImages();
   }, []);
 
   const fetchHeroSection = async () => {
@@ -60,7 +85,12 @@ export default function HeroManagementPage() {
       const response = await fetch('/api/admin/hero-section');
       if (response.ok) {
         const data = await response.json();
-        setHeroSection(data);
+        const heroData = {
+          ...data,
+          useHeroImages: data.useHeroImages ?? false,
+        };
+        setHeroSection(heroData);
+        setInitialHeroSection(heroData);
       }
     } catch (error) {
       console.error('Error fetching hero section:', error);
@@ -81,16 +111,86 @@ export default function HeroManagementPage() {
     }
   };
 
+  const fetchHeroImages = async () => {
+    try {
+      const response = await fetch('/api/admin/hero-images');
+      if (response.ok) {
+        const data = await response.json();
+        setHeroImages(data);
+        
+        // Resolve image URLs for previews
+        const token = localStorage.getItem('admin_token');
+        const urlMap: Record<number, string> = {};
+        
+        await Promise.all(
+          data.map(async (image: HeroImage) => {
+            if (image.image) {
+              // If it's already a full URL, use it
+              if (image.image.startsWith('http') || image.image.startsWith('/')) {
+                urlMap[image.id] = image.image;
+              } else if (image.image.match(/^\d+$/)) {
+                // It's a numeric ID - try to resolve from media table
+                try {
+                  if (token) {
+                    const mediaResponse = await fetch(`/api/admin/media/${image.image}`, {
+                      headers: { 'Authorization': `Bearer ${token}` },
+                    });
+                    if (mediaResponse.ok) {
+                      const mediaRecord = await mediaResponse.json();
+                      if (mediaRecord?.url) {
+                        urlMap[image.id] = mediaRecord.url;
+                        return;
+                      }
+                    }
+                  }
+                  // Fallback to images API
+                  urlMap[image.id] = `/api/images/${image.image}`;
+                } catch (e) {
+                  urlMap[image.id] = `/api/images/${image.image}`;
+                }
+              } else {
+                urlMap[image.id] = `/api/images/${image.image}`;
+              }
+            }
+          })
+        );
+        
+        setResolvedImageUrls(urlMap);
+      }
+    } catch (error) {
+      console.error('Error fetching hero images:', error);
+    }
+  };
+
   const handleSaveHeroSection = async () => {
     setSaving(true);
     try {
       const response = await fetch('/api/admin/hero-section', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(heroSection),
+        body: JSON.stringify({
+          ...heroSection,
+          useHeroImages: heroSection.useHeroImages ?? false,
+        }),
       });
 
       if (response.ok) {
+        const updated = await response.json();
+        // Normalize the saved data to match our state structure
+        const normalized = {
+          id: updated.id || heroSection.id,
+          weMakeItLogo: updated.weMakeItLogo || null,
+          isLogo: updated.isLogo || null,
+          fullLogo: updated.fullLogo || null,
+          backgroundImage: updated.backgroundImage || null,
+          backgroundVideo: updated.backgroundVideo || null,
+          heroImagesBackgroundImage: updated.heroImagesBackgroundImage || null,
+          useHeroImages: updated.useHeroImages ?? false,
+        };
+        setInitialHeroSection(normalized);
+        // Also update heroSection to ensure they match
+        setHeroSection(normalized);
+        setLastSaved(new Date());
         toast.success('Hero section updated successfully!');
       } else {
         toast.error('Failed to update hero section');
@@ -102,6 +202,29 @@ export default function HeroManagementPage() {
       setSaving(false);
     }
   };
+
+  // Check if there are unsaved changes - compare only relevant fields
+  const hasUnsavedChanges = initialHeroSection && (() => {
+    const current = {
+      weMakeItLogo: heroSection.weMakeItLogo || null,
+      isLogo: heroSection.isLogo || null,
+      fullLogo: heroSection.fullLogo || null,
+      backgroundImage: heroSection.backgroundImage || null,
+      backgroundVideo: heroSection.backgroundVideo || null,
+      heroImagesBackgroundImage: heroSection.heroImagesBackgroundImage || null,
+      useHeroImages: heroSection.useHeroImages ?? false,
+    };
+    const initial = {
+      weMakeItLogo: initialHeroSection.weMakeItLogo || null,
+      isLogo: initialHeroSection.isLogo || null,
+      fullLogo: initialHeroSection.fullLogo || null,
+      backgroundImage: initialHeroSection.backgroundImage || null,
+      backgroundVideo: initialHeroSection.backgroundVideo || null,
+      heroImagesBackgroundImage: initialHeroSection.heroImagesBackgroundImage || null,
+      useHeroImages: initialHeroSection.useHeroImages ?? false,
+    };
+    return JSON.stringify(current) !== JSON.stringify(initial);
+  })();
 
   const handleOpenAddDialog = () => {
     const newOrder = heroTickerItems.length > 0 
@@ -216,6 +339,130 @@ export default function HeroManagementPage() {
     }
   };
 
+  // Hero Images handlers
+  const handleOpenAddHeroImageDialog = () => {
+    const newOrder = heroImages.length > 0 
+      ? Math.max(...heroImages.map(img => img.displayOrder)) + 1 
+      : 0;
+    
+    setEditingHeroImage(null);
+    setHeroImageFormImage('');
+    setHeroImageFormAlt('');
+    setHeroImageFormDisplayOrder(newOrder);
+    setIsHeroImageDialogOpen(true);
+  };
+
+  const handleOpenEditHeroImageDialog = (image: HeroImage) => {
+    setEditingHeroImage(image);
+    setHeroImageFormImage(image.image);
+    setHeroImageFormAlt(image.alt);
+    setHeroImageFormDisplayOrder(image.displayOrder);
+    setIsHeroImageDialogOpen(true);
+  };
+
+  const handleCloseHeroImageDialog = () => {
+    setIsHeroImageDialogOpen(false);
+    setEditingHeroImage(null);
+    setHeroImageFormImage('');
+    setHeroImageFormAlt('');
+    setHeroImageFormDisplayOrder(0);
+  };
+
+  const handleSaveHeroImage = async () => {
+    if (!heroImageFormImage.trim()) {
+      toast.error('Please select an image');
+      return;
+    }
+
+    setSavingHeroImage(true);
+    const token = localStorage.getItem('admin_token');
+    try {
+      if (editingHeroImage) {
+        // Update existing
+        const response = await fetch(`/api/admin/hero-images/${editingHeroImage.id}`, {
+          method: 'PUT',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            image: heroImageFormImage,
+            alt: heroImageFormAlt || 'Hero image',
+            displayOrder: heroImageFormDisplayOrder,
+          }),
+        });
+
+        if (response.ok) {
+          toast.success('Hero image updated successfully!');
+          handleCloseHeroImageDialog();
+          await fetchHeroImages(); // Refresh images with resolved URLs
+        } else {
+          toast.error('Failed to update hero image');
+        }
+      } else {
+        // Create new
+        const response = await fetch('/api/admin/hero-images', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            image: heroImageFormImage,
+            alt: heroImageFormAlt || 'Hero image',
+            displayOrder: heroImageFormDisplayOrder,
+          }),
+        });
+
+        if (response.ok) {
+          toast.success('Hero image added successfully!');
+          handleCloseHeroImageDialog();
+          await fetchHeroImages(); // Refresh images with resolved URLs
+        } else {
+          toast.error('Failed to add hero image');
+        }
+      }
+    } catch (error) {
+      console.error('Error saving hero image:', error);
+      toast.error('An error occurred while saving');
+    } finally {
+      setSavingHeroImage(false);
+    }
+  };
+
+  const handleDeleteHeroImage = async (id: number) => {
+    const confirmed = await confirm(
+      'Are you sure you want to delete this hero image? This action cannot be undone.',
+      'Delete Image'
+    );
+    
+    if (!confirmed) return;
+
+    const token = localStorage.getItem('admin_token');
+    try {
+      const response = await fetch(`/api/admin/hero-images/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        toast.success('Hero image deleted successfully!');
+        // Remove from resolved URLs
+        setResolvedImageUrls(prev => {
+          const updated = { ...prev };
+          delete updated[id];
+          return updated;
+        });
+        await fetchHeroImages(); // Refresh images
+      } else {
+        toast.error('Failed to delete hero image');
+      }
+    } catch (error) {
+      console.error('Error deleting hero image:', error);
+      toast.error('An error occurred while deleting');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -234,71 +481,199 @@ export default function HeroManagementPage() {
         </p>
       </div>
 
-      {/* Hero Section Logos */}
-      <Card className="rounded-xl border border-border bg-white p-6 shadow-sm">
-        <h2 className="mb-6 text-lg font-medium text-foreground">Hero section logos</h2>
-        
-        <div className="grid gap-6 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="weMakeItLogo">We Make IT Possible Logo</Label>
-            <ImageUpload
-              value={heroSection.weMakeItLogo || ''}
-              onChange={(imageId) =>
-                setHeroSection({ ...heroSection, weMakeItLogo: imageId })
-              }
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="isLogo">iS Logo (Large Graphic)</Label>
-            <ImageUpload
-              value={heroSection.isLogo || ''}
-              onChange={(imageId) =>
-                setHeroSection({ ...heroSection, isLogo: imageId })
-              }
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="fullLogo">Full iSynergies Logo</Label>
-            <ImageUpload
-              value={heroSection.fullLogo || ''}
-              onChange={(imageId) =>
-                setHeroSection({ ...heroSection, fullLogo: imageId })
-              }
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="backgroundImage">Background Image</Label>
-            <ImageUpload
-              value={heroSection.backgroundImage || ''}
-              onChange={(imageId) =>
-                setHeroSection({ ...heroSection, backgroundImage: imageId })
-              }
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="backgroundVideo">Background Video</Label>
-            <ImageUpload
-              value={heroSection.backgroundVideo || ''}
-              onChange={(imageId) =>
-                setHeroSection({ ...heroSection, backgroundVideo: imageId })
-              }
-              acceptVideo={true}
-              mediaType="video"
-            />
-            <p className="text-xs text-muted-foreground">
-              
+      {/* Hero Visuals Section */}
+      <Card className="rounded-xl border border-border bg-white shadow-sm">
+        {/* Header with Save Button */}
+        <div className="flex items-center justify-between p-6 border-b border-border">
+          <div>
+            <h2 className="text-lg font-medium text-foreground">Hero Visuals</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Choose how the hero area is rendered
             </p>
+          </div>
+          <div className="flex items-center gap-3">
+            {hasUnsavedChanges && (
+              <div className="flex items-center gap-2 text-sm text-amber-600">
+                <AlertCircle className="h-4 w-4" />
+                <span>Unsaved changes</span>
+              </div>
+            )}
+            {!hasUnsavedChanges && lastSaved && (
+              <div className="flex items-center gap-2 text-sm text-green-600">
+                <Check className="h-4 w-4" />
+                <span>Saved {lastSaved.toLocaleTimeString()}</span>
+              </div>
+            )}
+            <Button 
+              onClick={handleSaveHeroSection} 
+              disabled={saving || !hasUnsavedChanges}
+            >
+              {saving ? 'Saving...' : 'Save'}
+            </Button>
           </div>
         </div>
 
-        <div className="mt-6 flex justify-end">
-          <Button onClick={handleSaveHeroSection} disabled={saving}>
-            {saving ? 'Saving...' : 'Save Hero Section'}
-          </Button>
+        <div className="p-6">
+          {/* Mode Selector */}
+          <div className="mb-8 grid gap-4 md:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => setHeroSection({ ...heroSection, useHeroImages: false })}
+              className={`relative rounded-xl border-2 p-6 text-left transition-all hover:shadow-md ${
+                !heroSection.useHeroImages
+                  ? 'border-blue-500 bg-blue-50/50 shadow-sm'
+                  : 'border-border bg-white hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className={`mt-1 h-5 w-5 rounded-full border-2 flex items-center justify-center ${
+                  !heroSection.useHeroImages
+                    ? 'border-blue-500 bg-blue-500'
+                    : 'border-gray-300'
+                }`}>
+                  {!heroSection.useHeroImages && (
+                    <div className="h-2.5 w-2.5 rounded-full bg-white" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-semibold text-foreground">Default Background Media</h3>
+                    {!heroSection.useHeroImages && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">
+                        Recommended
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Uses Background Image + Background Video
+                  </p>
+                </div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setHeroSection({ ...heroSection, useHeroImages: true })}
+              className={`relative rounded-xl border-2 p-6 text-left transition-all hover:shadow-md ${
+                heroSection.useHeroImages
+                  ? 'border-blue-500 bg-blue-50/50 shadow-sm'
+                  : 'border-border bg-white hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className={`mt-1 h-5 w-5 rounded-full border-2 flex items-center justify-center ${
+                  heroSection.useHeroImages
+                    ? 'border-blue-500 bg-blue-500'
+                    : 'border-gray-300'
+                }`}>
+                  {heroSection.useHeroImages && (
+                    <div className="h-2.5 w-2.5 rounded-full bg-white" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-foreground mb-1">Hero Images</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Upload a set of hero images (carousel/rotating images)
+                  </p>
+                </div>
+              </div>
+            </button>
+          </div>
+
+          {/* Mode A: Default Background Media */}
+          {!heroSection.useHeroImages && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-base font-medium text-foreground mb-4">Background Media</h3>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="backgroundImage">Background Image</Label>
+                    <ImageUpload
+                      value={heroSection.backgroundImage || ''}
+                      onChange={(imageId) =>
+                        setHeroSection({ ...heroSection, backgroundImage: imageId })
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="backgroundVideo">Background Video</Label>
+                    <ImageUpload
+                      value={heroSection.backgroundVideo || ''}
+                      onChange={(imageId) =>
+                        setHeroSection({ ...heroSection, backgroundVideo: imageId })
+                      }
+                      acceptVideo={true}
+                      mediaType="video"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Mode B: Hero Images */}
+          {heroSection.useHeroImages && (
+            <div className="space-y-6">
+              {/* Background Image for Hero Images mode */}
+              <div>
+                <h3 className="text-base font-medium text-foreground mb-4">Background Image</h3>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Upload a background image for the hero section
+                </p>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="heroImagesBackgroundImage">Background Image</Label>
+                    <ImageUpload
+                      value={heroSection.heroImagesBackgroundImage || ''}
+                      onChange={(imageId) =>
+                        setHeroSection({ ...heroSection, heroImagesBackgroundImage: imageId })
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Hero Section Logos - Placeholders */}
+              <div>
+                <h3 className="text-base font-medium text-foreground mb-4">Hero Section Logos</h3>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Upload the logos that appear in the hero section
+                </p>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="weMakeItLogo">We Make IT Possible Logo</Label>
+                    <ImageUpload
+                      value={heroSection.weMakeItLogo || ''}
+                      onChange={(imageId) =>
+                        setHeroSection({ ...heroSection, weMakeItLogo: imageId })
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="isLogo">iS Logo (Large Graphic)</Label>
+                    <ImageUpload
+                      value={heroSection.isLogo || ''}
+                      onChange={(imageId) =>
+                        setHeroSection({ ...heroSection, isLogo: imageId })
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="fullLogo">Full iSynergies Logo</Label>
+                    <ImageUpload
+                      value={heroSection.fullLogo || ''}
+                      onChange={(imageId) =>
+                        setHeroSection({ ...heroSection, fullLogo: imageId })
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </Card>
 
@@ -376,7 +751,7 @@ export default function HeroManagementPage() {
         </div>
       </Card>
 
-      {/* Add/Edit Dialog */}
+      {/* Add/Edit Ticker Item Dialog */}
       <Dialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
@@ -432,6 +807,70 @@ export default function HeroManagementPage() {
             disabled={savingTickerItem}
           >
             {savingTickerItem ? 'Saving...' : editingTickerItem ? 'Update' : 'Add'}
+          </Button>
+        </DialogFooter>
+      </Dialog>
+
+      {/* Add/Edit Hero Image Dialog */}
+      <Dialog
+        open={isHeroImageDialogOpen}
+        onOpenChange={setIsHeroImageDialogOpen}
+        title={editingHeroImage ? 'Edit Hero Image' : 'Add Hero Image'}
+      >
+        <div className="space-y-4 mb-6">
+          <div className="space-y-2">
+            <Label htmlFor="hero-image-upload">Image</Label>
+            <ImageUpload
+              value={heroImageFormImage}
+              onChange={(imageId) => setHeroImageFormImage(imageId)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Upload an image that will be displayed in the hero section
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="hero-image-alt">Alt Text</Label>
+            <Input
+              id="hero-image-alt"
+              type="text"
+              value={heroImageFormAlt}
+              onChange={(e) => setHeroImageFormAlt(e.target.value)}
+              placeholder="Hero image description"
+            />
+            <p className="text-xs text-muted-foreground">
+              Descriptive text for accessibility and SEO
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="hero-image-order">Display Order</Label>
+            <Input
+              id="hero-image-order"
+              type="number"
+              value={heroImageFormDisplayOrder}
+              onChange={(e) => setHeroImageFormDisplayOrder(parseInt(e.target.value) || 0)}
+              placeholder="0"
+            />
+            <p className="text-xs text-muted-foreground">
+              Lower numbers appear first
+            </p>
+          </div>
+        </div>
+
+        <DialogFooter className="justify-end">
+          <Button
+            variant="outline"
+            onClick={handleCloseHeroImageDialog}
+            disabled={savingHeroImage}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSaveHeroImage}
+            disabled={savingHeroImage}
+          >
+            {savingHeroImage ? 'Saving...' : editingHeroImage ? 'Update' : 'Add'}
           </Button>
         </DialogFooter>
       </Dialog>

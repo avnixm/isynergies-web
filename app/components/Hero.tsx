@@ -8,8 +8,10 @@ type HeroSection = {
   weMakeItLogo: string | null;
   isLogo: string | null;
   fullLogo: string | null;
-  backgroundImage: string | null;
-  backgroundVideo: string | null;
+  backgroundImage: string | null; // For Default Background Media mode
+  backgroundVideo: string | null; // For Default Background Media mode
+  heroImagesBackgroundImage: string | null; // For Hero Images mode
+  useHeroImages?: boolean;
 };
 
 type HeroTickerItem = {
@@ -85,9 +87,11 @@ export default function Hero({ navLinks }: HeroProps) {
     return `/api/images/${value}`;
   };
 
-  // Background image - from database only; if none, use a muted gradient background
-  const bgImage = getImageUrl(heroSection?.backgroundImage ?? null);
-  // Background video - from database only
+  // Background image - different for each mode
+  const bgImage = heroSection?.useHeroImages 
+    ? getImageUrl(heroSection?.heroImagesBackgroundImage ?? null) // Hero Images mode
+    : getImageUrl(heroSection?.backgroundImage ?? null); // Default Background Media mode
+  // Background video - from database only (only for Default Background Media mode)
   const bgVideo = getImageUrl(heroSection?.backgroundVideo ?? null);
   // Other images - only from database (no fallbacks)
   const weMakeItImage = getImageUrl(heroSection?.weMakeItLogo ?? null);
@@ -133,7 +137,7 @@ export default function Hero({ navLinks }: HeroProps) {
 
   return (
     <div ref={heroRef} className="relative min-h-screen overflow-hidden">
-      {/* Background - Load first, before video */}
+      {/* Background - Load first, before video - show different image based on mode */}
       <div className="absolute inset-0 z-0">
         {bgImage ? (
           <Image
@@ -150,8 +154,8 @@ export default function Hero({ navLinks }: HeroProps) {
         )}
       </div>
 
-      {/* Background Video - above background image but under logos */}
-      {bgVideo && !videoError && (
+      {/* Background Video - above background image but under logos - only show in Default Background Media mode */}
+      {!heroSection?.useHeroImages && bgVideo && !videoError && (
         <div className="absolute inset-0 z-[5] overflow-hidden">
           <video
             ref={videoRef}
@@ -262,8 +266,8 @@ export default function Hero({ navLinks }: HeroProps) {
         </nav>
       )}
 
-      {/* We make IT possible logo - Left side - only show if exists in database - Load with priority */}
-      {weMakeItImage && (
+      {/* We make IT possible logo - Left side - only show if exists in database AND useHeroImages is true - Load with priority */}
+      {weMakeItImage && heroSection?.useHeroImages && (
         <div className="slide-right absolute left-8 md:left-11 top-[200px] -translate-y-1/2 z-20">
           <Image
             src={weMakeItImage as string}
@@ -278,8 +282,8 @@ export default function Hero({ navLinks }: HeroProps) {
         </div>
       )}
 
-      {/* iS logo - Right side, large graphic - only show if exists in database - Load with priority */}
-      {isLogoImage && (
+      {/* iS logo - Right side, large graphic - only show if exists in database AND useHeroImages is true - Load with priority */}
+      {isLogoImage && heroSection?.useHeroImages && (
         <div className="fade-in absolute right-0 md:right-0 top-[100px] -translate-y-1/4 z-10">
           <Image
             src={isLogoImage as string}
@@ -294,8 +298,8 @@ export default function Hero({ navLinks }: HeroProps) {
         </div>
       )}
 
-      {/* Full iSynergies logo - Right side, below iS logo - only show if exists in database - Load with priority */}
-      {fullLogoImage && (
+      {/* Full iSynergies logo - Right side, below iS logo - only show if exists in database AND useHeroImages is true - Load with priority */}
+      {fullLogoImage && heroSection?.useHeroImages && (
         <div className="fade-in absolute right-2 md:right-[-40px] top-[45%] -translate-y-1/3 z-20 w-[600px] h-[300px] md:w-[700px] md:h-[350px]">
           <Image
             src={fullLogoImage as string}
