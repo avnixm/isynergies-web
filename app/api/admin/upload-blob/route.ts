@@ -53,9 +53,14 @@ export async function POST(request: Request) {
           // Ignore parsing errors
         }
 
+        // Construct callback URL for onUploadCompleted
+        const url = new URL(request.url);
+        const callbackUrl = `${url.protocol}//${url.host}/api/admin/upload-blob`;
+
         return {
           allowedContentTypes: allowedTypes,
           addRandomSuffix: true,
+          callbackUrl: callbackUrl,
           tokenPayload: JSON.stringify({ 
             filename: filename || pathname,
             contentType: contentType || 'application/octet-stream',
@@ -84,21 +89,31 @@ export async function POST(request: Request) {
           }).$returningId();
 
           const imageId = result[0]?.id;
-          console.log(`Uploaded file saved to database with ID: ${imageId}, URL: ${blob.url}`);
+          const timestamp = new Date().toISOString();
+          console.log('\n' + '='.repeat(80));
+          console.log(`📤 [${timestamp}] BLOB UPLOAD COMPLETED`);
+          console.log(`   Database ID: ${imageId}`);
+          console.log(`   URL: ${blob.url}`);
+          console.log(`   Pathname: ${blob.pathname || 'N/A'}`);
+          console.log(`   Content Type: ${contentType}`);
+          console.log(`   Size: ${(fileSize / 1024 / 1024).toFixed(2)} MB`);
+          console.log('='.repeat(80));
 
           // Delete old blob file if it exists
           if (oldBlobUrl && typeof oldBlobUrl === 'string' && 
               oldBlobUrl.startsWith('https://') && 
               oldBlobUrl.includes('blob.vercel-storage.com')) {
             try {
-              console.log(`Deleting old blob: ${oldBlobUrl}`);
+              console.log(`\n🗑️  [${timestamp}] DELETING OLD BLOB (replacement)`);
+              console.log(`   Old URL: ${oldBlobUrl.substring(0, 80)}...`);
               await del(oldBlobUrl);
-              console.log('Old blob deleted successfully');
+              console.log(`   ✅ Successfully deleted old blob`);
             } catch (deleteError: any) {
-              console.warn('Failed to delete old blob:', deleteError?.message);
+              console.warn(`   ❌ Failed to delete old blob: ${deleteError?.message}`);
               // Don't throw - deletion failure shouldn't block upload success
             }
           }
+
         } catch (dbError: any) {
           console.error('Error saving blob URL to database:', dbError);
           // Don't throw - upload succeeded, just DB save failed

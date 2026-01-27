@@ -80,6 +80,10 @@ function isVideoEmbedUrl(url: string): boolean {
   );
 }
 
+function isNumericId(value: string): boolean {
+  return /^\d+$/.test((value || '').trim());
+}
+
 export default function FeaturedApp() {
   const [content, setContent] = useState<FeaturedAppContent | null>(null);
   const [carouselImages, setCarouselImages] = useState<FeaturedAppCarouselImage[]>([]);
@@ -103,6 +107,7 @@ export default function FeaturedApp() {
   const [isVideoSliding, setIsVideoSliding] = useState(false);
   const [isLeftVideoPlaying, setIsLeftVideoPlaying] = useState(false);
   const [embedAutoplay, setEmbedAutoplay] = useState(false);
+  const [autoPlayRequested, setAutoPlayRequested] = useState(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -218,6 +223,8 @@ export default function FeaturedApp() {
     return carouselImages.filter((item) => item.mediaType === 'video' || isVideoEmbedUrl(item.image));
   }, [carouselImages]);
 
+  const hasVideos = videoItems.length > 0;
+
   // Reset video index when video list changes
   useEffect(() => {
     if (videoIndex >= videoItems.length) {
@@ -240,7 +247,9 @@ export default function FeaturedApp() {
       setVideoSlideDir(direction);
       setIsVideoSliding(true);
       setIsLeftVideoPlaying(false);
-      setEmbedAutoplay(false);
+      // Autoplay the next/prev item after navigation (works for both direct video + embeds).
+      setEmbedAutoplay(true);
+      setAutoPlayRequested(true);
 
       window.setTimeout(() => {
         setVideoIndex((prev) => {
@@ -253,6 +262,33 @@ export default function FeaturedApp() {
     },
     [videoItems.length]
   );
+
+  // When autoplay is requested (Next/Prev click, hover), attempt to start playback.
+  // For iframe embeds, we rely on `autoplay` prop (embed URL includes autoplay=1).
+  // For direct <video>, we best-effort call play() on the element.
+  useEffect(() => {
+    if (!autoPlayRequested) return;
+    if (!primaryVideoItem) return;
+
+    const t = window.setTimeout(() => {
+      const el = featuredVideoContainerRef.current?.querySelector('video, iframe') as
+        | HTMLVideoElement
+        | HTMLIFrameElement
+        | null;
+      if (el && el.tagName.toLowerCase() === 'video') {
+        try {
+          (el as HTMLVideoElement).play().catch(() => {
+            /* autoplay may be blocked; user can click play */
+          });
+        } catch {
+          /* ignore */
+        }
+      }
+      setAutoPlayRequested(false);
+    }, 50);
+
+    return () => window.clearTimeout(t);
+  }, [autoPlayRequested, primaryVideoItem]);
 
   // Only show non-video items in the right-side image carousel (prevents "duplicate video")
   const carouselDisplayItems = useMemo(() => {
@@ -578,12 +614,43 @@ export default function FeaturedApp() {
     );
   }
 
-  const getImageUrl = (imageId: string | null | undefined): string => {
-    if (!imageId) return '';
-    if (imageId.startsWith('/api/images/') || imageId.startsWith('http') || imageId.startsWith('/')) {
-      return imageId;
+  const getMediaUrl = (value: string | null | undefined, kind: 'image' | 'video' = 'image'): string => {
+    if (!value) return '';
+
+    // IMPORTANT: Videos uploaded via Vercel Blob are stored in the `media` table.
+    // If we ever get a video value that points at `/api/images/:id`, remap it to `/api/media/:id`
+    // to avoid returning non-video content (ID collisions between images and media).
+    if (kind === 'video') {
+      // Case 1: relative API images URL: /api/images/123
+      const relMatch = value.match(/^\/api\/images\/(\d+)\s*$/);
+      if (relMatch) {
+        return `/api/media/${relMatch[1]}`;
+      }
+
+      // Case 2: absolute URL: http(s)://host/api/images/123
+      const absMatch = value.match(/^(https?:\/\/[^/]+)\/api\/images\/(\d+)\s*$/);
+      if (absMatch) {
+        return `${absMatch[1]}/api/media/${absMatch[2]}`;
+      }
+
+      // Case 3: numeric ID (stored directly): "123"
+      if (isNumericId(value)) {
+        return `/api/media/${value.trim()}`;
+      }
     }
-    return `/api/images/${imageId}`;
+
+    // For already-resolved URLs, return as-is.
+    if (
+      value.startsWith('/api/images/') ||
+      value.startsWith('/api/media/') ||
+      value.startsWith('http') ||
+      value.startsWith('/')
+    ) {
+      return value;
+    }
+
+    // Default: treat as image ID.
+    return `/api/images/${value}`;
   };
 
   // Helper to convert video URLs to embed URLs
@@ -646,7 +713,7 @@ export default function FeaturedApp() {
           >
             {content.appLogo && (
               <img
-                src={getImageUrl(content.appLogo)}
+                src={getMediaUrl(content.appLogo, 'image')}
                 alt="App Logo"
                 className="w-auto h-full object-contain"
                 style={{
@@ -657,7 +724,7 @@ export default function FeaturedApp() {
             )}
             {content.poweredByImage && (
               <img
-                src={getImageUrl(content.poweredByImage)}
+                src={getMediaUrl(content.poweredByImage, 'image')}
                 alt="Powered By"
                 className="w-auto h-full object-contain"
                 style={{
@@ -680,7 +747,7 @@ export default function FeaturedApp() {
               }}
             >
               {features.map((feature) => {
-                const iconUrl = getImageUrl(feature.iconImage);
+                const iconUrl = getMediaUrl(feature.iconImage, 'image');
                 return (
                   <div key={feature.id} className="flex items-center">
                     {iconUrl && (
@@ -700,7 +767,7 @@ export default function FeaturedApp() {
         // Fallback to old header image for backward compatibility
         <div className="w-full h-27 md:h-43 overflow-hidden">
           <img
-            src={getImageUrl(content.headerImage)}
+            src={getMediaUrl(content.headerImage, 'image')}
             alt="Featured App Header"
             className="w-full h-full object-fill"
           />
@@ -712,11 +779,17 @@ export default function FeaturedApp() {
         <div className="w-full py-4 bg-[#D7E1E4] relative">
           <div className="relative w-full flex flex-col md:flex-row items-stretch gap-4 md:gap-6 px-4 md:px-6">
             {/* Left: Video Section (30% width on desktop) */}
-            <div className="w-full md:w-[30%] flex items-center justify-center">
-              {primaryVideoItem && (
+            {hasVideos && (
+              <div className="w-full md:w-[30%] flex items-center justify-center">
+                {primaryVideoItem && (
                 <div 
                   ref={featuredVideoContainerRef} 
                   className="relative w-full h-[180px] md:h-[220px]"
+                  onMouseEnter={() => {
+                    // Hover autoplay (best-effort; may be blocked by browser policy)
+                    setEmbedAutoplay(true);
+                    setAutoPlayRequested(true);
+                  }}
                 >
                   {/* Inner frame: rounded, clips video. All controls inside frame (YouTube-style). */}
                   <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-200 shadow-md">
@@ -734,11 +807,15 @@ export default function FeaturedApp() {
                       }}
                     >
                       {primaryVideoItem.mediaType === 'video' || isVideoEmbedUrl(primaryVideoItem.image) ? (
-                        <div className="w-full h-full">
+                        <div className="w-full h-full overflow-hidden">
                           <CustomVideoPlayer
-                            src={primaryVideoItem.image}
+                            src={getMediaUrl(
+                              primaryVideoItem.image,
+                              primaryVideoItem.mediaType === 'video' ? 'video' : 'image'
+                            )}
                             title={primaryVideoItem.alt || 'Featured video'}
                             className="w-full h-full"
+                            objectFit="cover"
                             shouldPause={pauseCarouselVideos}
                             onPlay={() => setIsLeftVideoPlaying(true)}
                             onPause={() => setIsLeftVideoPlaying(false)}
@@ -746,8 +823,8 @@ export default function FeaturedApp() {
                           />
                         </div>
                       ) : (
-                        <img
-                          src={getImageUrl(primaryVideoItem.image)}
+                          <img
+                            src={getMediaUrl(primaryVideoItem.image, 'image')}
                           alt={primaryVideoItem.alt}
                           className="w-full h-full object-cover"
                         />
@@ -849,11 +926,12 @@ export default function FeaturedApp() {
                     )}
                   </div>
                 </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
             {/* Right: Horizontal Carousel with Navigation (70% width on desktop) */}
-            <div className="w-full md:w-[70%] relative">
+            <div className={`w-full ${hasVideos ? 'md:w-[70%]' : 'md:w-full'} relative`}>
               <div className="relative w-full h-full flex items-center">
                 {/* Left Arrow Button - disabled while using infinite auto-scroll */}
                 {false && showLeftArrow && (
@@ -897,7 +975,7 @@ export default function FeaturedApp() {
                       }}
                     >
                     {carouselDisplayItems.map(({ item, originalIndex }, displayIndex) => {
-                      const mediaUrl = getImageUrl(item.image);
+                      const mediaUrl = getMediaUrl(item.image, 'image');
                       const isFirst = displayIndex === 0;
 
                       return (
@@ -1031,7 +1109,7 @@ export default function FeaturedApp() {
                 minWidth: '100%',
               }}>
                 {modalDisplayItems.map(({ item, originalIndex }, index) => {
-                  const mediaUrl = getImageUrl(item.image);
+                  const mediaUrl = getMediaUrl(item.image, 'image');
                   const isActive = index === modalIndex;
                   
                   return (
@@ -1101,7 +1179,7 @@ export default function FeaturedApp() {
                   {content.appStoreImage && (
                     <div className="flex-shrink-0">
                       <img
-                        src={getImageUrl(content.appStoreImage)}
+                        src={getMediaUrl(content.appStoreImage, 'image')}
                         alt="App Store"
                         className="h-20 md:h-24 object-contain"
                       />
@@ -1110,7 +1188,7 @@ export default function FeaturedApp() {
                   {content.googlePlayImage && (
                     <div className="flex-shrink-0">
                       <img
-                        src={getImageUrl(content.googlePlayImage)}
+                        src={getMediaUrl(content.googlePlayImage, 'image')}
                         alt="Google Play"
                         className="h-20 md:h-24 object-contain"
                       />
@@ -1119,7 +1197,7 @@ export default function FeaturedApp() {
                   {content.appGalleryImage && (
                     <div className="flex-shrink-0">
                       <img
-                        src={getImageUrl(content.appGalleryImage)}
+                        src={getMediaUrl(content.appGalleryImage, 'image')}
                         alt="App Gallery"
                         className="h-20 md:h-24 object-contain"
                       />
@@ -1152,7 +1230,7 @@ export default function FeaturedApp() {
             {content.logoImage && (
               <div className="flex-shrink-0 -mr-2 md:-mr-4 lg:-mr-6">
                 <img
-                  src={getImageUrl(content.logoImage)}
+                  src={getMediaUrl(content.logoImage, 'image')}
                   alt="Logo"
                   className="h-10 md:h-12 object-contain"
                 />

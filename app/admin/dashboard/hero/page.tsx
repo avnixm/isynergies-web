@@ -75,10 +75,22 @@ export default function HeroManagementPage() {
   const [heroImageFormDisplayOrder, setHeroImageFormDisplayOrder] = useState(0);
   const [savingHeroImage, setSavingHeroImage] = useState(false);
 
+  // Blob management state
+  const [blobs, setBlobs] = useState<Array<{
+    url: string;
+    pathname: string;
+    uploadedAt: Date;
+    size: number;
+    contentType: string;
+  }>>([]);
+  const [loadingBlobs, setLoadingBlobs] = useState(false);
+  const [deletingBlobs, setDeletingBlobs] = useState<Set<string>>(new Set());
+
   useEffect(() => {
     fetchHeroSection();
     fetchHeroTickerItems();
     fetchHeroImages();
+    fetchBlobs();
   }, []);
 
   const fetchHeroSection = async () => {
@@ -462,6 +474,88 @@ export default function HeroManagementPage() {
       console.error('Error deleting hero image:', error);
       toast.error('An error occurred while deleting');
     }
+  };
+
+  const fetchBlobs = async () => {
+    setLoadingBlobs(true);
+    try {
+      const token = localStorage.getItem('admin_token');
+      const response = await fetch('/api/admin/blobs?limit=100', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setBlobs(data.blobs || []);
+      }
+    } catch (error) {
+      console.error('Error fetching blobs:', error);
+    } finally {
+      setLoadingBlobs(false);
+    }
+  };
+
+  const handleDeleteBlob = async (url: string) => {
+    const confirmed = await confirm(
+      'Are you sure you want to delete this blob? This action cannot be undone.',
+      'Delete Blob'
+    );
+
+    if (!confirmed) return;
+
+    setDeletingBlobs(prev => new Set(prev).add(url));
+    try {
+      const token = localStorage.getItem('admin_token');
+      const response = await fetch('/api/admin/delete-blob', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ url }),
+      });
+
+      if (response.ok) {
+        toast.success('Blob deleted successfully!');
+        await fetchBlobs(); // Refresh list
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        toast.error(errorData.error || 'Failed to delete blob');
+      }
+    } catch (error) {
+      console.error('Error deleting blob:', error);
+      toast.error('An error occurred while deleting blob');
+    } finally {
+      setDeletingBlobs(prev => {
+        const updated = new Set(prev);
+        updated.delete(url);
+        return updated;
+      });
+    }
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+  };
+
+  const formatDate = (date: Date | string) => {
+    const d = typeof date === 'string' ? new Date(date) : date;
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    return d.toLocaleDateString();
   };
 
   if (loading) {
@@ -874,6 +968,111 @@ export default function HeroManagementPage() {
           </Button>
         </DialogFooter>
       </Dialog>
+
+      {/* Blob Storage Management Section */}
+      <Card className="rounded-xl border border-border bg-white shadow-sm">
+        <div className="flex items-center justify-between p-6 border-b border-border">
+          <div>
+            <h2 className="text-lg font-medium text-foreground">Blob Storage</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Manage uploaded files in Vercel Blob storage
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchBlobs}
+            disabled={loadingBlobs}
+          >
+            {loadingBlobs ? 'Refreshing...' : 'Refresh'}
+          </Button>
+        </div>
+
+        <div className="p-6">
+          {loadingBlobs ? (
+            <div className="flex items-center justify-center py-8">
+              <Loading />
+            </div>
+          ) : blobs.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-sm text-muted-foreground">No blobs found in storage</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="text-sm text-muted-foreground mb-4">
+                Total: {blobs.length} blob(s)
+              </div>
+              <div className="border border-border rounded-lg overflow-hidden">
+                <div className="divide-y divide-border">
+                  {blobs.map((blob, index) => (
+                    <div
+                      key={blob.url}
+                      className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3">
+                          <div className="flex-shrink-0">
+                            {blob.contentType.startsWith('image/') ? (
+                              <div className="w-12 h-12 rounded border border-border bg-muted/20 flex items-center justify-center overflow-hidden">
+                                <img
+                                  src={blob.url}
+                                  alt={blob.pathname}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                  }}
+                                />
+                              </div>
+                            ) : blob.contentType.startsWith('video/') ? (
+                              <div className="w-12 h-12 rounded border border-border bg-muted/20 flex items-center justify-center">
+                                <span className="text-xs text-muted-foreground">🎥</span>
+                              </div>
+                            ) : (
+                              <div className="w-12 h-12 rounded border border-border bg-muted/20 flex items-center justify-center">
+                                <span className="text-xs text-muted-foreground">📄</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">
+                              {blob.pathname || blob.url.substring(0, 60)}...
+                            </p>
+                            <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
+                              <span>{formatFileSize(blob.size)}</span>
+                              <span>•</span>
+                              <span>{blob.contentType}</span>
+                              <span>•</span>
+                              <span>{formatDate(blob.uploadedAt)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0 ml-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteBlob(blob.url)}
+                          disabled={deletingBlobs.has(blob.url)}
+                          className="border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600"
+                        >
+                          {deletingBlobs.has(blob.url) ? (
+                            'Deleting...'
+                          ) : (
+                            <>
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Delete
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </Card>
 
       {/* Sticky Footer Save Button - At the bottom of all content */}
       <StickyFooter formId="hero-form" saving={saving} disabled={!hasUnsavedChanges} />

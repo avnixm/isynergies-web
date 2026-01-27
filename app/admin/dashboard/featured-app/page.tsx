@@ -8,7 +8,6 @@ import { Label } from '@/app/components/ui/label';
 import { Input } from '@/app/components/ui/input';
 import { Dialog, DialogFooter } from '@/app/components/ui/dialog';
 import { ImageUpload } from '@/app/components/ui/image-upload';
-import { VideoUrlInput } from '@/app/components/ui/video-url-input';
 import { Plus, Pencil, Trash2, Info } from 'lucide-react';
 import { StickyFooter } from '../_components/sticky-footer';
 import { useToast } from '@/app/components/ui/toast';
@@ -294,7 +293,7 @@ export default function FeaturedAppPage() {
     setCarouselOrderError('');
 
     if (!formCarouselImage.image || (typeof formCarouselImage.image === 'string' && formCarouselImage.image.trim() === '')) {
-      toast.error(formCarouselImage.mediaType === 'video' ? 'Please enter a video URL' : 'Please select an image');
+      toast.error(formCarouselImage.mediaType === 'video' ? 'Please upload a video file' : 'Please select an image');
       return;
     }
 
@@ -1106,25 +1105,16 @@ export default function FeaturedAppPage() {
             </select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="carousel-image-upload">{formCarouselImage.mediaType === 'video' ? 'Video URL' : 'Image'}</Label>
-            {formCarouselImage.mediaType === 'video' ? (
-              <VideoUrlInput
-                value={formCarouselImage.image}
-                onChange={(url) => {
-                  console.log('Video URL changed:', url);
-                  setFormCarouselImage({ ...formCarouselImage, image: url });
-                }}
-                label=""
-              />
-            ) : (
-              <ImageUpload
-                value={formCarouselImage.image}
-                onChange={(imageId) => {
-                  console.log('Image ID changed:', imageId);
-                  setFormCarouselImage({ ...formCarouselImage, image: imageId });
-                }}
-              />
-            )}
+            <Label htmlFor="carousel-image-upload">{formCarouselImage.mediaType === 'video' ? 'Video' : 'Image'}</Label>
+            <ImageUpload
+              value={formCarouselImage.image}
+              onChange={(imageId) => {
+                console.log(`${formCarouselImage.mediaType === 'video' ? 'Video' : 'Image'} ID changed:`, imageId);
+                setFormCarouselImage({ ...formCarouselImage, image: imageId });
+              }}
+              acceptVideo={formCarouselImage.mediaType === 'video'}
+              mediaType={formCarouselImage.mediaType === 'video' ? 'video' : 'image'}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="carousel-image-alt">Alt Text</Label>

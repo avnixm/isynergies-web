@@ -35,9 +35,14 @@ export async function DELETE(request: Request) {
     }
 
     // Delete the blob
+    const timestamp = new Date().toISOString();
+    console.log(`\n🗑️  [${timestamp}] MANUAL BLOB DELETION`);
+    console.log(`   URL: ${url.substring(0, 80)}...`);
+    
     await del(url);
 
-    console.log(`Deleted blob: ${url}`);
+    console.log(`   ✅ Successfully deleted blob`);
+    console.log('='.repeat(80) + '\n');
 
     return NextResponse.json({ success: true, message: 'Blob deleted successfully' });
   } catch (error: any) {

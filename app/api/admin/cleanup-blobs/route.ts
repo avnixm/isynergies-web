@@ -119,24 +119,38 @@ export async function POST(request: Request) {
     if (!dryRun && blobsToDelete.length > 0) {
       console.log(`Deleting ${blobsToDelete.length} blobs...`);
       
-      // Delete in batches to avoid overwhelming the API
-      const batchSize = 10;
+      // Delete in batches using batch deletion API (more efficient)
+      const batchSize = 50; // Can delete up to 50 at once efficiently
       for (let i = 0; i < blobsToDelete.length; i += batchSize) {
         const batch = blobsToDelete.slice(i, i + batchSize);
+        const urlsToDelete = batch.map(blob => blob.url);
         
-        await Promise.allSettled(
-          batch.map(async (blob) => {
-            try {
-              await del(blob.url);
-              deletionResults.push({ url: blob.url, success: true });
-              console.log(`Deleted blob: ${blob.pathname || blob.url.substring(0, 50)}...`);
-            } catch (error: any) {
-              const errorMsg = error?.message || 'Unknown error';
-              deletionResults.push({ url: blob.url, success: false, error: errorMsg });
-              console.error(`Failed to delete blob ${blob.pathname || blob.url.substring(0, 50)}...:`, errorMsg);
-            }
-          })
-        );
+        try {
+          // Delete batch of blobs in a single request
+          await del(urlsToDelete);
+          
+          // All deletions succeeded
+          batch.forEach((blob) => {
+            deletionResults.push({ url: blob.url, success: true });
+            console.log(`✅ Deleted blob: ${blob.pathname || blob.url.substring(0, 50)}...`);
+          });
+        } catch (error: any) {
+          // If batch deletion fails, try individual deletions as fallback
+          console.warn(`Batch deletion failed, trying individual deletions...`);
+          await Promise.allSettled(
+            batch.map(async (blob) => {
+              try {
+                await del(blob.url);
+                deletionResults.push({ url: blob.url, success: true });
+                console.log(`✅ Deleted blob: ${blob.pathname || blob.url.substring(0, 50)}...`);
+              } catch (individualError: any) {
+                const errorMsg = individualError?.message || 'Unknown error';
+                deletionResults.push({ url: blob.url, success: false, error: errorMsg });
+                console.error(`❌ Failed to delete blob ${blob.pathname || blob.url.substring(0, 50)}...:`, errorMsg);
+              }
+            })
+          );
+        }
 
         // Small delay between batches to avoid rate limiting
         if (i + batchSize < blobsToDelete.length) {

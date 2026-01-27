@@ -8,6 +8,8 @@ interface CustomVideoPlayerProps {
   poster?: string;
   title?: string;
   className?: string;
+  /** How the video should fit inside its container (default: contain). */
+  objectFit?: 'contain' | 'cover';
   onPauseRequested?: () => void;
   shouldPause?: boolean;
   onPlay?: () => void;
@@ -20,6 +22,19 @@ interface CustomVideoPlayerProps {
 // Helper to extract direct video URL from various sources
 function getDirectVideoUrl(url: string): string | null {
   if (!url) return null;
+
+  // API image/media routes - these resolve to blob URLs (direct video URLs)
+  // The route handles redirects to actual video files
+  if (url.startsWith('/api/images/') || url.startsWith('/api/media/')) {
+    return url;
+  }
+
+  // Vercel Blob URLs (used for uploaded videos)
+  // These are already direct video URLs and should be played with a <video> tag,
+  // not inside an iframe "page" (which looks like a static image thumbnail).
+  if (url.startsWith('https://') && url.includes('blob.vercel-storage.com')) {
+    return url;
+  }
 
   // Google Drive - always use iframe embedding (preview URL)
   // The direct download URL doesn't work for video streaming
@@ -57,7 +72,19 @@ function getDirectVideoUrl(url: string): string | null {
   return null;
 }
 
-export function CustomVideoPlayer({ src, poster, title, className = '', onPauseRequested, shouldPause = false, onPlay, onPause, playerId, autoplay = false }: CustomVideoPlayerProps) {
+export function CustomVideoPlayer({
+  src,
+  poster,
+  title,
+  className = '',
+  objectFit = 'contain',
+  onPauseRequested,
+  shouldPause = false,
+  onPlay,
+  onPause,
+  playerId,
+  autoplay = false,
+}: CustomVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -75,6 +102,29 @@ export function CustomVideoPlayer({ src, poster, title, className = '', onPauseR
 
   const directVideoUrl = getDirectVideoUrl(src);
   const needsIframe = !directVideoUrl || useIframeFallback;
+
+  // Autoplay for direct <video> sources (e.g., Vercel Blob URLs, /api/images/:id redirects).
+  // For iframe embeds, autoplay is handled by appending `?autoplay=1` to the embed URL.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (needsIframe) return;
+    if (!autoplay) return;
+    if (!directVideoUrl) return;
+    if (shouldPause) return;
+
+    // Attempt to play on next tick so the element has updated src.
+    const t = window.setTimeout(() => {
+      video
+        .play()
+        .catch(() => {
+          // Autoplay might be blocked by browser policy if not muted / no user gesture.
+          // We keep silent here; the user can still press play.
+        });
+    }, 0);
+
+    return () => window.clearTimeout(t);
+  }, [autoplay, directVideoUrl, needsIframe, shouldPause]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -143,13 +193,22 @@ export function CustomVideoPlayer({ src, poster, title, className = '', onPauseR
       
       // Log with JSON.stringify to ensure proper serialization
       console.error('Video load error:', JSON.stringify(errorDetails, null, 2));
-      console.error('Video element state:', {
-        src: video.src,
-        currentSrc: video.currentSrc,
-        networkState: video.networkState,
-        readyState: video.readyState,
-        error: error ? { code: error.code, message: error.message } : null,
-      });
+
+      // Use warn + stringified snapshot so DevTools/Next overlay doesn't collapse it to `{}`.
+      console.warn(
+        'Video element state:',
+        JSON.stringify(
+          {
+            src: video.src,
+            currentSrc: video.currentSrc,
+            networkState: video.networkState,
+            readyState: video.readyState,
+            error: error ? { code: error.code, message: error.message } : null,
+          },
+          null,
+          2
+        )
+      );
       
       // If direct video fails, try iframe fallback
       if (directVideoUrl && !useIframeFallback) {
@@ -425,12 +484,14 @@ export function CustomVideoPlayer({ src, poster, title, className = '', onPauseR
     }
 
     return (
-      <div className={`relative w-full h-full ${className}`}>
+      <div className={`relative w-full h-full overflow-hidden ${className}`}>
         <iframe
           key={`${iframeKey}-${autoplay}`}
           ref={iframeRef}
           src={embedUrl}
           className="w-full h-full"
+          style={{ border: 'none', display: 'block' }}
+          loading="lazy"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
           title={title || 'Video'}
@@ -451,7 +512,7 @@ export function CustomVideoPlayer({ src, poster, title, className = '', onPauseR
 
   return (
     <div
-      className={`relative w-full h-full bg-black group ${className}`}
+      className={`relative w-full h-full bg-black group overflow-hidden ${className}`}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => {
         if (isPlaying) {
@@ -463,7 +524,8 @@ export function CustomVideoPlayer({ src, poster, title, className = '', onPauseR
         ref={videoRef}
         src={directVideoUrl || undefined}
         poster={poster}
-        className="w-full h-full object-contain"
+        className={`w-full h-full ${objectFit === 'cover' ? 'object-cover' : 'object-contain'}`}
+        style={{ maxWidth: '100%', maxHeight: '100%' }}
         onClick={togglePlay}
         crossOrigin="anonymous"
         preload="metadata"

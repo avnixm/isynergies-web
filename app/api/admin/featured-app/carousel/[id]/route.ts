@@ -65,11 +65,19 @@ export async function PUT(
       );
     }
 
-    // Normalize the image URL (extract from embed codes, decode HTML entities, etc.)
-    const normalizedImage = typeof image === 'string' ? normalizeVideoUrl(image) : image;
+    // Check if image is a numeric ID (media ID from Vercel Blob upload) vs URL string
+    const isNumericId = typeof image === 'string' && /^\d+$/.test(image.trim());
+    const isMediaId = isNumericId && mediaType === 'video';
+
+    // If it's a media ID from Vercel Blob upload, store it as-is
+    // Otherwise, normalize the URL (for backward compatibility with embed URLs)
+    const normalizedImage = isMediaId
+      ? image.trim() // Keep numeric media ID as-is
+      : (typeof image === 'string' ? normalizeVideoUrl(image) : image);
 
     // Check if normalized URL is too long (database column limit is 255)
-    if (typeof normalizedImage === 'string' && normalizedImage.length > 255) {
+    // Only check length for URL strings, not numeric IDs
+    if (!isMediaId && typeof normalizedImage === 'string' && normalizedImage.length > 255) {
       return NextResponse.json(
         { error: 'Video URL is too long. Please use a shorter URL or extract the media ID from embed codes.' },
         { status: 400 }
@@ -77,8 +85,9 @@ export async function PUT(
     }
 
     // Determine media type if not provided
-    // Check if it's a video URL (various video hosting services) or video file extension
-    const isVideoUrl = typeof normalizedImage === 'string' && (
+    // If it's a numeric media ID with mediaType='video', it's a blob video
+    // Otherwise check if it's a video URL (various video hosting services) or video file extension
+    const isVideoUrl = isMediaId || (typeof normalizedImage === 'string' && (
       normalizedImage.includes('youtube.com') ||
       normalizedImage.includes('youtu.be') ||
       normalizedImage.includes('vimeo.com') ||
@@ -96,7 +105,7 @@ export async function PUT(
       normalizedImage.endsWith('.webm') ||
       normalizedImage.endsWith('.mov') ||
       normalizedImage.endsWith('.m3u8') // HLS stream
-    );
+    ));
     const detectedMediaType = mediaType || (isVideoUrl ? 'video' : 'image');
 
     await db

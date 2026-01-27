@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/app/db';
-import { images, imageChunks } from '@/app/db/schema';
+import { images, imageChunks, media } from '@/app/db/schema';
 import { eq, asc } from 'drizzle-orm';
 
 export async function GET(
@@ -12,35 +12,64 @@ export async function GET(
     const imageId = parseInt(id);
     const range = request.headers.get('range');
     
-    // Fetch image from database
-    const [image] = await db
+    // Fetch image from database (check images table first)
+    let [image] = await db
       .select()
       .from(images)
       .where(eq(images.id, imageId))
       .limit(1);
 
+    let mediaRecord = null;
+    let blobUrl: string | null = null;
+    let contentType: string | null = null;
+    let isVideoFile = false;
+
+    // If not found in images table, check media table (for video media IDs)
     if (!image) {
+      [mediaRecord] = await db
+        .select()
+        .from(media)
+        .where(eq(media.id, imageId))
+        .limit(1);
+
+      if (mediaRecord) {
+        blobUrl = mediaRecord.url;
+        contentType = mediaRecord.contentType;
+        isVideoFile = mediaRecord.type === 'video';
+      }
+    } else {
+      // Found in images table
+      blobUrl = image.url || null;
+      contentType = image.mimeType || null;
+      isVideoFile = image.mimeType?.startsWith('video/') || false;
+    }
+
+    // If neither found, return 404
+    if (!image && !mediaRecord) {
       return NextResponse.json(
-        { error: 'Image not found' },
+        { error: 'Image/Media not found' },
         { status: 404 }
       );
     }
 
-    // NEW: If image has a Vercel Blob URL, redirect to it (preferred method)
-    if (image.url && image.url.startsWith('https://')) {
-      console.log(`Redirecting to Vercel Blob URL for image ${imageId}: ${image.url}`);
-      // For video files, we need to ensure proper headers for streaming
-      const isVideo = image.mimeType?.startsWith('video/');
+    // NEW: If we have a Vercel Blob URL, redirect to it (preferred method)
+    if (blobUrl && blobUrl.startsWith('https://')) {
+      console.log(`Redirecting to Vercel Blob URL for ${image ? 'image' : 'media'} ${imageId}: ${blobUrl}`);
       
-      if (isVideo) {
+      if (isVideoFile) {
         // For videos, always redirect to Vercel Blob - it handles range requests natively
         // Use 307 (Temporary Redirect) to preserve the request method and headers (including Range header)
         const headers = new Headers();
-        headers.set('Location', image.url);
+        headers.set('Location', blobUrl);
         headers.set('Cache-Control', 'public, max-age=31536000, immutable');
         headers.set('Access-Control-Allow-Origin', '*');
         headers.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
         headers.set('Access-Control-Expose-Headers', 'Content-Range, Accept-Ranges, Content-Length, Content-Type');
+        
+        // Set content type if available
+        if (contentType) {
+          headers.set('Content-Type', contentType);
+        }
         
         // Preserve range header if present
         if (range) {
@@ -53,7 +82,24 @@ export async function GET(
         });
       }
       
-      return NextResponse.redirect(image.url, 302);
+      return NextResponse.redirect(blobUrl, 302);
+    }
+
+    // If we got here and it's from media table, but no blob URL, that's unexpected
+    if (mediaRecord && !blobUrl) {
+      return NextResponse.json(
+        { error: 'Media record found but has no URL' },
+        { status: 404 }
+      );
+    }
+
+    // If we found a media record (not in images table), we've already handled it above
+    // Only continue with legacy base64/chunked storage if we found an image record
+    if (!image) {
+      return NextResponse.json(
+        { error: 'Media record found but has no blob URL' },
+        { status: 404 }
+      );
     }
 
     // LEGACY: Fall back to base64/chunked storage for backward compatibility
