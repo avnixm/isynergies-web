@@ -7,7 +7,17 @@ import { eq } from 'drizzle-orm';
 export async function GET() {
   try {
     // Select all columns from hero_section table
-    const content = await db.select().from(heroSection).limit(1);
+    const content = await db.select({
+      id: heroSection.id,
+      weMakeItLogo: heroSection.weMakeItLogo,
+      isLogo: heroSection.isLogo,
+      fullLogo: heroSection.fullLogo,
+      backgroundImage: heroSection.backgroundImage,
+      backgroundVideo: heroSection.backgroundVideo,
+      heroImagesBackgroundImage: heroSection.heroImagesBackgroundImage,
+      useHeroImages: heroSection.useHeroImages,
+      updatedAt: heroSection.updatedAt,
+    }).from(heroSection).limit(1);
     
     // If no content exists, return default
     if (content.length === 0) {
@@ -92,7 +102,9 @@ export async function PUT(request: Request) {
     const { weMakeItLogo, isLogo, fullLogo, backgroundImage, backgroundVideo, heroImagesBackgroundImage, useHeroImages } = body;
 
     // Check if record exists
-    const existing = await db.select().from(heroSection).limit(1);
+    const existing = await db.select({
+      id: heroSection.id,
+    }).from(heroSection).limit(1);
 
     if (existing.length === 0) {
       // Create new record
@@ -120,7 +132,17 @@ export async function PUT(request: Request) {
         });
     }
 
-    const updated = await db.select().from(heroSection).limit(1);
+    const updated = await db.select({
+      id: heroSection.id,
+      weMakeItLogo: heroSection.weMakeItLogo,
+      isLogo: heroSection.isLogo,
+      fullLogo: heroSection.fullLogo,
+      backgroundImage: heroSection.backgroundImage,
+      backgroundVideo: heroSection.backgroundVideo,
+      heroImagesBackgroundImage: heroSection.heroImagesBackgroundImage,
+      useHeroImages: heroSection.useHeroImages,
+      updatedAt: heroSection.updatedAt,
+    }).from(heroSection).limit(1);
     return NextResponse.json(updated[0]);
   } catch (error) {
     console.error('Error updating hero section:', error);
