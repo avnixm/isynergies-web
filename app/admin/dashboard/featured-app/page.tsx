@@ -9,11 +9,64 @@ import { Input } from '@/app/components/ui/input';
 import { Dialog, DialogFooter } from '@/app/components/ui/dialog';
 import { ImageUpload } from '@/app/components/ui/image-upload';
 import { VideoUrlInput } from '@/app/components/ui/video-url-input';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Info } from 'lucide-react';
+import { StickyFooter } from '../_components/sticky-footer';
 import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
 import { HtmlTips } from '@/app/components/ui/html-tips';
 import Image from 'next/image';
+
+// Reusable preview frame component for consistent image previews
+interface MediaPreviewFrameProps {
+  value: string;
+  onChange: (value: string) => void;
+  getImageUrl: (imageId: string | null) => string;
+  size?: 'logo' | 'badge';
+  disabled?: boolean;
+}
+
+function MediaPreviewFrame({ value, onChange, getImageUrl, size = 'logo', disabled }: MediaPreviewFrameProps) {
+  const frameHeight = size === 'badge' ? 'h-40' : 'h-44';
+  const imageUrl = value ? getImageUrl(value) : null;
+
+  if (value && imageUrl) {
+    return (
+      <div className={`relative ${frameHeight} w-full rounded-xl border border-border bg-muted/20 p-3 overflow-hidden`}>
+        {/* Preview Image - Centered and scaled to 50% */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="relative w-1/2 h-1/2 flex items-center justify-center">
+            <Image
+              src={imageUrl}
+              alt="Preview"
+              fill
+              className="object-contain"
+              unoptimized
+            />
+          </div>
+        </div>
+        {/* Delete Button */}
+        <button
+          type="button"
+          onClick={() => onChange('')}
+          className="absolute top-3 right-3 h-11 w-11 rounded-full border border-red-400 bg-white/90 backdrop-blur-sm shadow-sm flex items-center justify-center text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed z-20"
+          disabled={disabled}
+          aria-label="Delete media"
+        >
+          <Trash2 className="h-5 w-5" />
+        </button>
+      </div>
+    );
+  }
+
+  // Empty state: show ImageUpload for uploading
+  return (
+    <ImageUpload
+      value={value}
+      onChange={onChange}
+      disabled={disabled}
+    />
+  );
+}
 
 type FeaturedAppContent = {
   headerImage: string;
@@ -174,7 +227,8 @@ export default function FeaturedAppPage() {
       if (response.ok) {
         toast.success('Featured App content updated successfully!');
       } else {
-        toast.error('Failed to update content');
+        const errorData = await response.json().catch(() => ({ error: 'Failed to update content' }));
+        toast.error(errorData.error || 'Failed to update content');
       }
     } catch (error) {
       console.error('Error saving content:', error);
@@ -453,46 +507,63 @@ export default function FeaturedAppPage() {
   }
 
       return (
-        <div className="space-y-6 w-full min-w-0 max-w-full overflow-x-hidden">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Featured App Management</h1>
+        <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-semibold text-foreground">Featured App Management</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Manage the Featured App section images and content
         </p>
+        <div className="mt-4 flex gap-2 p-1 bg-muted/50 rounded-lg border border-border w-fit">
+          <a href="#main-config" className="px-4 py-1.5 text-sm font-medium rounded-md hover:bg-background transition-colors">Main Configuration</a>
+          <a href="#carousel-media" className="px-4 py-1.5 text-sm font-medium rounded-md hover:bg-background transition-colors">Carousel Media</a>
+          <a href="#banner-features" className="px-4 py-1.5 text-sm font-medium rounded-md hover:bg-background transition-colors">Banner Features</a>
+        </div>
       </div>
 
       {/* Main Content */}
-      <Card className="rounded-xl border border-border bg-white shadow-sm w-full min-w-0 max-w-full">
-        <CardHeader className="flex flex-row items-center justify-between px-6 pt-6 pb-4">
+      <form id="featured-app-form" onSubmit={(e) => { e.preventDefault(); handleSaveContent(); }} className="space-y-8">
+      <Card id="main-config" className="rounded-xl border border-border bg-white shadow-sm w-full min-w-0 max-w-full">
+        <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
-            <CardTitle className="text-lg font-medium text-foreground">Main Configuration</CardTitle>
+            <h2 className="text-lg font-medium text-foreground">Main Configuration</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Upload images for the header banner, download badges, and logo
             </p>
           </div>
-        </CardHeader>
-        <CardContent className="px-6 pb-6 space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="itemType" className="text-sm font-medium">
-              Section Type
-            </Label>
-            <select
-              id="itemType"
-              value={content.itemType}
-              onChange={(e) => setContent({ ...content, itemType: e.target.value as 'app' | 'website' })}
-              className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <option value="app">App</option>
-              <option value="website">Website</option>
-            </select>
-            <p className="text-xs text-muted-foreground">
-              Choose whether this section features an app (with download badges) or a website (with a visit link and logo)
-            </p>
+        </div>
+        <div className="p-6">
+          <div className="max-w-4xl space-y-8">
+          {/* Section Type & Links */}
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-base font-medium text-foreground mb-3">Section Type & Links</h3>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="itemType" className="text-sm font-medium">
+                Section Type
+              </Label>
+              <select
+                id="itemType"
+                value={content.itemType}
+                onChange={(e) => setContent({ ...content, itemType: e.target.value as 'app' | 'website' })}
+                className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="app">App</option>
+                <option value="website">Website</option>
+              </select>
+              <p className="text-xs text-muted-foreground">
+                Choose whether this section features an app (with download badges) or a website (with a visit link and logo)
+              </p>
+            </div>
           </div>
 
-          {/* Gradient Settings */}
-          <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/20">
-            <Label className="text-sm font-medium">Banner Gradient Background</Label>
+          {/* Banner Style */}
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-base font-medium text-foreground mb-3">Banner Style</h3>
+            </div>
+            <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/20">
+              <Label className="text-sm font-medium">Banner Gradient Background</Label>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="gradientFrom" className="text-xs">From Color</Label>
@@ -549,114 +620,147 @@ export default function FeaturedAppPage() {
                 </select>
               </div>
             </div>
-            {/* Gradient Preview */}
-            <div className="mt-2">
-              <div
-                className="h-16 w-full rounded border border-border"
-                style={{
-                  background: `linear-gradient(${content.gradientDirection === 'to-r' ? 'to right' : content.gradientDirection === 'to-l' ? 'to left' : content.gradientDirection === 'to-b' ? 'to bottom' : content.gradientDirection === 'to-t' ? 'to top' : content.gradientDirection === 'to-br' ? 'to bottom right' : content.gradientDirection === 'to-bl' ? 'to bottom left' : content.gradientDirection === 'to-tr' ? 'to top right' : 'to top left'}, ${content.gradientFrom}, ${content.gradientTo})`,
-                }}
-              />
-            </div>
-            {/* Banner Height */}
-            <div className="space-y-2">
-              <Label htmlFor="bannerHeight" className="text-xs">Banner Height</Label>
-              <select
-                id="bannerHeight"
-                value={content.bannerHeight}
-                onChange={(e) => setContent({ ...content, bannerHeight: e.target.value })}
-                className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                <option value="h-32">Small (h-32)</option>
-                <option value="h-40">Medium (h-40)</option>
-                <option value="h-48">Large (h-48)</option>
-                <option value="h-60">Extra Large (h-60)</option>
-                <option value="h-72">XXL (h-72)</option>
-                <option value="h-80">XXXL (h-80)</option>
-                <option value="h-96">Huge (h-96)</option>
-              </select>
-              <p className="text-xs text-muted-foreground">
-                Select the height of the banner (Tailwind CSS height classes)
-              </p>
-            </div>
-          </div>
-
-          {/* App Logo */}
-          <div className="space-y-2">
-            <Label htmlFor="appLogo" className="text-sm font-medium">
-              App Logo (Left Side)
-            </Label>
-            <ImageUpload
-              value={content.appLogo}
-              onChange={(imageId) => setContent({ ...content, appLogo: imageId })}
-            />
-            <p className="text-xs text-muted-foreground">
-              Logo displayed on the left side of the banner (vertically centered)
-            </p>
-          </div>
-
-          {/* Powered By Image */}
-          <div className="space-y-2">
-            <Label htmlFor="poweredByImage" className="text-sm font-medium">
-              Powered By Image (Next to App Logo)
-            </Label>
-            <ImageUpload
-              value={content.poweredByImage}
-              onChange={(imageId) => setContent({ ...content, poweredByImage: imageId })}
-            />
-            <p className="text-xs text-muted-foreground">
-              Image displayed next to the app logo (e.g., "Powered by: eCPAY")
-            </p>
-          </div>
-
-          {content.itemType === 'app' && (
-            <>
+              {/* Gradient Preview */}
+              <div className="mt-2">
+                <div
+                  className="h-24 w-full rounded border border-border"
+                  style={{
+                    background: `linear-gradient(${content.gradientDirection === 'to-r' ? 'to right' : content.gradientDirection === 'to-l' ? 'to left' : content.gradientDirection === 'to-b' ? 'to bottom' : content.gradientDirection === 'to-t' ? 'to top' : content.gradientDirection === 'to-br' ? 'to bottom right' : content.gradientDirection === 'to-bl' ? 'to bottom left' : content.gradientDirection === 'to-tr' ? 'to top right' : 'to top left'}, ${content.gradientFrom}, ${content.gradientTo})`,
+                  }}
+                />
+              </div>
+              {/* Banner Height */}
               <div className="space-y-2">
-                <Label htmlFor="downloadText" className="text-sm font-medium">
-                  Download Text
-                </Label>
-                <Input
-                  id="downloadText"
-                  value={content.downloadText}
-                  onChange={(e) => setContent({ ...content, downloadText: e.target.value })}
-                  placeholder="Download now via"
+                <Label htmlFor="bannerHeight" className="text-xs">Banner Height</Label>
+                <select
+                  id="bannerHeight"
+                  value={content.bannerHeight}
+                  onChange={(e) => setContent({ ...content, bannerHeight: e.target.value })}
+                  className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <option value="h-32">Small (h-32)</option>
+                  <option value="h-40">Medium (h-40)</option>
+                  <option value="h-48">Large (h-48)</option>
+                  <option value="h-60">Extra Large (h-60)</option>
+                  <option value="h-72">XXL (h-72)</option>
+                  <option value="h-80">XXXL (h-80)</option>
+                  <option value="h-96">Huge (h-96)</option>
+                </select>
+                <p className="text-xs text-muted-foreground">
+                  Select the height of the banner (Tailwind CSS height classes)
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Branding Images */}
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-base font-medium text-foreground mb-3">Branding Images</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* App Logo Card */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="appLogo" className="text-sm font-medium">
+                    App Logo (Left Side)
+                  </Label>
+                </div>
+                <MediaPreviewFrame
+                  value={content.appLogo}
+                  onChange={(imageId) => setContent({ ...content, appLogo: imageId })}
+                  getImageUrl={getImageUrl}
+                  size="logo"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Text displayed before the download badges (e.g., "Download now via")
+                  Logo displayed on the left side of the banner (vertically centered)
                 </p>
               </div>
 
-              <div className="space-y-4">
-                <Label className="text-sm font-medium">Download Badges</Label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="appStoreImage" className="text-xs">App Store Badge</Label>
-                <ImageUpload
-                  value={content.appStoreImage}
-                  onChange={(imageId) => setContent({ ...content, appStoreImage: imageId })}
+              {/* Powered By Image Card */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="poweredByImage" className="text-sm font-medium">
+                    Powered By Image (Next to App Logo)
+                  </Label>
+                </div>
+                <MediaPreviewFrame
+                  value={content.poweredByImage}
+                  onChange={(imageId) => setContent({ ...content, poweredByImage: imageId })}
+                  getImageUrl={getImageUrl}
+                  size="logo"
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="googlePlayImage" className="text-xs">Google Play Badge</Label>
-                <ImageUpload
-                  value={content.googlePlayImage}
-                  onChange={(imageId) => setContent({ ...content, googlePlayImage: imageId })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="appGalleryImage" className="text-xs">App Gallery Badge</Label>
-                <ImageUpload
-                  value={content.appGalleryImage}
-                  onChange={(imageId) => setContent({ ...content, appGalleryImage: imageId })}
-                />
+                <p className="text-xs text-muted-foreground">
+                  Image displayed next to the app logo (e.g., "Powered by: eCPAY")
+                </p>
               </div>
             </div>
           </div>
-            </>
+
+          {/* Download Area (App mode only) */}
+          {content.itemType === 'app' && (
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-base font-medium text-foreground mb-3">Download Area</h3>
+              </div>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="downloadText" className="text-sm font-medium">
+                    Download Text
+                  </Label>
+                  <Input
+                    id="downloadText"
+                    value={content.downloadText}
+                    onChange={(e) => setContent({ ...content, downloadText: e.target.value })}
+                    placeholder="Download now via"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Text displayed before the download badges (e.g., "Download now via")
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-sm font-medium">Download Badges</Label>
+                    <p className="text-xs text-muted-foreground mt-1">Upload badges for app store links</p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="appStoreImage" className="text-xs font-medium">App Store Badge</Label>
+                      <MediaPreviewFrame
+                        value={content.appStoreImage}
+                        onChange={(imageId) => setContent({ ...content, appStoreImage: imageId })}
+                        getImageUrl={getImageUrl}
+                        size="badge"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="googlePlayImage" className="text-xs font-medium">Google Play Badge</Label>
+                      <MediaPreviewFrame
+                        value={content.googlePlayImage}
+                        onChange={(imageId) => setContent({ ...content, googlePlayImage: imageId })}
+                        getImageUrl={getImageUrl}
+                        size="badge"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="appGalleryImage" className="text-xs font-medium">App Gallery Badge</Label>
+                      <MediaPreviewFrame
+                        value={content.appGalleryImage}
+                        onChange={(imageId) => setContent({ ...content, appGalleryImage: imageId })}
+                        getImageUrl={getImageUrl}
+                        size="badge"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
 
+          {/* Website Links (Website mode only) */}
           {content.itemType === 'website' && (
-            <>
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="visitText" className="text-sm font-medium">
                   Visit Link Text
@@ -687,35 +791,34 @@ export default function FeaturedAppPage() {
                   The URL that will be linked (replaces QR codes for website mode)
                 </p>
               </div>
-            </>
+            </div>
           )}
 
+          {/* Footer Logo */}
           <div className="space-y-2">
             <Label htmlFor="logoImage" className="text-sm font-medium">
-              Logo Image
+              Logo Image (Footer)
             </Label>
-            <ImageUpload
+            <MediaPreviewFrame
               value={content.logoImage}
               onChange={(imageId) => setContent({ ...content, logoImage: imageId })}
+              getImageUrl={getImageUrl}
+              size="logo"
             />
             <p className="text-xs text-muted-foreground">
               Logo displayed on the right side of the footer section (always visible)
             </p>
           </div>
-
-          <div className="flex justify-end pt-4 border-t border-border">
-            <Button onClick={handleSaveContent} disabled={saving}>
-              {saving ? 'Saving...' : 'Save Content'}
-            </Button>
           </div>
-        </CardContent>
+        </div>
       </Card>
+      </form>
 
           {/* Carousel Images */}
-          <Card className="rounded-xl border border-border bg-white shadow-sm w-full min-w-0 max-w-full">
-        <CardHeader className="flex flex-row items-center justify-between px-6 pt-6 pb-4">
+          <Card id="carousel-media" className="rounded-xl border border-border bg-white shadow-sm w-full min-w-0 max-w-full">
+        <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
-            <CardTitle className="text-lg font-medium text-foreground">Carousel Media</CardTitle>
+            <h2 className="text-lg font-medium text-foreground">Carousel Media</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Manage images and videos displayed in the horizontal carousel
             </p>
@@ -724,34 +827,36 @@ export default function FeaturedAppPage() {
             <Plus className="h-4 w-4" />
             Add Carousel Media
           </Button>
-        </CardHeader>
-        <CardContent className="px-6 pb-6">
+        </div>
+        <div className="p-6 pb-8">
           {carouselImages.length === 0 ? (
-            <div className="text-center py-8 border-2 border-dashed border-border rounded-lg bg-muted/20">
-              <p className="text-sm text-muted-foreground mb-4">No carousel images yet. Add images to the carousel.</p>
+            <div className="text-center py-12">
+              <div className="mx-auto mb-4 h-12 w-12 text-muted-foreground">
+                <Plus className="h-full w-full" />
+              </div>
+              <h3 className="mb-1 text-lg font-medium text-foreground">No carousel media yet</h3>
+              <p className="text-sm text-muted-foreground mb-4">Add images or videos to the carousel</p>
               <Button onClick={handleOpenAddCarouselDialog} variant="outline">
                 <Plus className="h-4 w-4 mr-2" /> Add First Media
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="space-y-2">
               {carouselImages.map((img) => {
                 const imageUrl = getImageUrl(img.image);
                 const isVideo = img.mediaType === 'video' || (img.image && (img.image.endsWith('.mp4') || img.image.endsWith('.webm') || img.image.endsWith('.mov')));
                 return (
-                  <Card key={img.id} className="group relative rounded-xl border border-border bg-white shadow-sm transition-all hover:shadow-lg hover:scale-[1.02]">
-                    <div className="absolute top-2 right-2 z-10">
-                      <span className="inline-flex items-center rounded-full bg-background/90 backdrop-blur-sm px-2.5 py-1 text-xs font-medium text-muted-foreground border border-border/50">
-                        Order: {img.displayOrder}
-                      </span>
-                    </div>
-
-                    <div className="relative aspect-video w-full bg-gradient-to-br from-muted/50 to-muted overflow-hidden rounded-t-xl">
+                  <div
+                    key={img.id}
+                    className="flex items-center gap-4 rounded-lg border border-border bg-white p-4 transition-colors hover:bg-muted/30"
+                  >
+                    {/* Thumbnail */}
+                    <div className="relative w-24 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-muted/30">
                       {imageUrl ? (
                         isVideo ? (
                           <video
                             src={imageUrl}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            className="w-full h-full object-cover"
                             muted
                             playsInline
                             preload="metadata"
@@ -761,60 +866,66 @@ export default function FeaturedAppPage() {
                             src={imageUrl}
                             alt={img.alt}
                             fill
-                            className="object-cover transition-transform duration-300 group-hover:scale-105"
+                            className="object-cover"
                             unoptimized
                           />
                         )
                       ) : (
-                        <div className="flex h-full items-center justify-center bg-muted/30">
-                          <div className="text-center">
-                            <div className="mx-auto mb-2 h-12 w-12 rounded-lg bg-muted flex items-center justify-center">
-                              <span className="text-2xl">📁</span>
-                            </div>
-                            <p className="text-xs text-muted-foreground">No image</p>
-                          </div>
+                        <div className="flex h-full items-center justify-center bg-muted">
+                          <span className="text-2xl">📁</span>
                         </div>
                       )}
                     </div>
 
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm text-foreground line-clamp-2 pr-12">{img.alt}</p>
+                    {/* Media Info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">
+                        {img.alt || (isVideo ? 'Video' : 'Image')}
+                      </p>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                          {isVideo ? 'Video' : 'Image'}
+                        </span>
+                        <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                          Order: {img.displayOrder}
+                        </span>
                       </div>
-                      <div className="mt-3 flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleOpenEditCarouselDialog(img)}
-                          className="flex-1"
-                        >
-                          <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                          Edit
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteCarouselImage(img)}
-                          className="border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600"
-                          type="button"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleOpenEditCarouselDialog(img)}
+                        className="h-9"
+                      >
+                        <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteCarouselImage(img)}
+                        className="h-9 w-9 p-0 border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600"
+                        type="button"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
                 );
               })}
             </div>
           )}
-        </CardContent>
+        </div>
       </Card>
 
           {/* Features Management */}
-          <Card className="rounded-xl border border-border bg-white shadow-sm w-full min-w-0 max-w-full">
-        <CardHeader className="flex flex-row items-center justify-between px-6 pt-6 pb-4">
+          <Card id="banner-features" className="rounded-xl border border-border bg-white shadow-sm w-full min-w-0 max-w-full">
+        <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
-            <CardTitle className="text-lg font-medium text-foreground">Banner Features</CardTitle>
+            <h2 className="text-lg font-medium text-foreground">Banner Features</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Manage feature icons displayed in the bottom right of the banner
             </p>
@@ -823,71 +934,87 @@ export default function FeaturedAppPage() {
             <Plus className="h-4 w-4" />
             Add Feature
           </Button>
-        </CardHeader>
-        <CardContent className="px-6 pb-6">
+        </div>
+        <div className="p-6 pb-8">
           {features.length === 0 ? (
-            <div className="text-center py-8 border-2 border-dashed border-border rounded-lg bg-muted/20">
-              <p className="text-sm text-muted-foreground mb-4">No features yet. Add feature icons to the banner.</p>
+            <div className="text-center py-12">
+              <div className="mx-auto mb-4 h-12 w-12 text-muted-foreground">
+                <Plus className="h-full w-full" />
+              </div>
+              <h3 className="mb-1 text-lg font-medium text-foreground">No features yet</h3>
+              <p className="text-sm text-muted-foreground mb-4">Add feature icons to the banner</p>
               <Button onClick={handleOpenAddFeatureDialog} variant="outline">
                 <Plus className="h-4 w-4 mr-2" /> Add First Feature
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="space-y-2">
               {features.map((feature) => {
                 const iconUrl = getImageUrl(feature.iconImage);
                 return (
-                  <Card key={feature.id} className="group relative rounded-xl border border-border bg-white shadow-sm transition-all hover:shadow-lg">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-3">
-                        {iconUrl ? (
-                          <div className="flex-shrink-0">
-                            <Image
-                              src={iconUrl}
-                              alt={feature.label}
-                              width={40}
-                              height={40}
-                              className="object-contain"
-                              unoptimized
-                            />
-                          </div>
-                        ) : (
-                          <div className="h-10 w-10 rounded bg-muted flex items-center justify-center">
-                            <span className="text-xs text-muted-foreground">No icon</span>
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">{feature.label}</p>
-                          <p className="text-xs text-muted-foreground">Order: {feature.displayOrder}</p>
-                        </div>
-                        <div className="flex gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleOpenEditFeatureDialog(feature)}
-                            className="h-7 w-7 p-0"
-                          >
-                            <Pencil className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteFeature(feature)}
-                            className="h-7 w-7 p-0 border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600"
-                            type="button"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
+                  <div
+                    key={feature.id}
+                    className="flex items-center gap-4 rounded-lg border border-border bg-white p-4 transition-colors hover:bg-muted/30"
+                  >
+                    {/* Icon */}
+                    <div className="relative w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-muted/30 flex items-center justify-center">
+                      {iconUrl ? (
+                        <Image
+                          src={iconUrl}
+                          alt={feature.label}
+                          width={48}
+                          height={48}
+                          className="object-contain"
+                          unoptimized
+                        />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">No icon</span>
+                      )}
+                    </div>
+
+                    {/* Feature Info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">
+                        {feature.label}
+                      </p>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                          Order: {feature.displayOrder}
+                        </span>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleOpenEditFeatureDialog(feature)}
+                        className="h-9"
+                      >
+                        <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteFeature(feature)}
+                        className="h-9 w-9 p-0 border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600"
+                        type="button"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
                 );
               })}
             </div>
           )}
-        </CardContent>
+        </div>
       </Card>
+
+      {/* Sticky Footer Save Button */}
+      <StickyFooter formId="featured-app-form" saving={saving} />
 
       {/* Feature Dialog */}
       <Dialog
@@ -951,7 +1078,21 @@ export default function FeaturedAppPage() {
         title={editingCarouselImage ? 'Edit Carousel Media' : 'Add Carousel Media'}
       >
         <div className="space-y-4 mb-6">
-          <HtmlTips />
+          {/* Compact HTML Tips */}
+          <div className="flex items-start gap-2 rounded-lg bg-muted/50 border border-border p-2">
+            <Info className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div className="text-xs text-muted-foreground leading-relaxed">
+              <strong className="font-medium">Tip:</strong> You can use HTML tags for formatting:{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;strong&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;em&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;br&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;p&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;ul&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;ol&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;li&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;a&gt;</code>, and more.
+            </div>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="carousel-media-type">Media Type</Label>
             <select

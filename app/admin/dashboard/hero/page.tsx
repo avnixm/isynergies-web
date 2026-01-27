@@ -9,6 +9,7 @@ import { ImageUpload } from '@/app/components/ui/image-upload';
 import { Input } from '@/app/components/ui/input';
 import { Dialog, DialogFooter } from '@/app/components/ui/dialog';
 import { Plus, Pencil, Trash2, Check, AlertCircle } from 'lucide-react';
+import { StickyFooter } from '../_components/sticky-footer';
 import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
 import { HtmlTips } from '@/app/components/ui/html-tips';
@@ -473,17 +474,18 @@ export default function HeroManagementPage() {
 
 
   return (
-    <div className="space-y-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Hero section management</h1>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-semibold text-foreground">Hero section management</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Manage the hero section logos and announcement text bar.
+          Manage hero visuals, logos, and announcement text bar.
         </p>
       </div>
 
+      <form id="hero-form" onSubmit={(e) => { e.preventDefault(); handleSaveHeroSection(); }} className="space-y-8">
       {/* Hero Visuals Section */}
       <Card className="rounded-xl border border-border bg-white shadow-sm">
-        {/* Header with Save Button */}
+        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
             <h2 className="text-lg font-medium text-foreground">Hero Visuals</h2>
@@ -504,12 +506,6 @@ export default function HeroManagementPage() {
                 <span>Saved {lastSaved.toLocaleTimeString()}</span>
               </div>
             )}
-            <Button 
-              onClick={handleSaveHeroSection} 
-              disabled={saving || !hasUnsavedChanges}
-            >
-              {saving ? 'Saving...' : 'Save'}
-            </Button>
           </div>
         </div>
 
@@ -584,7 +580,10 @@ export default function HeroManagementPage() {
           {!heroSection.useHeroImages && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-base font-medium text-foreground mb-4">Background Media</h3>
+                <h3 className="text-base font-medium text-foreground mb-2">Background Media</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Upload background image and video for the hero section
+                </p>
                 <div className="grid gap-6 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="backgroundImage">Background Image</Label>
@@ -614,11 +613,11 @@ export default function HeroManagementPage() {
 
           {/* Mode B: Hero Images */}
           {heroSection.useHeroImages && (
-            <div className="space-y-6">
+            <div className="space-y-8">
               {/* Background Image for Hero Images mode */}
               <div>
-                <h3 className="text-base font-medium text-foreground mb-4">Background Image</h3>
-                <p className="text-sm text-muted-foreground mb-6">
+                <h3 className="text-base font-medium text-foreground mb-2">Background Image</h3>
+                <p className="text-sm text-muted-foreground mb-4">
                   Upload a background image for the hero section
                 </p>
                 <div className="grid gap-6 md:grid-cols-2">
@@ -634,10 +633,10 @@ export default function HeroManagementPage() {
                 </div>
               </div>
 
-              {/* Hero Section Logos - Placeholders */}
+              {/* Hero Section Logos */}
               <div>
-                <h3 className="text-base font-medium text-foreground mb-4">Hero Section Logos</h3>
-                <p className="text-sm text-muted-foreground mb-6">
+                <h3 className="text-base font-medium text-foreground mb-2">Hero Section Logos</h3>
+                <p className="text-sm text-muted-foreground mb-4">
                   Upload the logos that appear in the hero section
                 </p>
                 <div className="grid gap-6 md:grid-cols-2">
@@ -677,6 +676,10 @@ export default function HeroManagementPage() {
         </div>
       </Card>
 
+      {/* Sticky Footer Save Button */}
+      <StickyFooter formId="hero-form" saving={saving} disabled={!hasUnsavedChanges} />
+      </form>
+
       {/* Hero Ticker Items */}
       <Card className="rounded-xl border border-border bg-white shadow-sm">
         <div className="flex items-center justify-between p-6 border-b border-border">
@@ -692,62 +695,62 @@ export default function HeroManagementPage() {
           </Button>
         </div>
         <div className="p-6">
-
-        {heroTickerItems.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-sm text-muted-foreground">No announcement texts yet. Click "Add Text" to create one.</p>
-          </div>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {heroTickerItems.map((item) => (
-              <Card
-                key={item.id}
-                className="group relative rounded-xl border border-border bg-white shadow-sm transition-all hover:shadow-md"
-              >
-                {/* Display Order Badge */}
-                <div className="absolute top-2 right-2 z-10">
-                  <span className="inline-flex items-center rounded-full bg-background/90 backdrop-blur-sm px-2 py-1 text-xs font-medium text-muted-foreground border border-border/50">
-                    Order: {item.displayOrder}
-                  </span>
-                </div>
-
-                {/* Text Content */}
-                <div className="px-4 pt-4 pb-3">
-                  <p className="text-sm text-foreground line-clamp-3 pr-12">
-                    {item.text}
-                  </p>
-                  {item.text.includes('[') && item.text.includes('](') && (
-                    <p className="text-xs text-muted-foreground mt-1 italic">
-                      Contains link
+          {heroTickerItems.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-sm text-muted-foreground">No announcement texts yet. Click "Add Text" to create one.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {heroTickerItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center gap-4 rounded-lg border border-border bg-white p-4 transition-colors hover:bg-muted/30"
+                >
+                  {/* Text Preview */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-foreground line-clamp-2">
+                      {item.text}
                     </p>
-                  )}
-                </div>
+                    {item.text.includes('[') && item.text.includes('](') && (
+                      <p className="text-xs text-muted-foreground mt-1 italic">
+                        Contains link
+                      </p>
+                    )}
+                  </div>
 
-                {/* Action Buttons */}
-                <div className="mt-3 flex gap-2 px-4 pb-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleOpenEditDialog(item)}
-                    className="flex-1"
-                  >
-                    <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                    Edit
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDeleteTickerItem(item.id)}
-                    className="border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600"
-                    type="button"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                  {/* Order Badge */}
+                  <div className="flex-shrink-0">
+                    <span className="inline-flex items-center rounded-full bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
+                      Order: {item.displayOrder}
+                    </span>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleOpenEditDialog(item)}
+                      className="h-9"
+                    >
+                      <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteTickerItem(item.id)}
+                      className="h-9 w-9 p-0 border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600"
+                      type="button"
+                      aria-label="Delete announcement text"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
-              </Card>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
         </div>
       </Card>
 
@@ -874,6 +877,9 @@ export default function HeroManagementPage() {
           </Button>
         </DialogFooter>
       </Dialog>
+
+      {/* Sticky Footer Save Button */}
+      <StickyFooter formId="hero-form" saving={saving} disabled={!hasUnsavedChanges} />
     </div>
   );
 }

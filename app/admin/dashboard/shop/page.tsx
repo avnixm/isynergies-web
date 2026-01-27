@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Save, Plus, Trash2, X, Pencil } from 'lucide-react';
+import { Plus, Trash2, X, Pencil, Info } from 'lucide-react';
+import { StickyFooter } from '../_components/sticky-footer';
 import Loading from '@/app/components/ui/loading';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -119,7 +120,8 @@ export default function ShopPage() {
       if (response.ok) {
         toast.success('Shop content updated successfully!');
       } else {
-        toast.error('Failed to update shop content');
+        const errorData = await response.json().catch(() => ({ error: 'Failed to update shop content' }));
+        toast.error(errorData.error || 'Failed to update shop content');
       }
     } catch (error) {
       console.error('Error saving shop:', error);
@@ -226,7 +228,8 @@ export default function ShopPage() {
         toast.success('Category deleted successfully!');
         fetchShopData();
       } else {
-        toast.error('Failed to delete category');
+        const errorData = await response.json().catch(() => ({ error: 'Failed to delete category' }));
+        toast.error(errorData.error || 'Failed to delete category');
       }
     } catch (error) {
       console.error('Error deleting category:', error);
@@ -327,7 +330,8 @@ export default function ShopPage() {
         toast.success('Dealer deleted successfully!');
         fetchShopData();
       } else {
-        toast.error('Failed to delete dealer');
+        const errorData = await response.json().catch(() => ({ error: 'Failed to delete dealer' }));
+        toast.error(errorData.error || 'Failed to delete dealer');
       }
     } catch (error) {
       console.error('Error deleting dealer:', error);
@@ -352,47 +356,71 @@ export default function ShopPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Shop</h1>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-semibold text-foreground">Shop</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Manage the shop section content and categories
         </p>
+        <div className="mt-4 flex flex-wrap gap-4 text-sm">
+          <span className="text-muted-foreground">Jump to:</span>
+          <a href="#shop-content" className="text-accent hover:underline">Shop Content</a>
+          <a href="#shop-categories" className="text-accent hover:underline">Shop Categories</a>
+          <a href="#authorized-dealers" className="text-accent hover:underline">Authorized Dealers</a>
+        </div>
       </div>
 
-      <form id="shop-form" onSubmit={handleSubmit} className="space-y-6">
+      <form id="shop-form" onSubmit={handleSubmit} className="space-y-8">
         {/* Shop Content */}
-        <Card className="rounded-xl border border-border bg-white shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-xl">Shop Content</CardTitle>
-            <CardDescription>Main shop section text and images</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <HtmlTips />
-            <div className="grid md:grid-cols-2 gap-4">
+        <Card id="shop-content" className="rounded-xl border border-border bg-white shadow-sm">
+          <div className="flex items-center justify-between p-6 border-b border-border">
+            <div>
+              <h2 className="text-lg font-medium text-foreground">Shop Content</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Main shop section text and images
+              </p>
+            </div>
+          </div>
+          <div className="p-6">
+            <div className="max-w-4xl space-y-6">
+              {/* Compact HTML Tips */}
+              <div className="flex items-start gap-2 rounded-lg bg-muted/50 border border-border p-2">
+                <Info className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <div className="text-xs text-muted-foreground leading-relaxed">
+                  <strong className="font-medium">Tip:</strong> You can use HTML tags for formatting:{' '}
+                  <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;strong&gt;</code>,{' '}
+                  <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;em&gt;</code>,{' '}
+                  <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;br&gt;</code>,{' '}
+                  <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;p&gt;</code>,{' '}
+                  <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;ul&gt;</code>,{' '}
+                  <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;ol&gt;</code>,{' '}
+                  <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;li&gt;</code>,{' '}
+                  <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;a&gt;</code>, and more.
+                </div>
+              </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    value={content.title}
+                    onChange={(e) => setContent({ ...content, title: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
               <div className="space-y-2">
-                <Label htmlFor="title">Title</Label>
-                <Input
-                  id="title"
-                  value={content.title}
-                  onChange={(e) => setContent({ ...content, title: e.target.value })}
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={content.description}
+                  onChange={(e) => setContent({ ...content, description: e.target.value })}
+                  className="min-h-[100px]"
                   required
                 />
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={content.description}
-                onChange={(e) => setContent({ ...content, description: e.target.value })}
-                className="min-h-[100px]"
-                required
-              />
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Sales Icon (Hexagon)</Label>
                 <ImageUpload
@@ -415,63 +443,48 @@ export default function ShopPage() {
                   Recommended size: 256×256 PNG with transparent background.
                 </p>
               </div>
-
-              <div className="space-y-2">
-                <Label>Authorized Dealer Image</Label>
-                <ImageUpload
-                  value={content.authorizedDealerImage}
-                  onChange={(url) => setContent({ ...content, authorizedDealerImage: url })}
-                />
-                {content.authorizedDealerImage && (
-                  <div className="relative h-32 w-full rounded-md overflow-hidden border border-gray-200 bg-gradient-to-b from-blue-900 to-blue-950">
-                    <Image
-                      src={typeof content.authorizedDealerImage === 'string' && (content.authorizedDealerImage.startsWith('/api/images/') || content.authorizedDealerImage.startsWith('http') || content.authorizedDealerImage.startsWith('/'))
-                        ? content.authorizedDealerImage 
-                        : `/api/images/${content.authorizedDealerImage}`}
-                      alt="Authorized Dealer"
-                      fill
-                      className="object-contain p-2"
-                    />
-                  </div>
-                )}
-                <p className="text-xs text-gray-800">
-                  Recommended aspect ratio: 16:9, SVG or PNG format.
-                </p>
-              </div>
             </div>
-          </CardContent>
+          </div>
         </Card>
 
         {/* Shop Categories */}
-        <Card className="rounded-xl border border-border bg-white shadow-sm">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-xl">Shop Categories</CardTitle>
-                <CardDescription>Manage product category panels</CardDescription>
-              </div>
-              <Button
-                type="button"
-                onClick={handleOpenAddCategoryDialog}
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Add Category
-              </Button>
+        <Card id="shop-categories" className="rounded-xl border border-border bg-white shadow-sm">
+          <div className="flex items-center justify-between p-6 border-b border-border">
+            <div>
+              <h2 className="text-lg font-medium text-foreground">Shop Categories</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Manage product category panels
+              </p>
             </div>
-          </CardHeader>
-          <CardContent>
+            <Button
+              type="button"
+              onClick={handleOpenAddCategoryDialog}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add Category
+            </Button>
+          </div>
+          <div className="p-6 pb-8">
             {categories.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-sm text-muted-foreground">No categories yet. Click "Add Category" to create one.</p>
+                <div className="mx-auto mb-4 h-12 w-12 text-muted-foreground">
+                  <Plus className="h-full w-full" />
+                </div>
+                <h3 className="mb-1 text-lg font-medium text-foreground">No categories yet</h3>
+                <p className="text-sm text-muted-foreground">Click "Add Category" to create one</p>
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="space-y-2">
                 {categories.map((category) => {
                   const imageUrl = getImageUrl(category.image);
                   return (
-                    <Card key={category.id} className="overflow-hidden rounded-xl border border-border bg-white transition-shadow hover:shadow-md group">
-                      <div className="relative aspect-video w-full bg-muted/30 rounded-t-xl overflow-hidden">
+                    <div
+                      key={category.id}
+                      className="flex items-center gap-4 rounded-lg border border-border bg-white p-4 transition-colors hover:bg-muted/30"
+                    >
+                      {/* Thumbnail */}
+                      <div className="relative w-24 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-muted/30">
                         {imageUrl ? (
                           <Image
                             src={imageUrl}
@@ -481,84 +494,97 @@ export default function ShopPage() {
                             unoptimized
                           />
                         ) : (
-                          <div className="flex h-full items-center justify-center">
+                          <div className="flex h-full items-center justify-center bg-muted">
                             <span className="text-xs text-muted-foreground">No image</span>
                           </div>
                         )}
-                        <div className="absolute top-2 right-2 z-10">
-                          <span className="inline-flex items-center rounded-full bg-background/90 backdrop-blur-sm px-2 py-1 text-xs font-medium text-muted-foreground border border-border/50">
+                      </div>
+
+                      {/* Category Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground">
+                          {category.name}
+                        </p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {category.text}
+                        </p>
+                        <div className="flex items-center gap-3 mt-1">
+                          <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                             Order: {category.displayOrder}
                           </span>
                         </div>
                       </div>
-                      <CardContent className="p-3">
-                        <div className="mb-2">
-                          <h4 className="font-semibold text-sm text-foreground">{category.name}</h4>
-                          <p className="text-xs text-muted-foreground mt-1">{category.text}</p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleOpenEditCategoryDialog(category)}
-                            className="flex-1"
-                            aria-label={`Edit ${category.name}`}
-                          >
-                            <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                            Edit
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteCategory(category.id)}
-                            className="border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600"
-                            aria-label={`Delete ${category.name}`}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleOpenEditCategoryDialog(category)}
+                          className="h-9"
+                          aria-label={`Edit ${category.name}`}
+                        >
+                          <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                          Edit
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteCategory(category.id)}
+                          className="h-9 w-9 p-0 border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600"
+                          aria-label={`Delete ${category.name}`}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
             )}
-          </CardContent>
+          </div>
         </Card>
 
         {/* Authorized Dealers */}
-        <Card className="rounded-xl border border-border bg-white shadow-sm">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-xl">Authorized Dealers</CardTitle>
-                <CardDescription>Manage brand logos displayed in the authorized dealer section</CardDescription>
-              </div>
-              <Button
-                type="button"
-                onClick={handleOpenAddDealerDialog}
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Add Dealer
-              </Button>
+        <Card id="authorized-dealers" className="rounded-xl border border-border bg-white shadow-sm">
+          <div className="flex items-center justify-between p-6 border-b border-border">
+            <div>
+              <h2 className="text-lg font-medium text-foreground">Authorized Dealers</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Manage brand logos displayed in the authorized dealer section
+              </p>
             </div>
-          </CardHeader>
-          <CardContent>
+            <Button
+              type="button"
+              onClick={handleOpenAddDealerDialog}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add Dealer
+            </Button>
+          </div>
+          <div className="p-6 pb-8">
             {authorizedDealers.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-sm text-muted-foreground">No authorized dealers yet. Click "Add Dealer" to create one.</p>
+                <div className="mx-auto mb-4 h-12 w-12 text-muted-foreground">
+                  <Plus className="h-full w-full" />
+                </div>
+                <h3 className="mb-1 text-lg font-medium text-foreground">No authorized dealers yet</h3>
+                <p className="text-sm text-muted-foreground">Click "Add Dealer" to create one</p>
               </div>
             ) : (
-              <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="space-y-2">
                 {authorizedDealers.map((dealer) => {
                   const imageUrl = getImageUrl(dealer.image);
                   return (
-                    <Card key={dealer.id} className="overflow-hidden rounded-xl border border-border bg-white transition-shadow hover:shadow-md group">
-                      <div
-                        className="relative aspect-square w-full rounded-t-xl overflow-hidden flex items-center justify-center p-4"
+                    <div
+                      key={dealer.id}
+                      className="flex items-center gap-4 rounded-lg border border-border bg-white p-4 transition-colors hover:bg-muted/30"
+                    >
+                      {/* Logo Thumbnail */}
+                      <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden flex items-center justify-center p-2"
                         style={{
                           background:
                             'linear-gradient(270deg, rgba(65, 65, 65, 0) 0%, #7A0000 33.17%, #930000 55.29%, #7A0000 75%, rgba(65, 65, 65, 0) 100%)',
@@ -569,73 +595,61 @@ export default function ShopPage() {
                             src={imageUrl}
                             alt={dealer.name}
                             fill
-                            className="object-contain p-4"
+                            className="object-contain p-2"
                             unoptimized
                           />
                         ) : (
-                          <div className="flex h-full items-center justify-center">
-                            <span className="text-xs text-muted-foreground">No logo</span>
-                          </div>
+                          <span className="text-xs text-muted-foreground">No logo</span>
                         )}
-                        <div className="absolute top-2 right-2 z-10">
-                          <span className="inline-flex items-center rounded-full bg-background/90 backdrop-blur-sm px-2 py-1 text-xs font-medium text-muted-foreground border border-border/50">
+                      </div>
+
+                      {/* Dealer Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground">
+                          {dealer.name}
+                        </p>
+                        <div className="flex items-center gap-3 mt-1">
+                          <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                             Order: {dealer.displayOrder}
                           </span>
                         </div>
                       </div>
-                      <CardContent className="p-3">
-                        <div className="mb-2">
-                          <h4 className="font-semibold text-sm text-foreground">{dealer.name}</h4>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleOpenEditDealerDialog(dealer)}
-                            className="flex-1"
-                            aria-label={`Edit ${dealer.name}`}
-                          >
-                            <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                            Edit
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteDealer(dealer.id)}
-                            className="border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600"
-                            aria-label={`Delete ${dealer.name}`}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleOpenEditDealerDialog(dealer)}
+                          className="h-9"
+                          aria-label={`Edit ${dealer.name}`}
+                        >
+                          <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                          Edit
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteDealer(dealer.id)}
+                          className="h-9 w-9 p-0 border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600"
+                          aria-label={`Delete ${dealer.name}`}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
             )}
-          </CardContent>
+          </div>
         </Card>
       </form>
 
-      <div className="flex justify-end">
-        <Button
-          type="submit"
-          form="shop-form"
-          onClick={(e) => {
-            e.preventDefault();
-            const form = document.getElementById('shop-form') as HTMLFormElement | null;
-            form?.requestSubmit();
-          }}
-          disabled={saving}
-          className="flex items-center gap-2"
-        >
-          <Save className="h-4 w-4" />
-          {saving ? 'Saving...' : 'Save changes'}
-        </Button>
-      </div>
+      {/* Sticky Footer Save Button */}
+      <StickyFooter formId="shop-form" saving={saving} />
 
       {/* Add/Edit Dealer Dialog */}
       <Dialog
@@ -713,7 +727,21 @@ export default function ShopPage() {
         title={editingCategory ? 'Edit Category' : 'Add Category'}
       >
         <div className="space-y-4 mb-6">
-          <HtmlTips />
+          {/* Compact HTML Tips */}
+          <div className="flex items-start gap-2 rounded-lg bg-muted/50 border border-border p-2">
+            <Info className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div className="text-xs text-muted-foreground leading-relaxed">
+              <strong className="font-medium">Tip:</strong> You can use HTML tags for formatting:{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;strong&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;em&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;br&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;p&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;ul&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;ol&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;li&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;a&gt;</code>, and more.
+            </div>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="dialog-category-name">Category Name (Internal)</Label>
             <Input

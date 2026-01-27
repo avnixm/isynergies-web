@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 // GET /api/admin/hero-section - Get hero section content
 export async function GET() {
   try {
+    // Select all columns from hero_section table
     const content = await db.select().from(heroSection).limit(1);
     
     // If no content exists, return default

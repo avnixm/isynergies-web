@@ -1,17 +1,17 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Save } from 'lucide-react';
+import { StickyFooter } from '../_components/sticky-footer';
 import Loading from '@/app/components/ui/loading';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
+import { Card, CardContent } from '@/app/components/ui/card';
 import { ImageUpload } from '@/app/components/ui/image-upload';
 import Image from 'next/image';
 import { useToast } from '@/app/components/ui/toast';
-import { HtmlTips } from '@/app/components/ui/html-tips';
+import { Info } from 'lucide-react';
 
 type SiteSettings = {
   companyName: string;
@@ -105,23 +105,48 @@ export default function SiteSettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Site settings</h1>
-        <p className="mt-1 text-sm text-gray-800">
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-semibold text-foreground">Site settings</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Manage your website&apos;s contact information and settings.
         </p>
+        <div className="mt-4 flex flex-wrap gap-4 text-sm">
+          <span className="text-muted-foreground">Jump to:</span>
+          <a href="#company-information" className="text-accent hover:underline">Company Information</a>
+          <a href="#social-media" className="text-accent hover:underline">Social Media</a>
+          <a href="#company-logo" className="text-accent hover:underline">Company Logo</a>
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form id="site-settings-form" onSubmit={handleSubmit} className="space-y-8">
         {/* Company Information */}
-        <Card className="rounded-xl border border-border bg-white shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-xl">Company Information</CardTitle>
-            <CardDescription>Basic company details displayed on the website</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <HtmlTips />
+        <Card id="company-information" className="rounded-xl border border-border bg-white shadow-sm">
+          <div className="flex items-center justify-between p-6 border-b border-border">
+            <div>
+              <h2 className="text-lg font-medium text-foreground">Company Information</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Basic company details displayed on the website
+              </p>
+            </div>
+          </div>
+          <CardContent className="p-6">
+            <div className="max-w-4xl space-y-4">
+              {/* Compact HTML Tips */}
+              <div className="flex items-start gap-2 rounded-lg bg-muted/50 border border-border p-2">
+                <Info className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <div className="text-xs text-muted-foreground leading-relaxed">
+                  <strong className="font-medium">Tip:</strong> You can use HTML tags for formatting:{' '}
+                  <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;strong&gt;</code>,{' '}
+                  <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;em&gt;</code>,{' '}
+                  <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;br&gt;</code>,{' '}
+                  <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;p&gt;</code>,{' '}
+                  <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;ul&gt;</code>,{' '}
+                  <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;ol&gt;</code>,{' '}
+                  <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;li&gt;</code>,{' '}
+                  <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;a&gt;</code>, and more.
+                </div>
+              </div>
             <div className="space-y-2">
               <Label htmlFor="companyName">Company Name</Label>
               <Input
@@ -139,7 +164,7 @@ export default function SiteSettingsPage() {
                 id="companyAddress"
                 value={settings.companyAddress}
                 onChange={(e) => setSettings({ ...settings, companyAddress: e.target.value })}
-                className="min-h-[80px]"
+                className="min-h-[100px]"
                 placeholder="ASKI Building 105 Maharlika Highway, Cabanatuan City, Nueva Ecija"
                 required
               />
@@ -184,16 +209,22 @@ export default function SiteSettingsPage() {
                 </p>
               </div>
             </div>
+            </div>
           </CardContent>
         </Card>
 
         {/* Social Media */}
-        <Card className="rounded-xl border border-border bg-white shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-xl">Social Media</CardTitle>
-            <CardDescription>Connect your social media profiles (optional)</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <Card id="social-media" className="rounded-xl border border-border bg-white shadow-sm">
+          <div className="flex items-center justify-between p-6 border-b border-border">
+            <div>
+              <h2 className="text-lg font-medium text-foreground">Social Media</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Connect your social media profiles (optional)
+              </p>
+            </div>
+          </div>
+          <CardContent className="p-6">
+            <div className="max-w-4xl space-y-4">
             <div className="space-y-2">
               <Label htmlFor="companyFacebook">Facebook URL</Label>
               <Input
@@ -226,16 +257,22 @@ export default function SiteSettingsPage() {
                 placeholder="https://instagram.com/isynergies"
               />
             </div>
+            </div>
           </CardContent>
         </Card>
 
         {/* Logo */}
-        <Card className="rounded-xl border border-border bg-white shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-xl">Company Logo</CardTitle>
-            <CardDescription>Upload your company logo displayed in the navbar and footer</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <Card id="company-logo" className="rounded-xl border border-border bg-white shadow-sm">
+          <div className="flex items-center justify-between p-6 border-b border-border">
+            <div>
+              <h2 className="text-lg font-medium text-foreground">Company Logo</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Upload your company logo displayed in the navbar and footer
+              </p>
+            </div>
+          </div>
+          <CardContent className="p-6">
+            <div className="max-w-4xl space-y-4">
             <div className="space-y-2">
               <Label>Logo Image</Label>
               <ImageUpload
@@ -258,26 +295,14 @@ export default function SiteSettingsPage() {
                 Logo displayed in navbar and footer. Recommended size: 200×60px PNG with transparent background.
               </p>
             </div>
+            </div>
           </CardContent>
         </Card>
 
-        {/* Save Button */}
-        <div className="flex items-center gap-4">
-          <Button type="submit" disabled={saving} className="min-w-[200px]">
-            {saving ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4 mr-2" />
-                Save Settings
-              </>
-            )}
-          </Button>
-        </div>
       </form>
+
+      {/* Sticky Footer Save Button */}
+      <StickyFooter formId="site-settings-form" saving={saving} />
     </div>
   );
 }

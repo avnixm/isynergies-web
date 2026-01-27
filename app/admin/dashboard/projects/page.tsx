@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { Pencil, Trash2, Plus } from 'lucide-react';
+import { Pencil, Trash2, Plus, Info } from 'lucide-react';
 import Loading from '@/app/components/ui/loading';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -224,77 +224,86 @@ export default function ProjectsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Projects</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage your portfolio and project showcase.
-          </p>
-        </div>
-        <Button onClick={handleOpenAddDialog} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Add Project
-        </Button>
-      </div>
-
-      {/* Tabs */}
-      <div className="border-b border-border">
-        <nav className="flex gap-1" aria-label="Project categories">
-          {(['all', 'desktop', 'mobile', 'tools'] as const).map((tab) => {
-            const tabLabels: Record<typeof tab, string> = {
-              all: 'All Projects',
-              desktop: 'Desktop/Web',
-              mobile: 'Mobile',
-              tools: 'Tools',
-            };
-            const count = tab === 'all' 
-              ? projects.length 
-              : projects.filter(p => p.category === tab).length;
-            
-            return (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`
-                  relative px-4 py-2 text-sm font-medium transition-colors
-                  border-b-2 -mb-[1px]
-                  ${activeTab === tab
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
-                  }
-                `}
-              >
-                {tabLabels[tab]}
-                {count > 0 && (
-                  <span className={`
-                    ml-2 px-2 py-0.5 text-xs rounded-full
-                    ${activeTab === tab
-                      ? 'bg-primary/10 text-primary'
-                      : 'bg-muted text-muted-foreground'
-                    }
-                  `}>
-                    {count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </nav>
-      </div>
-
-      {/* Filtered Projects List */}
+    <div className="space-y-8">
       <div>
-        {(() => {
-          const filteredProjects = activeTab === 'all'
-            ? projects
-            : projects.filter(p => p.category === activeTab);
+        <h1 className="text-2xl font-semibold text-foreground">Projects</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Manage your portfolio and project showcase.
+        </p>
+      </div>
 
-          if (filteredProjects.length === 0) {
-            return (
-              <Card className="rounded-xl border border-border bg-white p-12 shadow-sm">
-                <div className="text-center">
-                  <Plus className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+      {/* Projects Section */}
+      <Card className="rounded-xl border border-border bg-white shadow-sm">
+        <div className="flex items-center justify-between p-6 border-b border-border">
+          <div>
+            <h2 className="text-lg font-medium text-foreground">Projects</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Add, edit, or remove projects from your portfolio
+            </p>
+          </div>
+          <Button onClick={handleOpenAddDialog} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Add Project
+          </Button>
+        </div>
+        <div className="p-6">
+          {/* Tabs */}
+          <div className="border-b border-border mb-6">
+            <nav className="flex gap-1" aria-label="Project categories">
+              {(['all', 'desktop', 'mobile', 'tools'] as const).map((tab) => {
+                const tabLabels: Record<typeof tab, string> = {
+                  all: 'All Projects',
+                  desktop: 'Desktop/Web',
+                  mobile: 'Mobile',
+                  tools: 'Tools',
+                };
+                const count = tab === 'all' 
+                  ? projects.length 
+                  : projects.filter(p => p.category === tab).length;
+                
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`
+                      relative px-4 py-2 text-sm font-medium transition-colors
+                      border-b-2 -mb-[1px]
+                      ${activeTab === tab
+                        ? 'border-primary text-primary'
+                        : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+                      }
+                    `}
+                  >
+                    {tabLabels[tab]}
+                    {count > 0 && (
+                      <span className={`
+                        ml-2 px-2 py-0.5 text-xs rounded-full
+                        ${activeTab === tab
+                          ? 'bg-primary/10 text-primary'
+                          : 'bg-muted text-muted-foreground'
+                        }
+                      `}>
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Filtered Projects List */}
+          {(() => {
+            const filteredProjects = activeTab === 'all'
+              ? projects
+              : projects.filter(p => p.category === activeTab);
+
+            if (filteredProjects.length === 0) {
+              return (
+                <div className="text-center py-12">
+                  <div className="mx-auto mb-4 h-12 w-12 text-muted-foreground">
+                    <Plus className="h-full w-full" />
+                  </div>
                   <h3 className="mb-1 text-lg font-medium text-foreground">
                     {activeTab === 'all' ? 'No projects yet' : `No ${activeTab} projects yet`}
                   </h3>
@@ -305,94 +314,81 @@ export default function ProjectsPage() {
                     }
                   </p>
                 </div>
-              </Card>
-            );
-          }
+              );
+            }
 
-          return (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredProjects.map((project) => {
-                const getImageUrl = (imageId: string | null) => {
-                  if (!imageId) return null;
-                  if (imageId.startsWith('/api/images/') || imageId.startsWith('http') || imageId.startsWith('/')) {
-                    return imageId;
-                  }
-                  return `/api/images/${imageId}`;
-                };
+            return (
+              <div className="space-y-2">
+                {filteredProjects.map((project) => {
+                  const getImageUrl = (imageId: string | null) => {
+                    if (!imageId) return null;
+                    if (imageId.startsWith('/api/images/') || imageId.startsWith('http') || imageId.startsWith('/')) {
+                      return imageId;
+                    }
+                    return `/api/images/${imageId}`;
+                  };
 
-                const thumbnailUrl = getImageUrl(project.thumbnail);
-                const categoryColors: Record<string, { bg: string; text: string; border: string }> = {
-                  desktop: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
-                  mobile: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
-                  tools: { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
-                };
-                const categoryColor = categoryColors[project.category] || categoryColors.desktop;
+                  const thumbnailUrl = getImageUrl(project.thumbnail);
+                  const categoryColors: Record<string, { bg: string; text: string; border: string }> = {
+                    desktop: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+                    mobile: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
+                    tools: { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
+                  };
+                  const categoryColor = categoryColors[project.category] || categoryColors.desktop;
 
-                return (
-                  <Card key={project.id} className="group overflow-hidden rounded-xl border border-border bg-white transition-all hover:shadow-lg hover:scale-[1.02]">
-                    {/* Thumbnail */}
-                    <div className="relative aspect-video w-full bg-gradient-to-br from-muted/50 to-muted overflow-hidden">
-                      {thumbnailUrl ? (
-                        <Image
-                          src={thumbnailUrl}
-                          alt={project.title}
-                          fill
-                          className="object-cover transition-transform duration-300 group-hover:scale-105"
-                          unoptimized
-                        />
-                      ) : (
-                        <div className="flex h-full items-center justify-center bg-muted/30">
-                          <div className="text-center">
-                            <div className="mx-auto mb-2 h-12 w-12 rounded-lg bg-muted flex items-center justify-center">
-                              <span className="text-2xl">📁</span>
-                            </div>
-                            <p className="text-xs text-muted-foreground">No thumbnail</p>
+                  return (
+                    <div
+                      key={project.id}
+                      className="flex items-center gap-4 rounded-lg border border-border bg-white p-4 transition-colors hover:bg-muted/30"
+                    >
+                      {/* Thumbnail */}
+                      <div className="relative w-24 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-muted/30">
+                        {thumbnailUrl ? (
+                          <Image
+                            src={thumbnailUrl}
+                            alt={project.title}
+                            fill
+                            className="object-cover"
+                            unoptimized
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center bg-muted">
+                            <span className="text-2xl">📁</span>
                           </div>
-                        </div>
-                      )}
-                      {/* Category Badge */}
-                      <div className="absolute top-3 left-3">
-                        <span className={`
-                          inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium border
-                          ${categoryColor.bg} ${categoryColor.text} ${categoryColor.border}
-                        `}>
-                          {project.category === 'desktop' ? 'Desktop/Web' : project.category.charAt(0).toUpperCase() + project.category.slice(1)}
-                        </span>
+                        )}
                       </div>
-                      {/* Display Order Badge */}
-                      <div className="absolute top-3 right-3">
-                        <span className="inline-flex items-center rounded-full bg-background/90 backdrop-blur-sm px-2 py-1 text-xs font-medium text-muted-foreground border border-border/50">
-                          Order: {project.displayOrder}
-                        </span>
-                      </div>
-                    </div>
 
-                    {/* Content */}
-                    <CardContent className="p-4">
-                      <div className="mb-2">
-                        <h3 className="text-lg font-semibold text-foreground mb-1 line-clamp-1">
-                          {project.title}
-                        </h3>
-                        <p className="text-sm text-muted-foreground mb-2 line-clamp-1">
+                      {/* Project Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="text-sm font-medium text-foreground">
+                            {project.title}
+                          </p>
+                          <span className={`
+                            inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border
+                            ${categoryColor.bg} ${categoryColor.text} ${categoryColor.border}
+                          `}>
+                            {project.category === 'desktop' ? 'Desktop/Web' : project.category.charAt(0).toUpperCase() + project.category.slice(1)}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground line-clamp-1">
                           {project.subtitle}
                         </p>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
-                          <span>{project.year}</span>
-                          <span>•</span>
-                          <span className="capitalize">{project.category}</span>
+                        <div className="flex items-center gap-3 mt-1">
+                          <span className="text-xs text-muted-foreground">{project.year}</span>
+                          <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                            Order: {project.displayOrder}
+                          </span>
                         </div>
-                        <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-                          {project.description}
-                        </p>
                       </div>
 
                       {/* Actions */}
-                      <div className="flex gap-2 pt-2 border-t border-border">
+                      <div className="flex items-center gap-2 flex-shrink-0">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleOpenEditDialog(project)}
-                          className="flex-1"
+                          className="h-9"
                           aria-label={`Edit ${project.title}`}
                         >
                           <Pencil className="h-3.5 w-3.5 mr-1.5" />
@@ -402,21 +398,21 @@ export default function ProjectsPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleDelete(project.id)}
-                          className="border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600"
+                          className="h-9 w-9 p-0 border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600"
                           aria-label={`Delete ${project.title}`}
                           type="button"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          );
-        })()}
-      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+        </div>
+      </Card>
 
       {/* Add/Edit Dialog */}
       <Dialog
@@ -426,7 +422,21 @@ export default function ProjectsPage() {
         maxWidth="2xl"
       >
         <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 mb-6">
-          <HtmlTips />
+          {/* Compact HTML Tips */}
+          <div className="flex items-start gap-2 rounded-lg bg-muted/50 border border-border p-2">
+            <Info className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div className="text-xs text-muted-foreground leading-relaxed">
+              <strong className="font-medium">Tip:</strong> You can use HTML tags for formatting:{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;strong&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;em&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;br&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;p&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;ul&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;ol&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;li&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;a&gt;</code>, and more.
+            </div>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="dialog-title">Project Title</Label>
             <Input

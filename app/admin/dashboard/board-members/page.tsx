@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Pencil, Trash2, Plus } from 'lucide-react';
+import { Pencil, Trash2, Plus, Info } from 'lucide-react';
+import { StickyFooter } from '../_components/sticky-footer';
 import Loading from '@/app/components/ui/loading';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -227,101 +228,138 @@ export default function BoardMembersPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Board of Directors</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage your board members and their information.
-          </p>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-semibold text-foreground">Board of Directors</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Manage your board members and their information.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-4 text-sm">
+          <span className="text-muted-foreground">Jump to:</span>
+          <a href="#footer-text" className="text-accent hover:underline">Footer Text</a>
+          <a href="#board-members" className="text-accent hover:underline">Board Members</a>
         </div>
-        <Button onClick={handleOpenAddDialog} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Add Board Member
-        </Button>
       </div>
 
-      {/* Footer Text Setting */}
-      <Card className="rounded-xl border border-border bg-white shadow-sm">
-        <CardHeader>
-          <CardTitle>Section Footer Text</CardTitle>
-          <CardDescription>
-            Customize the text displayed at the bottom of the Board of Directors section
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <HtmlTips />
-            <div className="space-y-2">
-              <Label htmlFor="footerText">Footer Text</Label>
-              <Textarea
-                id="footerText"
-                value={footerText}
-                onChange={(e) => setFooterText(e.target.value)}
-                placeholder="iSynergies Inc.'s elected Board of Directors for the year 2025 - 2026"
-                className="min-h-[80px]"
-              />
+      <form id="board-members-form" onSubmit={(e) => { e.preventDefault(); handleSaveFooterText(); }} className="space-y-8">
+        {/* Footer Text Setting */}
+        <Card id="footer-text" className="rounded-xl border border-border bg-white shadow-sm">
+          <div className="flex items-center justify-between p-6 border-b border-border">
+            <div>
+              <h2 className="text-lg font-medium text-foreground">Section Footer Text</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Customize the text displayed at the bottom of the Board of Directors section
+              </p>
             </div>
-            <Button onClick={handleSaveFooterText} disabled={savingFooter}>
-              {savingFooter ? 'Saving...' : 'Save Footer Text'}
-            </Button>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Grid */}
-      <div>
-          {members.length === 0 ? (
-            <Card className="rounded-xl border border-border bg-white p-12 shadow-sm">
-              <div className="text-center">
-                <div className="mx-auto mb-4 h-12 w-12 text-gray-800">
-                  <Plus className="h-full w-full" />
+          <CardContent className="p-6">
+            <div className="max-w-4xl space-y-6">
+              {/* Compact HTML Tips */}
+              <div className="flex items-start gap-2 rounded-lg bg-muted/50 border border-border p-2">
+                <Info className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <div className="text-xs text-muted-foreground leading-relaxed">
+                  <strong className="font-medium">Tip:</strong> You can use HTML tags for formatting:{' '}
+                  <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;strong&gt;</code>,{' '}
+                  <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;em&gt;</code>,{' '}
+                  <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;br&gt;</code>,{' '}
+                  <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;p&gt;</code>,{' '}
+                  <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;ul&gt;</code>,{' '}
+                  <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;ol&gt;</code>,{' '}
+                  <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;li&gt;</code>,{' '}
+                  <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;a&gt;</code>, and more.
                 </div>
-                <h3 className="mb-1 text-lg font-medium text-gray-800">No board members yet</h3>
-                <p className="text-sm text-gray-800">Get started by adding your first board member</p>
               </div>
-            </Card>
+              <div className="space-y-2">
+                <Label htmlFor="footerText">Footer Text</Label>
+                <Textarea
+                  id="footerText"
+                  value={footerText}
+                  onChange={(e) => setFooterText(e.target.value)}
+                  placeholder="iSynergies Inc.'s elected Board of Directors for the year 2025 - 2026"
+                  className="min-h-[100px]"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </form>
+
+      {/* Board Members */}
+      <Card id="board-members" className="rounded-xl border border-border bg-white shadow-sm">
+        <div className="flex items-center justify-between p-6 border-b border-border">
+          <div>
+            <h2 className="text-lg font-medium text-foreground">Board Members</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Manage board members and their information
+            </p>
+          </div>
+          <Button onClick={handleOpenAddDialog} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Add Board Member
+          </Button>
+        </div>
+        <div className="p-6">
+          {members.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="mx-auto mb-4 h-12 w-12 text-muted-foreground">
+                <Plus className="h-full w-full" />
+              </div>
+              <h3 className="mb-1 text-lg font-medium text-foreground">No board members yet</h3>
+              <p className="text-sm text-muted-foreground">Get started by adding your first board member</p>
+            </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {members.map((member) => (
-                <Card key={member.id} className="overflow-hidden rounded-xl border border-border bg-white transition-shadow hover:shadow-md group">
-                  <div className="relative aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-200">
-                    {member.image ? (
-                      <img
-                        src={typeof member.image === 'string' && (member.image.startsWith('/api/images/') || member.image.startsWith('http'))
-                          ? member.image 
-                          : `/api/images/${member.image}`}
-                        alt={`${member.firstName} ${member.lastName}`}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-muted text-gray-800/60">
-                        <User className="h-8 w-8" />
+              {members.map((member) => {
+                const imageUrl = typeof member.image === 'string' && (member.image.startsWith('/api/images/') || member.image.startsWith('http'))
+                  ? member.image 
+                  : `/api/images/${member.image}`;
+                return (
+                  <Card key={member.id} className="overflow-hidden rounded-xl border border-border bg-white transition-shadow hover:shadow-md group">
+                    <div className="relative aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-200">
+                      {member.image ? (
+                        <img
+                          src={imageUrl}
+                          alt={`${member.firstName} ${member.lastName}`}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-muted text-gray-800/60">
+                          <User className="h-8 w-8" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                        <div className="w-full space-y-1">
+                          <p className="text-white font-semibold text-sm">{member.firstName} {member.lastName}</p>
+                          <p className="text-white/90 text-xs">{member.position}</p>
+                        </div>
                       </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
-                      <div className="w-full space-y-1">
-                        <p className="text-white font-semibold text-sm">{member.firstName} {member.lastName}</p>
-                        <p className="text-white/90 text-xs">{member.position}</p>
+                      <div className="absolute top-2 right-2 z-10">
+                        <span className="inline-flex items-center rounded-full bg-background/90 backdrop-blur-sm px-2 py-1 text-xs font-medium text-muted-foreground border border-border/50">
+                          Order: {member.displayOrder}
+                        </span>
                       </div>
                     </div>
-                  </div>
-                  <CardContent className="p-3">
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => handleOpenEditDialog(member)} className="flex-1">
-                        <Pencil className="h-3 w-3 mr-1" />
-                        Edit
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => handleDelete(member.id)} className="border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600" type="button">
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    <CardContent className="p-3">
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => handleOpenEditDialog(member)} className="flex-1">
+                          <Pencil className="h-3 w-3 mr-1" />
+                          Edit
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleDelete(member.id)} className="border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600" type="button">
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
-      </div>
+        </div>
+      </Card>
+
+      {/* Sticky Footer Save Button */}
+      <StickyFooter formId="board-members-form" saving={savingFooter} />
 
       {/* Add/Edit Dialog */}
       <Dialog

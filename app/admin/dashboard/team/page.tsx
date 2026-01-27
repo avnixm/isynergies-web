@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Pencil, Trash2, Plus } from 'lucide-react';
+import { Pencil, Trash2, Plus, Info } from 'lucide-react';
 import Loading from '@/app/components/ui/loading';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -179,30 +179,37 @@ export default function TeamPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Team members</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage your team members displayed on the website.
-          </p>
-        </div>
-        <Button onClick={handleOpenAddDialog} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Add Team Member
-        </Button>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-semibold text-foreground">Team members</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Manage your team members displayed on the website.
+        </p>
       </div>
 
-      {/* Grid */}
-      <div>
+      {/* Team Members Section */}
+      <Card className="rounded-xl border border-border bg-white shadow-sm">
+        <div className="flex items-center justify-between p-6 border-b border-border">
+          <div>
+            <h2 className="text-lg font-medium text-foreground">Team Members</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Add, edit, or remove team members from your team
+            </p>
+          </div>
+          <Button onClick={handleOpenAddDialog} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Add Team Member
+          </Button>
+        </div>
+        <div className="p-6 pb-8">
           {members.length === 0 ? (
-            <Card className="rounded-xl border border-border bg-white p-12 shadow-sm">
-              <div className="text-center">
-                <Plus className="mx-auto mb-4 h-12 w-12 text-gray-800" />
-                <h3 className="mb-1 text-lg font-medium text-gray-800">No team members yet</h3>
-                <p className="text-sm text-gray-800">Get started by adding your first team member</p>
+            <div className="text-center py-12">
+              <div className="mx-auto mb-4 h-12 w-12 text-muted-foreground">
+                <Plus className="h-full w-full" />
               </div>
-            </Card>
+              <h3 className="mb-1 text-lg font-medium text-foreground">No team members yet</h3>
+              <p className="text-sm text-muted-foreground">Get started by adding your first team member</p>
+            </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {members.map((member) => (
@@ -225,6 +232,9 @@ export default function TeamPage() {
                       <div className="w-full space-y-1">
                         <p className="text-white font-semibold text-sm">{member.name}</p>
                         <p className="text-white/90 text-xs">{member.position}</p>
+                        <span className="inline-flex items-center rounded-full bg-background/90 backdrop-blur-sm px-2 py-0.5 text-xs font-medium text-muted-foreground border border-border/50">
+                          Order: {member.displayOrder}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -243,7 +253,8 @@ export default function TeamPage() {
               ))}
             </div>
           )}
-      </div>
+        </div>
+      </Card>
 
       {/* Add/Edit Dialog */}
       <Dialog
@@ -252,7 +263,21 @@ export default function TeamPage() {
         title={editingMember ? 'Edit Team Member' : 'Add Team Member'}
       >
         <div className="space-y-4 mb-6">
-          <HtmlTips />
+          {/* Compact HTML Tips */}
+          <div className="flex items-start gap-2 rounded-lg bg-muted/50 border border-border p-2">
+            <Info className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div className="text-xs text-muted-foreground leading-relaxed">
+              <strong className="font-medium">Tip:</strong> You can use HTML tags for formatting:{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;strong&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;em&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;br&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;p&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;ul&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;ol&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;li&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;a&gt;</code>, and more.
+            </div>
+          </div>
           <div className="space-y-2">
             <Label>Photo</Label>
             <ImageUpload

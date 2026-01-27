@@ -9,7 +9,8 @@ import { Input } from '@/app/components/ui/input';
 import { Textarea } from '@/app/components/ui/textarea';
 import { Dialog, DialogFooter } from '@/app/components/ui/dialog';
 import { ImageUpload } from '@/app/components/ui/image-upload';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Info } from 'lucide-react';
+import { StickyFooter } from '../_components/sticky-footer';
 import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
 import { HtmlTips } from '@/app/components/ui/html-tips';
@@ -215,65 +216,82 @@ export default function WhatWeDoPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">What We Do Management</h1>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-semibold text-foreground">What We Do Management</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Manage the What We Do section images and content
         </p>
+        <div className="mt-4 flex flex-wrap gap-4 text-sm">
+          <span className="text-muted-foreground">Jump to:</span>
+          <a href="#text-content" className="text-accent hover:underline">Text Content</a>
+          <a href="#images" className="text-accent hover:underline">Images</a>
+        </div>
       </div>
 
-      {/* Main Content */}
-      <Card className="rounded-xl border border-border bg-white shadow-sm">
-        <div className="flex items-center justify-between p-6 border-b border-border">
-          <div>
-            <h2 className="text-lg font-medium text-foreground">Text Content</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Edit the text content displayed below the images in the What We Do section
-            </p>
+      <form id="what-we-do-form" onSubmit={(e) => { e.preventDefault(); handleSaveContent(); }} className="space-y-8">
+        {/* Main Content */}
+        <Card id="text-content" className="rounded-xl border border-border bg-white shadow-sm">
+          <div className="flex items-center justify-between p-6 border-b border-border">
+            <div>
+              <h2 className="text-lg font-medium text-foreground">Text Content</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Edit the text content displayed below the images in the What We Do section
+              </p>
+            </div>
           </div>
-        </div>
-        <div className="p-6 space-y-6">
-          <HtmlTips />
-          <div className="space-y-2">
-            <Label htmlFor="mainText" className="text-sm font-medium">
-              Main Description Text
-            </Label>
-            <Textarea
-              id="mainText"
-              value={content.mainText}
-              onChange={(e) => setContent({ ...content, mainText: e.target.value })}
-              placeholder="Main Text Here"
-              rows={6}
-              className="resize-none font-mono text-sm"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="tagline" className="text-sm font-medium">
-              Tagline
-            </Label>
-            <Input
-              id="tagline"
-              value={content.tagline}
-              onChange={(e) => setContent({ ...content, tagline: e.target.value })}
-              placeholder="Our team helps your IT to the next level. We make your IT plans possible."
-            />
-            <p className="text-xs text-muted-foreground">
-              This text will appear as the tagline below the main description
-            </p>
-          </div>
-          
-          <div className="flex justify-end pt-4 border-t border-border">
-            <Button onClick={handleSaveContent} disabled={saving}>
-              {saving ? 'Saving...' : 'Save Content'}
-            </Button>
+        <div className="p-6">
+          <div className="max-w-4xl space-y-6">
+            {/* Compact HTML Tips */}
+            <div className="flex items-start gap-2 rounded-lg bg-muted/50 border border-border p-2">
+              <Info className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <div className="text-xs text-muted-foreground leading-relaxed">
+                <strong className="font-medium">Tip:</strong> You can use HTML tags for formatting:{' '}
+                <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;strong&gt;</code>,{' '}
+                <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;em&gt;</code>,{' '}
+                <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;br&gt;</code>,{' '}
+                <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;p&gt;</code>,{' '}
+                <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;ul&gt;</code>,{' '}
+                <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;ol&gt;</code>,{' '}
+                <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;li&gt;</code>,{' '}
+                <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;a&gt;</code>, and more.
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="mainText" className="text-sm font-medium">
+                Main Description Text
+              </Label>
+              <Textarea
+                id="mainText"
+                value={content.mainText}
+                onChange={(e) => setContent({ ...content, mainText: e.target.value })}
+                placeholder="Main Text Here"
+                className="min-h-[150px] resize-none font-mono text-sm"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="tagline" className="text-sm font-medium">
+                Tagline
+              </Label>
+              <Input
+                id="tagline"
+                value={content.tagline}
+                onChange={(e) => setContent({ ...content, tagline: e.target.value })}
+                placeholder="Our team helps your IT to the next level. We make your IT plans possible."
+              />
+              <p className="text-xs text-muted-foreground">
+                This text will appear as the tagline below the main description
+              </p>
+            </div>
           </div>
         </div>
       </Card>
+      </form>
 
       {/* Images */}
-      <Card className="rounded-xl border border-border bg-white shadow-sm">
+      <Card id="images" className="rounded-xl border border-border bg-white shadow-sm">
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
             <h2 className="text-lg font-medium text-foreground">Images</h2>
@@ -292,21 +310,16 @@ export default function WhatWeDoPage() {
               <p className="text-sm text-muted-foreground">No images yet. Click "Add Image" to create one.</p>
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="space-y-2">
               {images.map((img) => {
                 const imageUrl = getImageUrl(img.image);
                 return (
-                  <Card
+                  <div
                     key={img.id}
-                    className="group relative rounded-xl border border-border bg-white shadow-sm transition-all hover:shadow-md"
+                    className="flex items-center gap-4 rounded-lg border border-border bg-white p-4 transition-colors hover:bg-muted/30"
                   >
-                    <div className="absolute top-2 right-2 z-10">
-                      <span className="inline-flex items-center rounded-full bg-background/90 backdrop-blur-sm px-2 py-1 text-xs font-medium text-muted-foreground border border-border/50">
-                        Order: {img.displayOrder}
-                      </span>
-                    </div>
-
-                    <div className="relative aspect-video w-full bg-muted/30 rounded-t-xl overflow-hidden">
+                    {/* Thumbnail */}
+                    <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted/30">
                       {imageUrl ? (
                         <Image
                           src={imageUrl}
@@ -322,18 +335,26 @@ export default function WhatWeDoPage() {
                       )}
                     </div>
 
-                    <div className="px-4 pt-4 pb-3">
-                      <p className="text-sm text-foreground line-clamp-2 pr-12">
+                    {/* Alt Text and Order */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-foreground line-clamp-1">
                         {img.alt}
                       </p>
+                      <div className="mt-1">
+                        <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                          Order: {img.displayOrder}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="mt-3 flex gap-2 px-4 pb-4">
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleOpenEditImageDialog(img)}
-                        className="flex-1"
+                        className="h-9"
+                        aria-label={`Edit ${img.alt}`}
                       >
                         <Pencil className="h-3.5 w-3.5 mr-1.5" />
                         Edit
@@ -342,19 +363,23 @@ export default function WhatWeDoPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleDeleteImage(img.id)}
-                        className="border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600"
+                        className="h-9 w-9 p-0 border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600"
+                        aria-label={`Delete ${img.alt}`}
                         type="button"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
-                  </Card>
+                  </div>
                 );
               })}
             </div>
           )}
         </div>
       </Card>
+
+      {/* Sticky Footer Save Button */}
+      <StickyFooter formId="what-we-do-form" saving={saving} />
 
       {/* Image Dialog */}
       <Dialog

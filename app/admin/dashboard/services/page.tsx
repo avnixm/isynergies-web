@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Pencil, Trash2, Plus } from 'lucide-react';
+import { Pencil, Trash2, Plus, Info } from 'lucide-react';
 import Loading from '@/app/components/ui/loading';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -12,7 +12,6 @@ import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
 import { ImageUpload } from '@/app/components/ui/image-upload';
 import { Textarea } from '@/app/components/ui/textarea';
-import { Info } from 'lucide-react';
 import { HtmlTips } from '@/app/components/ui/html-tips';
 import Image from 'next/image';
 
@@ -479,20 +478,26 @@ export default function ServicesPage() {
 
   return (
     <div className="space-y-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Services management</h1>
+      <div>
+        <h1 className="text-2xl font-semibold text-foreground">Services management</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Manage the service icons, statistics, and ticker items in the Services section.
         </p>
+        <div className="mt-4 flex flex-wrap gap-4 text-sm">
+          <span className="text-muted-foreground">Jump to:</span>
+          <a href="#service-icons" className="text-accent hover:underline">Service Icons</a>
+          <a href="#statistics" className="text-accent hover:underline">Statistics</a>
+          <a href="#ticker-items" className="text-accent hover:underline">Ticker Items</a>
+        </div>
       </div>
 
       {/* Service Icons Section */}
-      <div className="border-b pb-8">
-        <div className="mb-6 flex items-center justify-between">
+      <Card id="service-icons" className="rounded-xl border border-border bg-white shadow-sm">
+        <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
-            <h2 className="text-xl font-semibold tracking-tight text-foreground">Service Icons</h2>
+            <h2 className="text-lg font-medium text-foreground">Service Icons</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Manage the images displayed in the hexagonal grid on the Services page.
+              Manage the images displayed in the hexagonal grid on the Services page
             </p>
           </div>
           <Button onClick={handleOpenAddServiceDialog} className="flex items-center gap-2">
@@ -500,65 +505,95 @@ export default function ServicesPage() {
             Add Service Icon
           </Button>
         </div>
-
-        {/* Services Grid */}
-        <div>
+        <div className="p-6">
           {services.length === 0 ? (
-            <Card className="rounded-xl border border-border bg-white p-12 shadow-sm">
-              <div className="text-center">
-                <Plus className="mx-auto mb-4 h-12 w-12 text-gray-800" />
-                <h3 className="mb-1 text-lg font-medium text-gray-800">No service icons yet</h3>
-                <p className="text-sm text-gray-800">Get started by adding your first service icon</p>
+            <div className="text-center py-12">
+              <div className="mx-auto mb-4 h-12 w-12 text-muted-foreground">
+                <Plus className="h-full w-full" />
               </div>
-            </Card>
+              <h3 className="mb-1 text-lg font-medium text-foreground">No service icons yet</h3>
+              <p className="text-sm text-muted-foreground">Get started by adding your first service icon</p>
+            </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {services.map((service) => (
-                <Card key={service.id} className="overflow-hidden rounded-xl border border-border bg-white transition-shadow hover:shadow-md">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      {service.icon && (
-                        <div className="relative h-20 w-20 flex-shrink-0 rounded-lg overflow-hidden border border-gray-200 bg-gradient-to-b from-blue-900 to-blue-950">
-                          <Image
-                            src={typeof service.icon === 'string' && (service.icon.startsWith('/api/images/') || service.icon.startsWith('http') || service.icon.startsWith('/'))
-                              ? service.icon 
-                              : `/api/images/${service.icon}`}
-                            alt={service.title}
-                            fill
-                            className="object-contain p-2"
-                          />
+            <div className="space-y-2">
+              {services.map((service) => {
+                const imageUrl = typeof service.icon === 'string' && (service.icon.startsWith('/api/images/') || service.icon.startsWith('http') || service.icon.startsWith('/'))
+                  ? service.icon 
+                  : `/api/images/${service.icon}`;
+                return (
+                  <div
+                    key={service.id}
+                    className="flex items-center gap-4 rounded-lg border border-border bg-white p-4 transition-colors hover:bg-muted/30"
+                  >
+                    {/* Icon Thumbnail */}
+                    <div className="relative h-20 w-20 flex-shrink-0 rounded-lg overflow-hidden border border-gray-200 bg-gradient-to-b from-blue-900 to-blue-950">
+                      {service.icon ? (
+                        <Image
+                          src={imageUrl}
+                          alt={service.title}
+                          fill
+                          className="object-contain p-2"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center bg-muted">
+                          <Plus className="h-8 w-8 text-muted-foreground" />
                         </div>
                       )}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-1">{service.title}</h3>
-                        <p className="text-sm text-gray-600 mb-2 line-clamp-2">{service.description}</p>
-                        <div className="text-xs text-gray-500">Order: {service.displayOrder}</div>
+                    </div>
+
+                    {/* Service Info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">
+                        {service.title}
+                      </p>
+                      <p className="text-sm text-muted-foreground line-clamp-1">
+                        {service.description}
+                      </p>
+                      <div className="mt-1">
+                        <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                          Order: {service.displayOrder}
+                        </span>
                       </div>
                     </div>
-                    <div className="flex gap-2 mt-4">
-                      <Button variant="outline" size="sm" onClick={() => handleOpenEditServiceDialog(service)} className="flex-1">
-                        <Pencil className="h-4 w-4 mr-1" />
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleOpenEditServiceDialog(service)}
+                        className="h-9"
+                        aria-label={`Edit ${service.title}`}
+                      >
+                        <Pencil className="h-3.5 w-3.5 mr-1.5" />
                         Edit
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => handleServiceDelete(service.id)} className="border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600" type="button">
-                        <Trash2 className="h-4 w-4" />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleServiceDelete(service.id)}
+                        className="h-9 w-9 p-0 border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600"
+                        aria-label={`Delete ${service.title}`}
+                        type="button"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
-      </div>
+      </Card>
 
       {/* Statistics Section */}
-      <div className="border-b pb-8">
-        <div className="mb-6 flex items-center justify-between">
+      <Card id="statistics" className="rounded-xl border border-border bg-white shadow-sm">
+        <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
-            <h2 className="text-xl font-semibold tracking-tight text-foreground">Statistics</h2>
+            <h2 className="text-lg font-medium text-foreground">Statistics</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Manage the statistics displayed in the &quot;By the Numbers&quot; section.
+              Manage the statistics displayed in the &quot;By the Numbers&quot; section
             </p>
           </div>
           <Button onClick={handleOpenAddStatDialog} className="flex items-center gap-2">
@@ -566,53 +601,72 @@ export default function ServicesPage() {
             Add Statistic
           </Button>
         </div>
-
-        {/* Statistics Grid */}
-        <div>
+        <div className="p-6">
           {statistics.length === 0 ? (
-            <Card className="rounded-xl border border-border bg-white p-12 shadow-sm">
-              <div className="text-center">
-                <Plus className="mx-auto mb-4 h-12 w-12 text-gray-800" />
-                <h3 className="mb-1 text-lg font-medium text-gray-800">No statistics yet</h3>
-                <p className="text-sm text-gray-800">Get started by adding your first statistic</p>
+            <div className="text-center py-12">
+              <div className="mx-auto mb-4 h-12 w-12 text-muted-foreground">
+                <Plus className="h-full w-full" />
               </div>
-            </Card>
+              <h3 className="mb-1 text-lg font-medium text-foreground">No statistics yet</h3>
+              <p className="text-sm text-muted-foreground">Get started by adding your first statistic</p>
+            </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
               {statistics.map((stat) => (
-                <Card key={stat.id} className="overflow-hidden rounded-xl border border-border bg-white transition-shadow hover:shadow-md">
-                  <CardContent className="p-6">
-                    <div className="text-center mb-4">
-                      <div className="mb-2 text-5xl font-bold text-primary">{stat.value}</div>
-                      <div className="text-lg font-semibold text-gray-800">{stat.label}</div>
-                    </div>
-                    <div className="mb-4 flex items-center justify-between text-xs text-gray-800">
-                      <span>Order: {stat.displayOrder}</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => handleOpenEditStatDialog(stat)} className="flex-1">
-                        <Pencil className="h-4 w-4 mr-1" />
-                        Edit
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => handleDelete(stat.id)} className="border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600" type="button">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div
+                  key={stat.id}
+                  className="flex items-center gap-4 rounded-lg border border-border bg-white p-4 transition-colors hover:bg-muted/30"
+                >
+                  {/* Value Display */}
+                  <div className="flex-shrink-0 text-center min-w-[120px]">
+                    <div className="text-3xl font-bold text-primary">{stat.value}</div>
+                    <div className="text-sm font-medium text-foreground mt-1">{stat.label}</div>
+                  </div>
+
+                  {/* Order Badge */}
+                  <div className="flex-1 min-w-0">
+                    <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                      Order: {stat.displayOrder}
+                    </span>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleOpenEditStatDialog(stat)}
+                      className="h-9"
+                      aria-label={`Edit ${stat.label}`}
+                    >
+                      <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDelete(stat.id)}
+                      className="h-9 w-9 p-0 border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600"
+                      aria-label={`Delete ${stat.label}`}
+                      type="button"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
               ))}
             </div>
           )}
         </div>
-      </div>
+      </Card>
 
       {/* Ticker Items Section */}
-      <div className="border-t pt-8">
-        <div className="mb-6 flex items-center justify-between">
+      <Card id="ticker-items" className="rounded-xl border border-border bg-white shadow-sm">
+        <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
-            <h2 className="text-xl font-semibold tracking-tight text-foreground">Ticker bar items</h2>
+            <h2 className="text-lg font-medium text-foreground">Ticker Bar Items</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Manage the scrolling text items in the ticker bar.
+              Manage the scrolling text items in the ticker bar
             </p>
           </div>
           <Button onClick={handleOpenAddTickerDialog} className="flex items-center gap-2">
@@ -620,44 +674,63 @@ export default function ServicesPage() {
             Add Ticker Item
           </Button>
         </div>
-
-        {/* Ticker Grid */}
-        <div>
-            {tickerItems.length === 0 ? (
-                <Card className="rounded-xl border border-border bg-white p-12 shadow-sm">
-                <div className="text-center">
-                  <Plus className="mx-auto mb-4 h-12 w-12 text-gray-800" />
-                  <h3 className="mb-1 text-lg font-medium text-gray-800">No ticker items yet</h3>
-                  <p className="text-sm text-gray-800">Add items to display in the scrolling ticker bar</p>
-                </div>
-              </Card>
-            ) : (
-              <div className="space-y-3">
-                {tickerItems.map((item) => (
-                  <Card key={item.id} className="overflow-hidden rounded-xl border border-border bg-white transition-shadow hover:shadow-md">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="text-lg font-semibold text-gray-800">{item.text}</div>
-                          <div className="mt-1 text-xs text-gray-800">Order: {item.displayOrder}</div>
-                        </div>
-                        <div className="flex gap-2 ml-4">
-                          <Button variant="outline" size="sm" onClick={() => handleOpenEditTickerDialog(item)}>
-                            <Pencil className="h-4 w-4 mr-1" />
-                            Edit
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={() => handleTickerDelete(item.id)} className="border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600" type="button">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+        <div className="p-6">
+          {tickerItems.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="mx-auto mb-4 h-12 w-12 text-muted-foreground">
+                <Plus className="h-full w-full" />
               </div>
-            )}
+              <h3 className="mb-1 text-lg font-medium text-foreground">No ticker items yet</h3>
+              <p className="text-sm text-muted-foreground">Add items to display in the scrolling ticker bar</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {tickerItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center gap-4 rounded-lg border border-border bg-white p-4 transition-colors hover:bg-muted/30"
+                >
+                  {/* Text Preview */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground line-clamp-1">
+                      {item.text}
+                    </p>
+                    <div className="mt-1">
+                      <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                        Order: {item.displayOrder}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleOpenEditTickerDialog(item)}
+                      className="h-9"
+                      aria-label={`Edit ${item.text}`}
+                    >
+                      <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleTickerDelete(item.id)}
+                      className="h-9 w-9 p-0 border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600"
+                      aria-label={`Delete ${item.text}`}
+                      type="button"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      </div>
+      </Card>
 
       {/* Statistics Dialog */}
       <Dialog
@@ -788,7 +861,21 @@ export default function ServicesPage() {
         title={editingService ? 'Edit Service Icon' : 'Add Service Icon'}
       >
         <div className="space-y-4 mb-6">
-          <HtmlTips />
+          {/* Compact HTML Tips */}
+          <div className="flex items-start gap-2 rounded-lg bg-muted/50 border border-border p-2">
+            <Info className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div className="text-xs text-muted-foreground leading-relaxed">
+              <strong className="font-medium">Tip:</strong> You can use HTML tags for formatting:{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;strong&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;em&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;br&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;p&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;ul&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;ol&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;li&gt;</code>,{' '}
+              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;a&gt;</code>, and more.
+            </div>
+          </div>
           <div className="space-y-2">
             <Label>Icon Image</Label>
             <ImageUpload
