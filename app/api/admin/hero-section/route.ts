@@ -17,6 +17,8 @@ export async function GET() {
         fullLogo: null,
         backgroundImage: null,
         backgroundVideo: null,
+        heroImagesBackgroundImage: null,
+        useHeroImages: false,
       });
     }
     
@@ -76,6 +78,8 @@ export async function GET() {
       fullLogo: null,
       backgroundImage: null,
       backgroundVideo: null,
+      heroImagesBackgroundImage: null,
+      useHeroImages: false,
     });
   }
 }
@@ -84,7 +88,7 @@ export async function GET() {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    const { weMakeItLogo, isLogo, fullLogo, backgroundImage, backgroundVideo } = body;
+    const { weMakeItLogo, isLogo, fullLogo, backgroundImage, backgroundVideo, heroImagesBackgroundImage, useHeroImages } = body;
 
     // Check if record exists
     const existing = await db.select().from(heroSection).limit(1);
@@ -97,6 +101,8 @@ export async function PUT(request: Request) {
         fullLogo,
         backgroundImage,
         backgroundVideo,
+        heroImagesBackgroundImage,
+        useHeroImages: useHeroImages ?? false,
       });
     } else {
       // Update existing record (there should only be one)
@@ -108,6 +114,8 @@ export async function PUT(request: Request) {
           fullLogo,
           backgroundImage,
           backgroundVideo,
+          heroImagesBackgroundImage: heroImagesBackgroundImage !== undefined ? heroImagesBackgroundImage : undefined,
+          useHeroImages: useHeroImages !== undefined ? useHeroImages : undefined,
         });
     }
 
