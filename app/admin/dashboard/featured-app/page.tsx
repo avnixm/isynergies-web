@@ -237,13 +237,23 @@ export default function FeaturedAppPage() {
     }
   };
 
-  const getImageUrl = (imageId: string | null): string => {
-    if (!imageId) return '/placeholder-image.png';
-    if (imageId.startsWith('/api/images/') || imageId.startsWith('http') || imageId.startsWith('/')) {
-      return imageId;
+  const isNumericId = (value: string | null | undefined) =>
+    !!value && /^\d+$/.test(value.trim());
+
+  const getMediaUrl = (value: string | null, kind: 'image' | 'video' = 'image'): string => {
+    if (!value) return '/placeholder-image.png';
+    if (value.startsWith('/api/images/') || value.startsWith('/api/media/') || value.startsWith('http') || value.startsWith('/')) {
+      return value;
     }
-    return `/api/images/${imageId}`;
+    // Videos uploaded via Vercel Blob are stored in the `media` table with numeric IDs.
+    if (kind === 'video' && isNumericId(value)) {
+      return `/api/media/${value}`;
+    }
+    return `/api/images/${value}`;
   };
+
+  // Backward-compat helper name used by preview frames (images only)
+  const getImageUrl = (imageId: string | null): string => getMediaUrl(imageId, 'image');
 
   // Carousel Image Dialog Handlers
   const usedCarouselOrders = carouselImages.filter(img => img.id !== editingCarouselImage?.id).map(img => img.displayOrder);
@@ -842,8 +852,10 @@ export default function FeaturedAppPage() {
           ) : (
             <div className="space-y-2">
               {carouselImages.map((img) => {
-                const imageUrl = getImageUrl(img.image);
-                const isVideo = img.mediaType === 'video' || (img.image && (img.image.endsWith('.mp4') || img.image.endsWith('.webm') || img.image.endsWith('.mov')));
+                const isVideo =
+                  img.mediaType === 'video' ||
+                  (img.image && (img.image.endsWith('.mp4') || img.image.endsWith('.webm') || img.image.endsWith('.mov')));
+                const displayUrl = getMediaUrl(img.image, isVideo ? 'video' : 'image');
                 return (
                   <div
                     key={img.id}
@@ -851,10 +863,10 @@ export default function FeaturedAppPage() {
                   >
                     {/* Thumbnail */}
                     <div className="relative w-24 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-muted/30">
-                      {imageUrl ? (
+                      {displayUrl ? (
                         isVideo ? (
                           <video
-                            src={imageUrl}
+                            src={displayUrl}
                             className="w-full h-full object-cover"
                             muted
                             playsInline
@@ -862,7 +874,7 @@ export default function FeaturedAppPage() {
                           />
                         ) : (
                           <Image
-                            src={imageUrl}
+                            src={displayUrl}
                             alt={img.alt}
                             fill
                             className="object-cover"
