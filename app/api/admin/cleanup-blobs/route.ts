@@ -4,6 +4,10 @@ import { list, del } from '@vercel/blob';
 import { db } from '@/app/db';
 import { images, media } from '@/app/db/schema';
 
+function getBlobToken(): string | undefined {
+  return process.env.BLOB_READ_WRITE_TOKEN || process.env.isyn_READ_WRITE_TOKEN;
+}
+
 /**
  * POST /api/admin/cleanup-blobs
  * Finds and deletes blob files
@@ -72,6 +76,7 @@ export async function POST(request: Request) {
       const listResult = await list({
         cursor,
         limit: Math.min(100, limit - totalChecked),
+        token: getBlobToken(),
       });
 
       for (const blob of listResult.blobs) {
@@ -127,7 +132,7 @@ export async function POST(request: Request) {
         
         try {
           // Delete batch of blobs in a single request
-          await del(urlsToDelete);
+          await del(urlsToDelete, { token: getBlobToken() });
           
           // All deletions succeeded
           batch.forEach((blob) => {
@@ -235,6 +240,7 @@ export async function GET(request: Request) {
       const listResult = await list({
         cursor,
         limit: Math.min(100, limit - totalChecked),
+        token: getBlobToken(),
       });
 
       for (const blob of listResult.blobs) {

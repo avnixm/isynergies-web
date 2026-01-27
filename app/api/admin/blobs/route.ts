@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server';
 import { requireAuth } from '@/app/lib/auth-middleware';
 import { list } from '@vercel/blob';
 
+function getBlobToken(): string | undefined {
+  // Support both the standard Vercel env var and the project's custom name.
+  return process.env.BLOB_READ_WRITE_TOKEN || process.env.isyn_READ_WRITE_TOKEN;
+}
+
 function guessContentTypeFromPathname(pathname: string): string {
   const lower = (pathname || '').toLowerCase();
   if (lower.endsWith('.mp4')) return 'video/mp4';
@@ -47,6 +52,7 @@ export async function GET(request: Request) {
       const listResult = await list({
         cursor,
         limit: Math.min(100, limit - totalChecked),
+        token: getBlobToken(),
       });
 
       for (const blob of listResult.blobs) {

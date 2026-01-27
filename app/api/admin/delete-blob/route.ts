@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import { requireAuth } from '@/app/lib/auth-middleware';
 import { del } from '@vercel/blob';
 
+function getBlobToken(): string | undefined {
+  return process.env.BLOB_READ_WRITE_TOKEN || process.env.isyn_READ_WRITE_TOKEN;
+}
+
 /**
  * DELETE /api/admin/delete-blob
  * Deletes a file from Vercel Blob storage
@@ -39,7 +43,7 @@ export async function DELETE(request: Request) {
     console.log(`\n🗑️  [${timestamp}] MANUAL BLOB DELETION`);
     console.log(`   URL: ${url.substring(0, 80)}...`);
     
-    await del(url);
+    await del(url, { token: getBlobToken() });
 
     console.log(`   ✅ Successfully deleted blob`);
     console.log('='.repeat(80) + '\n');
