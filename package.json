@@ -17,6 +17,8 @@
     "add-demo-columns:prod": "tsx scripts/add-demo-columns-prod.ts",
     "add-videos-table:prod": "tsx scripts/add-videos-table-prod.ts",
     "create-media-table:prod": "tsx scripts/create-media-table-prod.ts",
+    "create-upload-sessions-table:prod": "tsx scripts/create-upload-sessions-table-prod.ts",
+    "migrate-images-to-media": "tsx scripts/migrate-images-to-media.ts",
     "create-admin": "tsx scripts/create-admin.ts",
     "create-featured-app-tables": "tsx scripts/create-featured-app-tables.ts",
     "cleanup-unused-tables": "tsx scripts/cleanup-unused-tables.ts"
