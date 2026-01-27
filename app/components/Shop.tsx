@@ -151,12 +151,12 @@ export default function Shop() {
       <div className="relative w-full flex items-stretch z-10" style={{ minHeight: '700px', height: '700px' }}>
         {/* Left Panel (~48%) */}
         <div className="relative w-[48%] flex flex-col" style={{ height: '100%' }}>
-          <div className="p-8 md:p-10 flex flex-col h-full justify-between">
+          <div className="px-4 md:px-8 lg:px-16 py-8 md:py-10 flex flex-col h-full justify-between">
             {/* Top Section: Title and Description */}
             <div className="flex flex-col relative">
               {/* Header with title and button */}
               <div className="flex items-start justify-between gap-6 mb-6">
-                <h2 className={`font-sans text-4xl md:text-5xl font-bold tracking-tight text-white slide-right-content ${
+                <h2 className={`font-sans text-4xl md:text-5xl font-semibold tracking-tight text-white slide-right-content ${
                   isVisible ? 'animate' : 'opacity-0'
                 }`}>
                   {content.title}
@@ -173,7 +173,7 @@ export default function Shop() {
               </div>
 
               {/* Paragraph description */}
-              <p className={`max-w-xl text-xs md:text-sm leading-relaxed text-white/85 font-sans slide-right-content relative z-10 ${
+              <p className={`max-w-xl text-xs md:text-sm leading-relaxed text-white/85 font-sans slide-right-content relative z-10 mb-8 md:mb-12 ${
                 isVisible ? 'animate' : 'opacity-0'
               }`}
               style={{

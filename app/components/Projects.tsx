@@ -420,7 +420,7 @@ export default function Projects() {
     if (view === 'all') return 'Our Work';
     if (view === 'desktop') return 'Desktop';
     if (view === 'mobile') return 'Mobile';
-    return 'Tools';
+    return 'Hardware';
   }, [view]);
 
   return (
@@ -530,7 +530,7 @@ export default function Projects() {
                   ? 'border-white/40 bg-gradient-to-b from-[#2C68D8] to-[#0D1E66] text-white shadow-[0_10px_20px_rgba(0,0,0,0.18)]'
                   : 'border-black/10 bg-white/50 text-gray-700 hover:bg-[#0D1E66] hover:text-white hover:scale-110 hover:shadow-md',
               ].join(' ')}
-              aria-label="Tools"
+              aria-label="Hardware"
             >
               <svg
                 className="mx-auto h-5 w-5"

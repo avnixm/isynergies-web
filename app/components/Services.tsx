@@ -286,7 +286,7 @@ export default function Services() {
               {tickerItems.map((item) => (
                 <span key={`ticker-1-${item.id}`}>
                   <span className="ticker-item">{item.text}</span>
-                  <span className="ticker-star">*</span>
+                  <span className="ticker-star">•</span>
                 </span>
               ))}
             </div>
@@ -296,7 +296,7 @@ export default function Services() {
               {tickerItems.map((item) => (
                 <span key={`ticker-2-${item.id}`}>
                   <span className="ticker-item">{item.text}</span>
-                  <span className="ticker-star">*</span>
+                  <span className="ticker-star">•</span>
                 </span>
               ))}
             </div>
