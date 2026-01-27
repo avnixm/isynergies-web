@@ -38,6 +38,7 @@ export async function PUT(request: Request) {
         description: content.description,
         salesIcon: content.salesIcon,
         authorizedDealerImage: content.authorizedDealerImage,
+        shopUrl: content.shopUrl || null,
       }).where(eq(shopContent.id, existing.id));
     } else {
       await db.insert(shopContent).values({
@@ -45,6 +46,7 @@ export async function PUT(request: Request) {
         description: content.description,
         salesIcon: content.salesIcon || null,
         authorizedDealerImage: content.authorizedDealerImage || null,
+        shopUrl: content.shopUrl || null,
       });
     }
 

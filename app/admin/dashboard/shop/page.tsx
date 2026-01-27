@@ -22,6 +22,7 @@ type ShopContent = {
   description: string;
   salesIcon: string;
   authorizedDealerImage: string;
+  shopUrl?: string;
 };
 
 type ShopCategory = {
@@ -47,6 +48,7 @@ export default function ShopPage() {
     description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
     salesIcon: '',
     authorizedDealerImage: '',
+    shopUrl: '',
   });
   const [categories, setCategories] = useState<ShopCategory[]>([]);
   const [authorizedDealers, setAuthorizedDealers] = useState<AuthorizedDealer[]>([]);
@@ -419,6 +421,21 @@ export default function ShopPage() {
                   className="min-h-[100px]"
                   required
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="shopUrl">Shop URL</Label>
+                <Input
+                  id="shopUrl"
+                  type="url"
+                  value={content.shopUrl || ''}
+                  onChange={(e) => setContent({ ...content, shopUrl: e.target.value })}
+                  placeholder="https://example.com/shop"
+                  className="max-w-2xl"
+                />
+                <p className="text-xs text-muted-foreground">
+                  The URL for the "Visit Shop" button. Leave empty to disable the link.
+                </p>
               </div>
 
               <div className="space-y-2">

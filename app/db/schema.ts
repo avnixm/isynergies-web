@@ -148,6 +148,7 @@ export const shopContent = mysqlTable('shop_content', {
   description: text('description').notNull(),
   salesIcon: varchar('sales_icon', { length: 255 }),
   authorizedDealerImage: varchar('authorized_dealer_image', { length: 255 }),
+  shopUrl: varchar('shop_url', { length: 500 }),
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
 });
 

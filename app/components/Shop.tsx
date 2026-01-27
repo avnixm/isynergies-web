@@ -19,6 +19,7 @@ type ShopContent = {
   description: string;
   salesIcon: string;
   authorizedDealerImage: string;
+  shopUrl?: string;
 };
 
 type AuthorizedDealer = {
@@ -163,12 +164,14 @@ export default function Shop() {
               <div className="flex items-start justify-between gap-6 mb-4">
                 <h2 className={`font-sans text-4xl md:text-5xl font-semibold tracking-tight text-white slide-right-content ${
                   isVisible ? 'animate' : 'opacity-0'
-                }`}>
+                }`} style={{ fontWeight: 600 }}>
                   {content.title}
                 </h2>
 
                 <a
-                  href="#"
+                  href={content.shopUrl || '#'}
+                  target={content.shopUrl?.startsWith('http') ? '_blank' : undefined}
+                  rel={content.shopUrl?.startsWith('http') ? 'noopener noreferrer' : undefined}
                   className="inline-flex items-center gap-2 rounded-full bg-[#7A0D1A] px-6 py-3 text-sm font-semibold text-white shadow-[0_10px_25px_rgba(0,0,0,0.25)] hover:bg-[#8A0E1F] transition-colors"
                   aria-label="Visit Shop"
                 >
@@ -200,7 +203,7 @@ export default function Shop() {
             </div>
 
             {/* Middle Section: Sales hexagon - centered with even spacing */}
-            <div className="flex items-center justify-center flex-1 py-8 relative">
+            <div className="flex items-center justify-center flex-1 relative -mt-16">
               <div className="relative h-[220px] w-[220px]">
                 {content.salesIcon ? (
                   <Image
