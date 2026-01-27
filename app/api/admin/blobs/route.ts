@@ -2,6 +2,20 @@ import { NextResponse } from 'next/server';
 import { requireAuth } from '@/app/lib/auth-middleware';
 import { list } from '@vercel/blob';
 
+function guessContentTypeFromPathname(pathname: string): string {
+  const lower = (pathname || '').toLowerCase();
+  if (lower.endsWith('.mp4')) return 'video/mp4';
+  if (lower.endsWith('.webm')) return 'video/webm';
+  if (lower.endsWith('.mov')) return 'video/quicktime';
+  if (lower.endsWith('.m3u8')) return 'application/vnd.apple.mpegurl';
+  if (lower.endsWith('.png')) return 'image/png';
+  if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+  if (lower.endsWith('.gif')) return 'image/gif';
+  if (lower.endsWith('.webp')) return 'image/webp';
+  if (lower.endsWith('.svg')) return 'image/svg+xml';
+  return 'unknown';
+}
+
 /**
  * GET /api/admin/blobs
  * Lists all blob files in storage
@@ -41,7 +55,8 @@ export async function GET(request: Request) {
           pathname: blob.pathname,
           uploadedAt: blob.uploadedAt,
           size: blob.size || 0,
-          contentType: blob.contentType || 'unknown',
+          // `list()` results don't include contentType; infer best-effort from filename.
+          contentType: guessContentTypeFromPathname(blob.pathname),
         });
         totalChecked++;
         

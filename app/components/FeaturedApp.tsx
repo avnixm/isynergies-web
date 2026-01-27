@@ -809,10 +809,9 @@ export default function FeaturedApp() {
                       {primaryVideoItem.mediaType === 'video' || isVideoEmbedUrl(primaryVideoItem.image) ? (
                         <div className="w-full h-full overflow-hidden">
                           <CustomVideoPlayer
-                            src={getMediaUrl(
-                              primaryVideoItem.image,
-                              primaryVideoItem.mediaType === 'video' ? 'video' : 'image'
-                            )}
+                            // This slot is explicitly the “primary video”, so always resolve as video.
+                            // Some legacy records may be missing `mediaType`, but still represent blob videos.
+                            src={getMediaUrl(primaryVideoItem.image, 'video')}
                             title={primaryVideoItem.alt || 'Featured video'}
                             className="w-full h-full"
                             objectFit="cover"
