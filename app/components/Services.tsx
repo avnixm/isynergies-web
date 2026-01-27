@@ -78,6 +78,54 @@ type TickerItem = {
   displayOrder: number;
 };
 
+type AnimatedCounterProps = {
+  value: string;
+  isVisible: boolean;
+};
+
+function AnimatedCounter({ value, isVisible }: AnimatedCounterProps) {
+  const [displayValue, setDisplayValue] = useState(0);
+  const [hasAnimated, setHasAnimated] = useState(false);
+
+  // Extract numeric part and suffix (e.g. "5000+" -> 5000 and "+")
+  const match = value.match(/([\d,.]+)/);
+  const numericPart = match ? match[1] : '';
+  const suffix = match ? value.slice(numericPart.length) : '';
+  const targetNumber = numericPart ? parseFloat(numericPart.replace(/,/g, '')) : 0;
+
+  useEffect(() => {
+    if (!isVisible || hasAnimated || !targetNumber) return;
+
+    const duration = 1500; // ms
+    const start = performance.now();
+
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+
+      setDisplayValue(targetNumber * eased);
+
+      if (progress < 1) {
+        requestAnimationFrame(tick);
+      } else {
+        setHasAnimated(true);
+      }
+    };
+
+    requestAnimationFrame(tick);
+  }, [isVisible, hasAnimated, targetNumber]);
+
+  // Fallback to original value if parsing fails
+  if (!match) {
+    return <span>{value}</span>;
+  }
+
+  const formatted = `${Math.round(displayValue).toLocaleString()}${suffix}`;
+
+  return <span>{formatted}</span>;
+}
+
 export default function Services() {
   const [statistics, setStatistics] = useState<Statistic[]>([]);
   const [tickerItems, setTickerItems] = useState<TickerItem[]>([]);
@@ -332,7 +380,7 @@ export default function Services() {
                         letterSpacing: '0%',
                       }}
                     >
-                      {stat.value}
+                      <AnimatedCounter value={stat.value} isVisible={isVisible} />
                     </div>
                     <div className="mt-1 text-sm md:text-base font-semibold text-gray-900">
                       {stat.label}
