@@ -517,7 +517,7 @@ export default function Contact() {
               {/* Do you want a demo? */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 font-sans">
-                  Do you want a demo?
+                  Would you like to book a demo?
                 </label>
                 <div className="flex gap-4">
                   <label className="flex items-center cursor-pointer">

@@ -144,14 +144,14 @@ export default function Footer() {
                 <a href="#home" className="block text-white/90 hover:text-white transition-colors">
                   Home
                 </a>
-                <a href="#about" className="block text-white/90 hover:text-white transition-colors">
-                  About Us
-                </a>
                 <a href="#services" className="block text-white/90 hover:text-white transition-colors">
                   Services
                 </a>
                 <a href="#shop" className="block text-white/90 hover:text-white transition-colors">
                   Shop
+                </a>
+                <a href="#about" className="block text-white/90 hover:text-white transition-colors">
+                  About Us
                 </a>
                 <a href="#team" className="block text-white/90 hover:text-white transition-colors">
                   Team

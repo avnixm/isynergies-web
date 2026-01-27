@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import Loading from './ui/loading';
-import { Star, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Star, X, ChevronLeft, ChevronRight, Play, SkipBack, SkipForward } from 'lucide-react';
 import { CustomVideoPlayer } from './ui/custom-video-player';
 
 type FeaturedAppContent = {
@@ -92,6 +92,7 @@ export default function FeaturedApp() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalIndex, setModalIndex] = useState(0);
   const modalCarouselRef = useRef<HTMLDivElement>(null);
+  const featuredVideoContainerRef = useRef<HTMLDivElement>(null);
   const [modalShowLeftArrow, setModalShowLeftArrow] = useState(false);
   const [modalShowRightArrow, setModalShowRightArrow] = useState(true);
   const [pauseCarouselVideos, setPauseCarouselVideos] = useState(false);
@@ -101,6 +102,7 @@ export default function FeaturedApp() {
   const [videoSlideDir, setVideoSlideDir] = useState<'next' | 'prev'>('next');
   const [isVideoSliding, setIsVideoSliding] = useState(false);
   const [isLeftVideoPlaying, setIsLeftVideoPlaying] = useState(false);
+  const [embedAutoplay, setEmbedAutoplay] = useState(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -237,6 +239,8 @@ export default function FeaturedApp() {
       if (videoItems.length <= 1) return;
       setVideoSlideDir(direction);
       setIsVideoSliding(true);
+      setIsLeftVideoPlaying(false);
+      setEmbedAutoplay(false);
 
       window.setTimeout(() => {
         setVideoIndex((prev) => {
@@ -691,9 +695,9 @@ export default function FeaturedApp() {
             {/* Left: Video Section (30% width on desktop) */}
             <div className="w-full md:w-[30%] flex items-center justify-center">
               {primaryVideoItem && (
-                <div className="relative w-full h-[180px] md:h-[220px]">
-                  {/* Inner frame: rounded, clips video only */}
-                  <div className="w-full h-full rounded-lg overflow-hidden bg-gray-200 shadow-md">
+                <div ref={featuredVideoContainerRef} className="relative w-full h-[180px] md:h-[220px]">
+                  {/* Inner frame: rounded, clips video. All controls inside frame (YouTube-style). */}
+                  <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-200 shadow-md">
                     {/* Video content with slide transition */}
                     <div
                       key={`featured-video-${primaryVideoItem.id}-${videoIndex}`}
@@ -714,6 +718,8 @@ export default function FeaturedApp() {
                           className="w-full h-full"
                           shouldPause={pauseCarouselVideos}
                           onPlay={() => setIsLeftVideoPlaying(true)}
+                          onPause={() => setIsLeftVideoPlaying(false)}
+                          autoplay={embedAutoplay}
                         />
                       ) : (
                         <img
@@ -723,29 +729,67 @@ export default function FeaturedApp() {
                         />
                       )}
                     </div>
-                  </div>
 
-                  {/* Prev/Next buttons only if 2+ videos - overlayed at outer frame edge */}
-                  {videoItems.length > 1 && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => navigateVideo('prev')}
-                        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-30 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110"
-                        aria-label="Previous video"
-                      >
-                        <ChevronLeft className="w-5 h-5 text-gray-800" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => navigateVideo('next')}
-                        className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-30 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110"
-                        aria-label="Next video"
-                      >
-                        <ChevronRight className="w-5 h-5 text-gray-800" />
-                      </button>
-                    </>
-                  )}
+                    {/* YouTube-style controls: Prev | Play | Next – separate dark circles, inside frame */}
+                    {(primaryVideoItem.mediaType === 'video' || isVideoEmbedUrl(primaryVideoItem.image)) && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                        <div
+                          className={`pointer-events-auto flex items-center shrink-0 transition-[gap,width] duration-300 ${
+                            isLeftVideoPlaying || isVideoSliding
+                              ? 'w-full justify-between px-3 md:px-5'
+                              : 'justify-center gap-2 md:gap-3'
+                          }`}
+                          style={{ backgroundColor: 'transparent' }}
+                        >
+                          {videoItems.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => navigateVideo('prev')}
+                              className="w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center transition-transform hover:scale-110 shrink-0"
+                              style={{ backgroundColor: 'rgba(0,0,0,0.5)', border: 'none', outline: 'none' }}
+                              aria-label="Previous video"
+                            >
+                              <SkipBack className="w-5 h-5 md:w-6 md:h-6 text-white shrink-0 fill-white" />
+                            </button>
+                          )}
+                          {!isLeftVideoPlaying && !isVideoSliding && (
+                            <button
+                              type="button"
+                              className="w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center transition-transform hover:scale-110 shrink-0"
+                              style={{ backgroundColor: 'rgba(0,0,0,0.5)', border: 'none', outline: 'none' }}
+                              onClick={() => {
+                                setIsLeftVideoPlaying(true);
+                                setEmbedAutoplay(true);
+                                const el = featuredVideoContainerRef.current?.querySelector('iframe, video');
+                                if (el) {
+                                  try {
+                                    (el as HTMLElement).focus();
+                                    el.dispatchEvent(new MouseEvent('click', { bubbles: true, view: window }));
+                                  } catch {
+                                    /* native video click; iframe uses autoplay URL */
+                                  }
+                                }
+                              }}
+                              aria-label="Play"
+                            >
+                              <Play className="w-6 h-6 md:w-7 md:h-7 text-white fill-white ml-0.5 shrink-0" />
+                            </button>
+                          )}
+                          {videoItems.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => navigateVideo('next')}
+                              className="w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center transition-transform hover:scale-110 shrink-0"
+                              style={{ backgroundColor: 'rgba(0,0,0,0.5)', border: 'none', outline: 'none' }}
+                              aria-label="Next video"
+                            >
+                              <SkipForward className="w-5 h-5 md:w-6 md:h-6 text-white shrink-0 fill-white" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

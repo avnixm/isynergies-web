@@ -11,7 +11,10 @@ interface CustomVideoPlayerProps {
   onPauseRequested?: () => void;
   shouldPause?: boolean;
   onPlay?: () => void;
+  onPause?: () => void;
   playerId?: string | number;
+  /** When true, embed URL includes autoplay=1 (YouTube/etc.) so play works. */
+  autoplay?: boolean;
 }
 
 // Helper to extract direct video URL from various sources
@@ -54,7 +57,7 @@ function getDirectVideoUrl(url: string): string | null {
   return null;
 }
 
-export function CustomVideoPlayer({ src, poster, title, className = '', onPauseRequested, shouldPause = false, onPlay, playerId }: CustomVideoPlayerProps) {
+export function CustomVideoPlayer({ src, poster, title, className = '', onPauseRequested, shouldPause = false, onPlay, onPause, playerId, autoplay = false }: CustomVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -85,7 +88,10 @@ export function CustomVideoPlayer({ src, poster, title, className = '', onPauseR
         onPlay();
       }
     };
-    const handlePause = () => setIsPlaying(false);
+    const handlePause = () => {
+      setIsPlaying(false);
+      if (onPause) onPause();
+    };
     const handleLoadStart = () => setIsLoading(true);
     const handleCanPlay = () => setIsLoading(false);
     const handleError = (e: Event) => {
@@ -189,7 +195,7 @@ export function CustomVideoPlayer({ src, poster, title, className = '', onPauseR
       video.removeEventListener('canplay', handleCanPlay);
       video.removeEventListener('error', handleError);
     };
-  }, [needsIframe, directVideoUrl, useIframeFallback]);
+  }, [needsIframe, directVideoUrl, useIframeFallback, onPlay, onPause]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -340,7 +346,8 @@ export function CustomVideoPlayer({ src, poster, title, className = '', onPauseR
     else {
       const youtubeMatch = src.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
       if (youtubeMatch) {
-        embedUrl = `https://www.youtube.com/embed/${youtubeMatch[1]}`;
+        const base = `https://www.youtube.com/embed/${youtubeMatch[1]}`;
+        embedUrl = autoplay ? `${base}?autoplay=1` : base;
       }
       // Vimeo
       else {
@@ -420,7 +427,7 @@ export function CustomVideoPlayer({ src, poster, title, className = '', onPauseR
     return (
       <div className={`relative w-full h-full ${className}`}>
         <iframe
-          key={iframeKey}
+          key={`${iframeKey}-${autoplay}`}
           ref={iframeRef}
           src={embedUrl}
           className="w-full h-full"
