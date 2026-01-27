@@ -205,7 +205,7 @@ export default function HeroManagementPage() {
   };
 
   // Check if there are unsaved changes - compare only relevant fields
-  const hasUnsavedChanges = initialHeroSection && (() => {
+  const hasUnsavedChanges = !initialHeroSection || (() => {
     const current = {
       weMakeItLogo: heroSection.weMakeItLogo || null,
       isLogo: heroSection.isLogo || null,
@@ -675,9 +675,6 @@ export default function HeroManagementPage() {
           )}
         </div>
       </Card>
-
-      {/* Sticky Footer Save Button */}
-      <StickyFooter formId="hero-form" saving={saving} disabled={!hasUnsavedChanges} />
       </form>
 
       {/* Hero Ticker Items */}
@@ -878,7 +875,7 @@ export default function HeroManagementPage() {
         </DialogFooter>
       </Dialog>
 
-      {/* Sticky Footer Save Button */}
+      {/* Sticky Footer Save Button - At the bottom of all content */}
       <StickyFooter formId="hero-form" saving={saving} disabled={!hasUnsavedChanges} />
     </div>
   );
