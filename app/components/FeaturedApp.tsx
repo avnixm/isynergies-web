@@ -264,6 +264,13 @@ export default function FeaturedApp() {
     return [...base, ...base];
   }, [carouselImages]);
 
+  // Filter images only for modal (exclude videos)
+  const modalDisplayItems = useMemo(() => {
+    return carouselImages
+      .map((item, originalIndex) => ({ item, originalIndex }))
+      .filter(({ item }) => !(item.mediaType === 'video' || isVideoEmbedUrl(item.image)));
+  }, [carouselImages]);
+
   // One-time "slide in from the right" intro for the carousel track
   useEffect(() => {
     if (!isVisible) return;
@@ -306,11 +313,19 @@ export default function FeaturedApp() {
     }
   }, []);
 
-  // Open modal at specific index
-  const openModal = (index: number) => {
+
+  // Open modal at specific index (originalIndex from carouselDisplayItems) - for images only
+  const openModal = (originalIndex: number) => {
     // Pause all carousel videos before opening modal
     setPauseCarouselVideos(true);
-    setModalIndex(index);
+    // Find the index in modalDisplayItems that corresponds to this originalIndex
+    const modalItemIndex = modalDisplayItems.findIndex(({ originalIndex: idx }) => idx === originalIndex);
+    if (modalItemIndex !== -1) {
+      setModalIndex(modalItemIndex);
+    } else {
+      // Fallback to first image if not found
+      setModalIndex(0);
+    }
     setIsModalOpen(true);
     setPlayingVideoIndex(null); // Reset playing video when opening modal
     // Update modal arrow visibility after opening
@@ -319,16 +334,18 @@ export default function FeaturedApp() {
     }, 100);
   };
 
-  // Navigate modal carousel
+
+  // Navigate modal carousel (only navigate through images, skip videos)
   const navigateModal = (direction: 'left' | 'right') => {
     if (direction === 'left' && modalIndex > 0) {
       setModalIndex(modalIndex - 1);
       setPlayingVideoIndex(null); // Reset playing video when navigating
-    } else if (direction === 'right' && modalIndex < carouselImages.length - 1) {
+    } else if (direction === 'right' && modalIndex < modalDisplayItems.length - 1) {
       setModalIndex(modalIndex + 1);
       setPlayingVideoIndex(null); // Reset playing video when navigating
     }
   };
+
 
   // Handle video play - pause all other videos
   const handleVideoPlay = (index: number) => {
@@ -445,6 +462,7 @@ export default function FeaturedApp() {
     }
   }, [modalIndex, isModalOpen]);
 
+
   // Update modal carousel scroll position when modalIndex changes
   useEffect(() => {
     if (isModalOpen && modalCarouselRef.current) {
@@ -520,16 +538,16 @@ export default function FeaturedApp() {
         updateModalArrowVisibility();
       }, 900);
     }
-  }, [modalIndex, isModalOpen, carouselImages.length, updateModalArrowVisibility]);
+  }, [modalIndex, isModalOpen, modalDisplayItems.length, updateModalArrowVisibility]);
 
-  // Handle keyboard navigation in modal
+  // Handle keyboard navigation in image modal
   useEffect(() => {
     if (!isModalOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft' && modalIndex > 0) {
         navigateModal('left');
-      } else if (e.key === 'ArrowRight' && modalIndex < carouselImages.length - 1) {
+      } else if (e.key === 'ArrowRight' && modalIndex < modalDisplayItems.length - 1) {
         navigateModal('right');
       } else if (e.key === 'Escape') {
         setIsModalOpen(false);
@@ -541,7 +559,8 @@ export default function FeaturedApp() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isModalOpen, modalIndex, carouselImages.length]);
+  }, [isModalOpen, modalIndex, modalDisplayItems.length]);
+
 
   // Continuous auto-scroll for the main carousel on the right side
   // NOTE: The actual infinite scrolling is now handled via CSS keyframes
@@ -695,7 +714,10 @@ export default function FeaturedApp() {
             {/* Left: Video Section (30% width on desktop) */}
             <div className="w-full md:w-[30%] flex items-center justify-center">
               {primaryVideoItem && (
-                <div ref={featuredVideoContainerRef} className="relative w-full h-[180px] md:h-[220px]">
+                <div 
+                  ref={featuredVideoContainerRef} 
+                  className="relative w-full h-[180px] md:h-[220px]"
+                >
                   {/* Inner frame: rounded, clips video. All controls inside frame (YouTube-style). */}
                   <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-200 shadow-md">
                     {/* Video content with slide transition */}
@@ -712,15 +734,17 @@ export default function FeaturedApp() {
                       }}
                     >
                       {primaryVideoItem.mediaType === 'video' || isVideoEmbedUrl(primaryVideoItem.image) ? (
-                        <CustomVideoPlayer
-                          src={primaryVideoItem.image}
-                          title={primaryVideoItem.alt || 'Featured video'}
-                          className="w-full h-full"
-                          shouldPause={pauseCarouselVideos}
-                          onPlay={() => setIsLeftVideoPlaying(true)}
-                          onPause={() => setIsLeftVideoPlaying(false)}
-                          autoplay={embedAutoplay}
-                        />
+                        <div className="w-full h-full">
+                          <CustomVideoPlayer
+                            src={primaryVideoItem.image}
+                            title={primaryVideoItem.alt || 'Featured video'}
+                            className="w-full h-full"
+                            shouldPause={pauseCarouselVideos}
+                            onPlay={() => setIsLeftVideoPlaying(true)}
+                            onPause={() => setIsLeftVideoPlaying(false)}
+                            autoplay={embedAutoplay}
+                          />
+                        </div>
                       ) : (
                         <img
                           src={getImageUrl(primaryVideoItem.image)}
@@ -732,7 +756,11 @@ export default function FeaturedApp() {
 
                     {/* YouTube-style controls: Prev | Play | Next – separate dark circles, inside frame */}
                     {(primaryVideoItem.mediaType === 'video' || isVideoEmbedUrl(primaryVideoItem.image)) && (
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                      <div 
+                        className="absolute inset-0 flex items-center justify-center pointer-events-none z-30"
+                        onClick={(e) => e.stopPropagation()}
+                        onMouseDown={(e) => e.stopPropagation()}
+                      >
                         <div
                           className={`pointer-events-auto flex items-center shrink-0 transition-[gap,width] duration-300 ${
                             isLeftVideoPlaying || isVideoSliding
@@ -740,11 +768,27 @@ export default function FeaturedApp() {
                               : 'justify-center gap-2 md:gap-3'
                           }`}
                           style={{ backgroundColor: 'transparent' }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                          }}
+                          onMouseDown={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                          }}
                         >
                           {videoItems.length > 1 && (
                             <button
                               type="button"
-                              onClick={() => navigateVideo('prev')}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                navigateVideo('prev');
+                              }}
+                              onMouseDown={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                              }}
                               className="w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center transition-transform hover:scale-110 shrink-0"
                               style={{ backgroundColor: 'rgba(0,0,0,0.5)', border: 'none', outline: 'none' }}
                               aria-label="Previous video"
@@ -757,18 +801,24 @@ export default function FeaturedApp() {
                               type="button"
                               className="w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center transition-transform hover:scale-110 shrink-0"
                               style={{ backgroundColor: 'rgba(0,0,0,0.5)', border: 'none', outline: 'none' }}
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
                                 setIsLeftVideoPlaying(true);
                                 setEmbedAutoplay(true);
                                 const el = featuredVideoContainerRef.current?.querySelector('iframe, video');
                                 if (el) {
                                   try {
                                     (el as HTMLElement).focus();
-                                    el.dispatchEvent(new MouseEvent('click', { bubbles: true, view: window }));
+                                    el.dispatchEvent(new MouseEvent('click', { bubbles: false, view: window }));
                                   } catch {
                                     /* native video click; iframe uses autoplay URL */
                                   }
                                 }
+                              }}
+                              onMouseDown={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
                               }}
                               aria-label="Play"
                             >
@@ -778,7 +828,15 @@ export default function FeaturedApp() {
                           {videoItems.length > 1 && (
                             <button
                               type="button"
-                              onClick={() => navigateVideo('next')}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                navigateVideo('next');
+                              }}
+                              onMouseDown={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                              }}
                               className="w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center transition-transform hover:scale-110 shrink-0"
                               style={{ backgroundColor: 'rgba(0,0,0,0.5)', border: 'none', outline: 'none' }}
                               aria-label="Next video"
@@ -841,8 +899,6 @@ export default function FeaturedApp() {
                     {carouselDisplayItems.map(({ item, originalIndex }, displayIndex) => {
                       const mediaUrl = getImageUrl(item.image);
                       const isFirst = displayIndex === 0;
-                      const isVideo = item.mediaType === 'video' || isVideoEmbedUrl(item.image);
-                      const embedUrl = isVideo && item.image ? convertToEmbedUrl(item.image) : '';
 
                       return (
                         <div
@@ -857,20 +913,11 @@ export default function FeaturedApp() {
                           onClick={() => openModal(originalIndex)}
                         >
                           {mediaUrl ? (
-                            isVideo && embedUrl ? (
-                              <CustomVideoPlayer
-                                src={item.image}
-                                title={item.alt || 'Video'}
-                                className="w-full h-full"
-                                shouldPause={pauseCarouselVideos}
-                              />
-                            ) : (
-                              <img
-                                src={mediaUrl}
-                                alt={item.alt}
-                                className="w-full h-full object-cover"
-                              />
-                            )
+                            <img
+                              src={mediaUrl}
+                              alt={item.alt}
+                              className="w-full h-full object-cover"
+                            />
                           ) : (
                             <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200" />
                           )}
@@ -923,7 +970,7 @@ export default function FeaturedApp() {
         </div>
       )}
 
-      {/* Fullscreen Modal */}
+      {/* Fullscreen Image Modal */}
       {isModalOpen && (
         <div 
           className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 md:p-8"
@@ -983,11 +1030,9 @@ export default function FeaturedApp() {
                 paddingRight: 'calc(50vw - 42.5vw)',
                 minWidth: '100%',
               }}>
-                {carouselImages.map((item, index) => {
+                {modalDisplayItems.map(({ item, originalIndex }, index) => {
                   const mediaUrl = getImageUrl(item.image);
-                  const isVideo = item.mediaType === 'video' || isVideoEmbedUrl(item.image);
                   const isActive = index === modalIndex;
-                  const embedUrl = isVideo && item.image ? convertToEmbedUrl(item.image) : '';
                   
                   return (
                     <div
@@ -1000,22 +1045,11 @@ export default function FeaturedApp() {
                       }`}
                     >
                       {mediaUrl ? (
-                        isVideo && embedUrl ? (
-                          <CustomVideoPlayer
-                            src={item.image}
-                            title={item.alt || 'Video'}
-                            className="w-full h-full rounded-lg"
-                            onPlay={() => handleVideoPlay(index)}
-                            playerId={index}
-                            shouldPause={playingVideoIndex !== null && playingVideoIndex !== index}
-                          />
-                        ) : (
-                          <img
-                            src={mediaUrl}
-                            alt={item.alt}
-                            className="w-full h-full object-contain rounded-lg"
-                          />
-                        )
+                        <img
+                          src={mediaUrl}
+                          alt={item.alt}
+                          className="w-full h-full object-contain rounded-lg"
+                        />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg" />
                       )}
@@ -1035,7 +1069,7 @@ export default function FeaturedApp() {
             </div>
 
             {/* Right Arrow */}
-            {modalShowRightArrow && (
+            {modalShowRightArrow && modalIndex < modalDisplayItems.length - 1 && (
               <button
                 onClick={() => navigateModal('right')}
                 className="absolute right-2 md:right-4 z-20 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110"

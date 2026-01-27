@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 import { requireUser } from '@/app/lib/auth-middleware';
+import { del } from '@vercel/blob';
 
 // Handle client-side uploads to Vercel Blob for videos
 // This follows Vercel's "Client Uploads" pattern using handleUpload
@@ -20,14 +21,14 @@ export async function POST(request: Request) {
       request,
       onBeforeGenerateToken: async (pathname, clientPayload) => {
         // Validate file type from client payload
-        let payload: { contentType?: string; filename?: string; size?: number } = {};
+        let payload: { contentType?: string; filename?: string; size?: number; oldBlobUrl?: string } = {};
         try {
           payload = typeof clientPayload === 'string' ? JSON.parse(clientPayload) : (clientPayload as any);
         } catch (e) {
           payload = clientPayload as any;
         }
         
-        const { contentType } = payload;
+        const { contentType, oldBlobUrl } = payload;
         
         // Only allow videos
         const allowedTypes = [
@@ -55,6 +56,7 @@ export async function POST(request: Request) {
             contentType: contentType || 'video/mp4',
             size: payload.size || 0,
             userId,
+            oldBlobUrl: oldBlobUrl, // Pass through for deletion
           }),
           pathname: videoPathname,
         };
@@ -64,6 +66,27 @@ export async function POST(request: Request) {
         // The client will create a media record via POST /api/admin/media
         // This avoids race conditions and ensures proper media type handling
         console.log(`Video uploaded to Blob: ${blob.url}`);
+
+        // Delete old blob file if it exists
+        try {
+          const payload = JSON.parse(tokenPayload || '{}');
+          const oldBlobUrl = payload.oldBlobUrl || null;
+          
+          if (oldBlobUrl && typeof oldBlobUrl === 'string' && 
+              oldBlobUrl.startsWith('https://') && 
+              oldBlobUrl.includes('blob.vercel-storage.com')) {
+            try {
+              console.log(`Deleting old blob: ${oldBlobUrl}`);
+              await del(oldBlobUrl);
+              console.log('Old blob deleted successfully');
+            } catch (deleteError: any) {
+              console.warn('Failed to delete old blob:', deleteError?.message);
+              // Don't throw - deletion failure shouldn't block upload success
+            }
+          }
+        } catch (parseError) {
+          // Ignore parsing errors
+        }
       },
     });
 

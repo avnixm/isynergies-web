@@ -3,6 +3,7 @@ import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 import { requireAuth } from '@/app/lib/auth-middleware';
 import { db } from '@/app/db';
 import { images } from '@/app/db/schema';
+import { del } from '@vercel/blob';
 
 // Handle client-side uploads to Vercel Blob
 // This route generates upload tokens and handles post-upload callbacks
@@ -43,6 +44,15 @@ export async function POST(request: Request) {
           throw new Error(`File type ${contentType} is not allowed`);
         }
 
+        // Parse old blob URL from client payload if provided
+        let oldBlobUrl: string | null = null;
+        try {
+          const clientPayloadParsed = typeof clientPayload === 'string' ? JSON.parse(clientPayload) : (clientPayload as any);
+          oldBlobUrl = clientPayloadParsed.oldBlobUrl || null;
+        } catch (e) {
+          // Ignore parsing errors
+        }
+
         return {
           allowedContentTypes: allowedTypes,
           addRandomSuffix: true,
@@ -50,6 +60,7 @@ export async function POST(request: Request) {
             filename: filename || pathname,
             contentType: contentType || 'application/octet-stream',
             size: size || 0,
+            oldBlobUrl: oldBlobUrl, // Pass through for deletion
           }),
         };
       },
@@ -60,6 +71,7 @@ export async function POST(request: Request) {
           const filename = payload.filename || blob.pathname;
           const contentType = payload.contentType || blob.contentType || 'application/octet-stream';
           const fileSize = payload.size || 0; // Size from client payload
+          const oldBlobUrl = payload.oldBlobUrl || null;
 
           const result: { id: number }[] = await db.insert(images).values({
             filename,
@@ -73,6 +85,20 @@ export async function POST(request: Request) {
 
           const imageId = result[0]?.id;
           console.log(`Uploaded file saved to database with ID: ${imageId}, URL: ${blob.url}`);
+
+          // Delete old blob file if it exists
+          if (oldBlobUrl && typeof oldBlobUrl === 'string' && 
+              oldBlobUrl.startsWith('https://') && 
+              oldBlobUrl.includes('blob.vercel-storage.com')) {
+            try {
+              console.log(`Deleting old blob: ${oldBlobUrl}`);
+              await del(oldBlobUrl);
+              console.log('Old blob deleted successfully');
+            } catch (deleteError: any) {
+              console.warn('Failed to delete old blob:', deleteError?.message);
+              // Don't throw - deletion failure shouldn't block upload success
+            }
+          }
         } catch (dbError: any) {
           console.error('Error saving blob URL to database:', dbError);
           // Don't throw - upload succeeded, just DB save failed

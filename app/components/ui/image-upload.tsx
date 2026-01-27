@@ -20,6 +20,35 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
   const [uploadProgress, setUploadProgress] = useState<string>('');
   const [detectedMediaType, setDetectedMediaType] = useState<'image' | 'video' | null>(null);
 
+  // Helper function to delete old blob file if it exists
+  const deleteOldBlob = useCallback(async (oldUrl: string, token: string) => {
+    // Check if it's a Vercel Blob URL
+    if (oldUrl && oldUrl.startsWith('https://') && oldUrl.includes('blob.vercel-storage.com')) {
+      try {
+        console.log(`Deleting old blob: ${oldUrl}`);
+        const deleteResponse = await fetch('/api/admin/delete-blob', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ url: oldUrl }),
+        });
+
+        if (deleteResponse.ok) {
+          console.log('Old blob deleted successfully');
+        } else {
+          const errorData = await deleteResponse.json().catch(() => ({ error: 'Failed to delete blob' }));
+          console.warn('Failed to delete old blob:', errorData.error);
+          // Don't throw - deletion failure shouldn't block upload
+        }
+      } catch (deleteError) {
+        console.warn('Error deleting old blob:', deleteError);
+        // Don't throw - deletion failure shouldn't block upload
+      }
+    }
+  }, []);
+
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
 
@@ -31,6 +60,53 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
       setUploading(false);
       alert('No authentication token found. Please log in again.');
       return;
+    }
+
+    // Store the old value to delete after successful upload
+    const oldValue = value;
+    let oldBlobUrl: string | null = null;
+
+    // Check if old value is a blob URL or needs to be resolved
+    if (oldValue) {
+      if (oldValue.startsWith('https://') && oldValue.includes('blob.vercel-storage.com')) {
+        // Direct blob URL
+        oldBlobUrl = oldValue;
+      } else if (oldValue.match(/^\d+$/)) {
+        // Numeric ID - try to resolve to blob URL from media table first, then images table
+        try {
+          // Try media table first
+          const mediaResponse = await fetch(`/api/admin/media/${oldValue}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          });
+          if (mediaResponse.ok) {
+            const mediaData = await mediaResponse.json();
+            if (mediaData?.url && mediaData.url.startsWith('https://') && mediaData.url.includes('blob.vercel-storage.com')) {
+              oldBlobUrl = mediaData.url;
+            }
+          } else {
+            // Try images table as fallback
+            const imageResponse = await fetch(`/api/images/${oldValue}`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+              },
+            });
+            if (imageResponse.ok) {
+              // Check if response redirects to a blob URL (images route redirects to blob URLs)
+              const imageUrl = imageResponse.url;
+              if (imageUrl && imageUrl.startsWith('https://') && imageUrl.includes('blob.vercel-storage.com')) {
+                oldBlobUrl = imageUrl;
+              } else {
+                // Try to get blob URL from response headers or fetch image record
+                // For now, we'll skip - images table might not have blob URLs stored directly
+              }
+            }
+          }
+        } catch (e) {
+          // Ignore errors - will try to delete after upload
+        }
+      }
     }
 
     try {
@@ -54,6 +130,7 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
             filename: file.name,
             contentType: file.type,
             size: file.size,
+            oldBlobUrl: oldBlobUrl, // Pass old blob URL for deletion
           }),
           onUploadProgress: (progress) => {
             const percentage = progress.percentage || 0;
@@ -96,6 +173,11 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
             // Store the media ID
             console.log(`Created media record: ID ${mediaData.id}, type ${mediaData.type}`);
             onChange(String(mediaData.id));
+            
+            // Delete old blob after successful upload
+            if (oldBlobUrl) {
+              await deleteOldBlob(oldBlobUrl, token);
+            }
           } else {
             throw new Error('Media record created but no ID returned');
           }
@@ -104,6 +186,11 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
           // Fallback: store blob URL directly (Hero component handles http URLs)
           console.warn('Falling back to storing blob URL directly:', blob.url);
           onChange(blob.url);
+          
+          // Delete old blob after successful upload (even in fallback)
+          if (oldBlobUrl) {
+            await deleteOldBlob(oldBlobUrl, token);
+          }
         }
         
         setUploadProgress('');
@@ -187,6 +274,11 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
         console.log('Upload finalized successfully');
         setUploadProgress('');
         onChange(String(imageId));
+        
+        // Delete old blob after successful upload
+        if (oldBlobUrl) {
+          await deleteOldBlob(oldBlobUrl, token);
+        }
       } else {
         // Direct upload for small files
         const formData = new FormData();
@@ -212,6 +304,11 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
         }
 
         onChange(String(uploadData.id));
+        
+        // Delete old blob after successful upload
+        if (oldBlobUrl) {
+          await deleteOldBlob(oldBlobUrl, token);
+        }
       }
     } catch (error) {
       console.error('Upload error:', error);
@@ -239,7 +336,7 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
       setUploading(false);
       setUploadProgress('');
     }
-  }, [onChange]);
+  }, [onChange, value, deleteOldBlob]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
