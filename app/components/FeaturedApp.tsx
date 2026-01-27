@@ -296,8 +296,9 @@ export default function FeaturedApp() {
       .map((item, originalIndex) => ({ item, originalIndex }))
       .filter(({ item }) => !(item.mediaType === 'video' || isVideoEmbedUrl(item.image)));
 
-    // Duplicate list for seamless looping, similar to Projects marquee
-    return [...base, ...base];
+    // Duplicate list for seamless looping, similar to Projects marquee.
+    // Triple to reduce visible gap on ultra-wide screens and keep the loop “infinite”.
+    return [...base, ...base, ...base];
   }, [carouselImages]);
 
   // Filter images only for modal (exclude videos)
