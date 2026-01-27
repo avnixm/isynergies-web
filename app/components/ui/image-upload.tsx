@@ -25,7 +25,7 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
     // Check if it's a Vercel Blob URL
     if (oldUrl && oldUrl.startsWith('https://') && oldUrl.includes('blob.vercel-storage.com')) {
       try {
-        console.log(`Deleting old blob: ${oldUrl}`);
+        console.log(`[Blob Cleanup] Deleting old blob: ${oldUrl.substring(0, 60)}...`);
         const deleteResponse = await fetch('/api/admin/delete-blob', {
           method: 'DELETE',
           headers: {
@@ -36,16 +36,21 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
         });
 
         if (deleteResponse.ok) {
-          console.log('Old blob deleted successfully');
+          const result = await deleteResponse.json().catch(() => ({}));
+          console.log(`[Blob Cleanup] ✓ Successfully deleted old blob: ${oldUrl.substring(0, 60)}...`);
+          return true;
         } else {
           const errorData = await deleteResponse.json().catch(() => ({ error: 'Failed to delete blob' }));
-          console.warn('Failed to delete old blob:', errorData.error);
-          // Don't throw - deletion failure shouldn't block upload
+          console.warn(`[Blob Cleanup] ✗ Failed to delete old blob: ${errorData.error || 'Unknown error'}`);
+          return false;
         }
-      } catch (deleteError) {
-        console.warn('Error deleting old blob:', deleteError);
-        // Don't throw - deletion failure shouldn't block upload
+      } catch (deleteError: any) {
+        console.warn(`[Blob Cleanup] ✗ Error deleting old blob: ${deleteError?.message || String(deleteError)}`);
+        return false;
       }
+    } else {
+      console.log(`[Blob Cleanup] Skipping deletion - not a Vercel Blob URL: ${oldUrl?.substring(0, 60) || 'null'}...`);
+      return false;
     }
   }, []);
 
@@ -86,21 +91,23 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
               oldBlobUrl = mediaData.url;
             }
           } else {
-            // Try images table as fallback
-            const imageResponse = await fetch(`/api/images/${oldValue}`, {
-              headers: {
-                'Authorization': `Bearer ${token}`,
-              },
-            });
-            if (imageResponse.ok) {
-              // Check if response redirects to a blob URL (images route redirects to blob URLs)
-              const imageUrl = imageResponse.url;
-              if (imageUrl && imageUrl.startsWith('https://') && imageUrl.includes('blob.vercel-storage.com')) {
-                oldBlobUrl = imageUrl;
-              } else {
-                // Try to get blob URL from response headers or fetch image record
-                // For now, we'll skip - images table might not have blob URLs stored directly
+            // Try images table as fallback - fetch the image record by ID
+            try {
+              const imageRecordResponse = await fetch(`/api/admin/images/${oldValue}`, {
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                },
+              });
+              if (imageRecordResponse.ok) {
+                const imageRecord = await imageRecordResponse.json();
+                if (imageRecord?.url && imageRecord.url.startsWith('https://') && imageRecord.url.includes('blob.vercel-storage.com')) {
+                  oldBlobUrl = imageRecord.url;
+                  console.log(`Resolved image ID ${oldValue} to blob URL: ${imageRecord.url.substring(0, 50)}...`);
+                }
               }
+            } catch (e) {
+              console.warn(`Failed to resolve image ID ${oldValue} to blob URL:`, e);
+              // Ignore errors - will try to delete after upload if we can resolve it later
             }
           }
         } catch (e) {
