@@ -24,6 +24,7 @@
     "cleanup-unused-tables": "tsx scripts/cleanup-unused-tables.ts"
   },
   "dependencies": {
+    "@number-flow/react": "^0.5.10",
     "@mynaui/icons-react": "^0.4.2",
     "@uploadthing/react": "^7.3.3",
     "@vercel/blob": "^2.0.0",
