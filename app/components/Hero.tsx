@@ -41,6 +41,10 @@ export default function Hero({ navLinks }: HeroProps) {
   const [videoError, setVideoError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
+  const lastScrollY = useRef(0);
+  const [headerVisible, setHeaderVisible] = useState(true);
+  const announcementRef = useRef<HTMLDivElement>(null);
+  const [useMarquee, setUseMarquee] = useState(false);
 
   useEffect(() => {
     const fetchHeroData = async () => {
@@ -101,6 +105,86 @@ export default function Hero({ navLinks }: HeroProps) {
 
   // Use ticker items from database only (no hardcoded fallbacks)
   const tickerItems = heroTickerItems;
+
+  function parseTextWithLinks(text: string): ReactNode[] {
+    const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+    const parts: ReactNode[] = [];
+    let lastIndex = 0;
+    let match;
+    let key = 0;
+    while ((match = linkRegex.exec(text)) !== null) {
+      if (match.index > lastIndex) parts.push(text.substring(lastIndex, match.index));
+      const href = match[2];
+      const isHashLink = typeof href === 'string' && href.startsWith('#');
+      parts.push(
+        <a
+          key={key++}
+          href={href}
+          {...(!isHashLink ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+          className="underline hover:text-gray-300 transition-colors"
+          onClick={(e) => {
+            if (!isHashLink) return;
+            e.preventDefault();
+            const el = document.querySelector(href);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }}
+        >
+          {match[1]}
+        </a>
+      );
+      lastIndex = linkRegex.lastIndex;
+    }
+    if (lastIndex < text.length) parts.push(text.substring(lastIndex));
+    return parts.length > 0 ? parts : [text];
+  }
+
+  const announcementBarContent = (
+    <>
+      {tickerItems.map((item, index) => (
+        <div key={item.id} className="flex items-center gap-4 text-[12px] font-medium text-white whitespace-nowrap">
+          {index > 0 && <span className="text-white/50 font-bold">-</span>}
+          <span>{parseTextWithLinks(item.text)}</span>
+        </div>
+      ))}
+    </>
+  );
+  const barClasses =
+    'flex items-center justify-center gap-4 rounded-2xl bg-gray-800/90 backdrop-blur-xl px-6 py-4 shadow-2xl shadow-black/25 border border-gray-700/50 w-fit ticker-slow-fade';
+
+  // Header visibility: hide on scroll down, show on scroll up (dynamic, not permanently fixed)
+  useEffect(() => {
+    const handleScroll = () => {
+      const y = window.scrollY;
+      const prev = lastScrollY.current;
+      lastScrollY.current = y;
+      if (y <= 80) {
+        setHeaderVisible(true);
+        return;
+      }
+      if (y > prev) setHeaderVisible(false);
+      else if (y < prev) setHeaderVisible(true);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Announcement bar: marquee only when content exceeds 80% viewport width
+  useEffect(() => {
+    if (tickerItems.length === 0) return;
+    const measure = () => {
+      const el = announcementRef.current;
+      if (!el) return;
+      const w = el.getBoundingClientRect().width;
+      const maxW = window.innerWidth * 0.8;
+      setUseMarquee(w > maxW);
+    };
+    const t = setTimeout(measure, 0);
+    window.addEventListener('resize', measure);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener('resize', measure);
+    };
+  }, [tickerItems]);
 
   // Intersection Observer to play video only when hero section is visible
   useEffect(() => {
@@ -230,9 +314,13 @@ export default function Hero({ navLinks }: HeroProps) {
       {/* Invisible anchor for home */}
       <div id="home" className="absolute top-0 h-0 w-0" aria-hidden />
 
-      {/* Glassmorphic floating navbar - show and animate only after hero data is loaded */}
+      {/* Glassmorphic floating navbar - fixed, hide on scroll down / show on scroll up */}
       {!loading && (
-        <nav className="absolute left-1/2 top-6 z-20 w-[85%] max-w-4xl -translate-x-1/2">
+        <nav
+          className={`fixed left-1/2 top-6 z-20 w-[85%] max-w-4xl -translate-x-1/2 transition-transform duration-300 ease-out ${
+            headerVisible ? 'translate-y-0' : '-translate-y-[calc(100%+2rem)]'
+          }`}
+        >
           <div className="navbar-dropdown flex items-center justify-between rounded-2xl bg-gray-800/90 backdrop-blur-xl px-6 py-2 shadow-2xl shadow-black/25 border border-gray-700/50">
             <div className="flex items-center">
               {logoSrc ? (
@@ -314,64 +402,36 @@ export default function Hero({ navLinks }: HeroProps) {
         </div>
       )}
 
-      {/* Floating Text Bar - only show if there are ticker items in database */}
+      {/* Floating Text Bar - static by default, max 80% width; marquee only when content overflows */}
       {tickerItems.length > 0 && (
         <div className="pointer-events-none absolute inset-0">
-          <div className="pointer-events-auto absolute bottom-8 left-1/2 z-10 -translate-x-1/2 px-4">
-            <div className="flex items-center justify-center gap-4 rounded-2xl bg-gray-800/90 backdrop-blur-xl px-6 py-4 shadow-2xl shadow-black/25 border border-gray-700/50 w-fit ticker-slow-fade">
-              {tickerItems.map((item, index) => {
-              // Parse markdown-style links [text](url)
-              const parseTextWithLinks = (text: string): ReactNode[] => {
-                const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
-                const parts: ReactNode[] = [];
-                let lastIndex = 0;
-                let match;
-                let key = 0;
-
-                while ((match = linkRegex.exec(text)) !== null) {
-                  // Add text before the link
-                  if (match.index > lastIndex) {
-                    parts.push(text.substring(lastIndex, match.index));
-                  }
-                  // Add the link
-                  const href = match[2];
-                  const isHashLink = typeof href === 'string' && href.startsWith('#');
-                  parts.push(
-                    <a
-                      key={key++}
-                      href={href}
-                      {...(!isHashLink
-                        ? { target: '_blank', rel: 'noopener noreferrer' }
-                        : {})}
-                      className="underline hover:text-gray-300 transition-colors"
-                      onClick={(e) => {
-                        if (!isHashLink) return;
-                        e.preventDefault();
-                        const el = document.querySelector(href);
-                        if (el) {
-                          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }
-                      }}
-                    >
-                      {match[1]}
-                    </a>
-                  );
-                  lastIndex = linkRegex.lastIndex;
-                }
-                // Add remaining text
-                if (lastIndex < text.length) {
-                  parts.push(text.substring(lastIndex));
-                }
-                return parts.length > 0 ? parts : [text];
-              };
-
-              return (
-                <div key={item.id} className="flex items-center gap-4 text-[12px] font-medium text-white whitespace-nowrap">
-                  {index > 0 && <span className="text-white/50 font-bold">-</span>}
-                  <span>{parseTextWithLinks(item.text)}</span>
+          {/* Hidden measure bar – same structure as visible bar for width comparison vs 80vw */}
+          <div
+            ref={announcementRef}
+            aria-hidden
+            className={`invisible absolute -top-[9999px] left-0 ${barClasses}`}
+          >
+            {announcementBarContent}
+          </div>
+          <div className="pointer-events-auto absolute bottom-8 left-1/2 z-10 w-full max-w-[80vw] -translate-x-1/2 px-4">
+            <div className="flex justify-center">
+              {useMarquee ? (
+                <div className={`hero-announcement-marquee w-full max-w-full overflow-hidden rounded-2xl border border-gray-700/50 bg-gray-800/90 px-6 py-4 shadow-2xl shadow-black/25 backdrop-blur-xl ${'ticker-slow-fade'}`}>
+                  <div className="hero-announcement-marquee-track">
+                    <div className="flex min-w-max items-center justify-center gap-4 text-[12px] font-medium text-white whitespace-nowrap">
+                      {announcementBarContent}
+                    </div>
+                    <span className="flex-shrink-0 px-1 text-[12px] font-bold text-white/50">-</span>
+                    <div className="flex min-w-max items-center justify-center gap-4 text-[12px] font-medium text-white whitespace-nowrap">
+                      {announcementBarContent}
+                    </div>
+                  </div>
                 </div>
-              );
-            })}
+              ) : (
+                <div className={barClasses}>
+                  {announcementBarContent}
+                </div>
+              )}
             </div>
           </div>
         </div>

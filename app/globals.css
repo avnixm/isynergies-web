@@ -301,6 +301,25 @@ body:not(.admin-dashboard-active) {
   animation-play-state: paused;
 }
 
+/* Hero announcement: marquee only when content exceeds 80% width */
+.hero-announcement-marquee {
+  overflow: hidden;
+}
+
+.hero-announcement-marquee-track {
+  display: inline-flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  width: max-content;
+  animation: projectsMarquee 45s linear infinite;
+  will-change: transform;
+}
+
+.hero-announcement-marquee:hover .hero-announcement-marquee-track {
+  animation-play-state: paused;
+}
+
 .ticker-row {
   display: inline-flex;
   align-items: center;

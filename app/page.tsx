@@ -6,6 +6,7 @@ const navLinks = [
   { label: "Projects", href: "#projects" },
   { label: "Shop", href: "#shop" },
   { label: "About Us", href: "#about" },
+  { label: "Contact Us", href: "#contact" },
 ];
 
 import Hero from './components/Hero';
