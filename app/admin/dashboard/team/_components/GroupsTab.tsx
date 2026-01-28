@@ -22,6 +22,7 @@ import {
 } from '@/app/components/ui/dropdown-menu';
 import { GripVertical, MoreHorizontal, Pencil, Trash2, User } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
+import { resolveImageSrc } from '@/app/lib/resolve-image-src';
 
 export type GroupsTabMember = {
   id: number;
@@ -60,14 +61,6 @@ type GroupsTabProps = {
 
 const COLUMN_ID_UNGROUPED = 'ungrouped';
 
-function resolveImageSrc(image: string | null): string {
-  if (!image) return '';
-  if (typeof image === 'string' && (image.startsWith('/api/images/') || image.startsWith('http'))) {
-    return image;
-  }
-  return `/api/images/${image}`;
-}
-
 function MemberCard({
   member,
   groups,
@@ -99,7 +92,7 @@ function MemberCard({
   dragAttributes?: Record<string, unknown>;
   style?: React.CSSProperties;
 }) {
-  const src = resolveImageSrc(member.image);
+  const src = resolveImageSrc(member.image) ?? '';
   const groupId = sourceColumnId === COLUMN_ID_UNGROUPED ? null : parseInt(sourceColumnId.replace('group-', ''), 10);
   const targetGroups = groups;
   const listeners = dragListeners ?? {};

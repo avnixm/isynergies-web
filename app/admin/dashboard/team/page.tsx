@@ -11,7 +11,6 @@ import { ImageUpload } from '@/app/components/ui/image-upload';
 import { Dialog, DialogFooter } from '@/app/components/ui/dialog';
 import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
-import { Select } from '@/app/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
 import { TeamPageHeader } from './_components/TeamPageHeader';
 import { MembersTab, type SortOption, type MembersFilter } from './_components/MembersTab';
@@ -684,7 +683,7 @@ export default function TeamPage() {
               <Label>Photo</Label>
               <ImageUpload
                 value={formData.image}
-                onChange={(url) => setFormData({ ...formData, image: url })}
+                onChange={(url) => setFormData((prev) => ({ ...prev, image: url }))}
               />
             </div>
             <div className="flex flex-col gap-4">
@@ -693,7 +692,7 @@ export default function TeamPage() {
                 <Input
                   id="dialog-name"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                   placeholder="John Doe"
                   required
                 />
@@ -703,7 +702,7 @@ export default function TeamPage() {
                 <Input
                   id="dialog-position"
                   value={formData.position}
-                  onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, position: e.target.value }))}
                   placeholder="Software Developer"
                   required
                 />
@@ -715,7 +714,7 @@ export default function TeamPage() {
                   type="number"
                   value={formData.displayOrder}
                   onChange={(e) => {
-                    setFormData({ ...formData, displayOrder: parseInt(e.target.value) || 0 });
+                    setFormData((prev) => ({ ...prev, displayOrder: parseInt(e.target.value) || 0 }));
                     setOrderError('');
                   }}
                   className={orderError ? 'border-red-500' : ''}
@@ -752,7 +751,7 @@ export default function TeamPage() {
             <Input
               id="group-name"
               value={groupFormData.name}
-              onChange={(e) => setGroupFormData({ ...groupFormData, name: e.target.value })}
+              onChange={(e) => setGroupFormData((prev) => ({ ...prev, name: e.target.value }))}
               placeholder="e.g. Finance, Admin & Accounting"
             />
           </div>
@@ -763,7 +762,7 @@ export default function TeamPage() {
               type="number"
               value={groupFormData.displayOrder}
               onChange={(e) =>
-                setGroupFormData({ ...groupFormData, displayOrder: parseInt(e.target.value, 10) || 0 })
+                setGroupFormData((prev) => ({ ...prev, displayOrder: parseInt(e.target.value, 10) || 0 }))
               }
             />
           </div>

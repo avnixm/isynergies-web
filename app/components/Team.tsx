@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo, useCallback, memo } from 'react';
 import { Encode_Sans_Expanded } from 'next/font/google';
 import Image from 'next/image';
 import Loading from './ui/loading';
+import { resolveImageSrc } from '@/app/lib/resolve-image-src';
 
 const encodeSansExpanded = Encode_Sans_Expanded({
   subsets: ['latin'],
@@ -89,23 +90,6 @@ const GROUP_KEYWORD_CONFIG: { name: string; keywords: string[] }[] = [
     keywords: ['development', 'developer'],
   },
 ];
-
-/** Phase 5A: supports numeric id, numeric string id, full URL (/api/images/... or http(s)://...) */
-function resolveImageSrc(image: Member['image']): string | null {
-  if (image === undefined || image === null) return null;
-  if (typeof image === 'number') return `/api/images/${image}`;
-
-  if (typeof image === 'string') {
-    const trimmed = image.trim();
-    if (!trimmed) return null;
-    if (trimmed.startsWith('/api/images/') || trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-      return trimmed;
-    }
-    if (!Number.isNaN(Number(trimmed))) return `/api/images/${trimmed}`;
-  }
-
-  return null;
-}
 
 function normalizeGroups(rawGroups: Group[]): Group[] {
   return [...rawGroups].sort((a, b) => {

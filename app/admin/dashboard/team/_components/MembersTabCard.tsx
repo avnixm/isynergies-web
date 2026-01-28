@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/app/components/ui/dropdown-menu';
 import { MoreVertical, Pencil, Trash2, User } from 'lucide-react';
+import { resolveImageSrc } from '@/app/lib/resolve-image-src';
 
 export type MembersTabCardMember = {
   id: number;
@@ -24,16 +25,8 @@ type MembersTabCardProps = {
   onDelete: () => void;
 };
 
-function resolveImageSrc(image: string | null): string {
-  if (!image) return '';
-  if (typeof image === 'string' && (image.startsWith('/api/images/') || image.startsWith('http'))) {
-    return image;
-  }
-  return `/api/images/${image}`;
-}
-
 export function MembersTabCard({ member, onEdit, onDelete }: MembersTabCardProps) {
-  const src = resolveImageSrc(member.image);
+  const src = resolveImageSrc(member.image) ?? '';
 
   return (
     <Card className="group flex rounded-xl border border-border bg-white shadow-sm transition-shadow hover:border-primary/20 hover:shadow-md">

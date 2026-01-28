@@ -31,8 +31,8 @@ export function Dialog({
   maxWidth = '2xl',
   preventBodyScroll = true,
 }: DialogProps) {
-  const dialogRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const backdropMousedownRef = useRef(false);
 
   // Prevent body scroll when dialog is open
   useEffect(() => {
@@ -109,22 +109,30 @@ export function Dialog({
     };
   }, [open, onOpenChange]);
 
-  // Handle backdrop click
+  // Only close when both mousedown and click were on backdrop (avoids closing when
+  // interacting with selects/file picker then releasing over overlay, or dragging from content)
+  const handleBackdropMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    backdropMousedownRef.current = e.target === e.currentTarget;
+  };
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) {
+    if (e.target === e.currentTarget && backdropMousedownRef.current) {
       onOpenChange(false);
     }
+    backdropMousedownRef.current = false;
+  };
+  const handleContentMouseDown = () => {
+    backdropMousedownRef.current = false;
   };
 
   if (!open) return null;
 
   return (
     <div
-      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-labelledby="dialog-title"
       className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 py-6"
+      onMouseDown={handleBackdropMouseDown}
       onClick={handleBackdropClick}
       style={{
         animation: 'fadeIn 0.15s ease-out',
@@ -137,6 +145,10 @@ export function Dialog({
           maxWidthClasses[maxWidth],
           'max-h-[90vh] flex flex-col'
         )}
+        onMouseDown={(e) => {
+          e.stopPropagation();
+          handleContentMouseDown();
+        }}
         onClick={(e) => e.stopPropagation()}
         style={{
           animation: 'slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)',

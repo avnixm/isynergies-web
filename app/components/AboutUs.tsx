@@ -140,10 +140,11 @@ export default function AboutUs() {
     : [];
 
   // Sort by order (displayOrder) and duplicate for seamless loop.
-  const orderedGallery = [...baseGallery]; // baseGallery is already derived from ordered data below
+  const orderedGallery = [...baseGallery];
   const tiledGallery = [...orderedGallery, ...orderedGallery];
-  const tileHeight = `${100 / orderedGallery.length}%`;
-  const scrollSeconds = Math.max(20, baseGallery.length * 6);
+  const n = orderedGallery.length;
+  const tileHeight = n > 0 ? `${100 / (2 * n)}%` : '0%'; /* 2n tiles => 100% of track; each set = 50% */
+  const scrollSeconds = Math.max(20, n * 6);
 
   return (
       <section
@@ -192,14 +193,14 @@ export default function AboutUs() {
               </div>
             </div>
 
-            {/* Right Side - Auto-scrolling Image Gallery (multi-image, infinite) */}
+            {/* Right Side - Auto-scrolling Image Gallery (same pattern as Our Work carousel) */}
             {baseGallery.length > 0 && (
             <div className="hidden md:block md:w-1/2 -mt-0">
-              <div className={`slide-up-container relative h-[600px] w-full overflow-hidden shadow-lg ${isVisible ? 'animate' : ''}`}>
-                <div
-                  className="scroll-animation absolute top-0 left-0 w-full flex flex-col"
-                  style={{ height: '200%', animationDuration: `${scrollSeconds}s` }}
-                >
+              <div
+                className={`slide-up-container about-us-gallery-marquee relative h-[600px] w-full overflow-hidden shadow-lg ${isVisible ? 'animate' : ''}`}
+                style={{ ['--about-us-scroll-duration' as string]: `${scrollSeconds}s` }}
+              >
+                <div className="about-us-gallery-track absolute top-0 left-0 w-full flex flex-col">
                   {tiledGallery.map((item, idx) => (
                     <div
                       key={`${item.key}-${idx}`}

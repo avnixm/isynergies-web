@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/app/components/ui/card';
 import { Label } from '@/app/components/ui/label';
 import { Select } from '@/app/components/ui/select';
 import { User } from 'lucide-react';
+import { resolveImageSrc } from '@/app/lib/resolve-image-src';
 
 export type FeaturedMember = {
   id: number;
@@ -17,14 +18,6 @@ type FeaturedTabPanelProps = {
   onFeaturedChange: (memberId: number | null) => void;
   members: FeaturedMember[];
 };
-
-function resolveImageSrc(image: string | null): string {
-  if (!image) return '';
-  if (typeof image === 'string' && (image.startsWith('/api/images/') || image.startsWith('http'))) {
-    return image;
-  }
-  return `/api/images/${image}`;
-}
 
 export function FeaturedTabPanel({
   featuredMemberId,
@@ -77,17 +70,20 @@ export function FeaturedTabPanel({
                     className="max-h-[98%] max-w-[98%] object-contain brightness-[0.55] contrast-125"
                   />
                 </div>
-                {resolveImageSrc(featured.image) ? (
-                  <img
-                    src={resolveImageSrc(featured.image)}
-                    alt=""
-                    className="relative z-[1] max-h-full max-w-full object-contain object-center"
-                  />
-                ) : (
-                  <div className="relative z-[1] flex items-center justify-center text-white/80">
-                    <User className="h-16 w-16" />
-                  </div>
-                )}
+                {(() => {
+                  const src = resolveImageSrc(featured.image);
+                  return src ? (
+                    <img
+                      src={src}
+                      alt=""
+                      className="relative z-[1] max-h-full max-w-full object-contain object-center"
+                    />
+                  ) : (
+                    <div className="relative z-[1] flex items-center justify-center text-white/80">
+                      <User className="h-16 w-16" />
+                    </div>
+                  );
+                })()}
               </div>
               <div className="shrink-0 bg-gradient-to-t from-black/80 to-transparent p-4">
                 <p className="text-lg font-semibold text-white truncate">{featured.name}</p>

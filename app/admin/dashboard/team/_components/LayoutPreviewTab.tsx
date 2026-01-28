@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { User } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
+import { resolveImageSrc } from '@/app/lib/resolve-image-src';
 
 type PreviewMember = {
   id: number;
@@ -27,14 +28,6 @@ type LayoutPreviewTabProps = {
   ungroupedCount: number;
   validMembersCount: number;
 };
-
-function resolveImageSrc(image: string | null): string {
-  if (!image) return '';
-  if (typeof image === 'string' && (image.startsWith('/api/images/') || image.startsWith('http'))) {
-    return image;
-  }
-  return `/api/images/${image}`;
-}
 
 type Slot = { type: 'member'; member: PreviewMember; variant?: 'boss' } | { type: 'empty' };
 
@@ -148,7 +141,7 @@ export function LayoutPreviewTab({
         </div>
       );
     }
-    const src = resolveImageSrc(slot.member.image);
+    const src = resolveImageSrc(slot.member.image) ?? '';
     const isBoss = slot.variant === 'boss';
     return (
       <div
