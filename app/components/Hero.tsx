@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState, useRef, ReactNode } from 'react';
+import { useEffect, useState, useRef, ReactNode, MouseEvent } from 'react';
 import Image from 'next/image';
+import { Menu, X } from 'lucide-react';
 import Loading from './ui/loading';
 
 type HeroSection = {
@@ -39,6 +40,7 @@ export default function Hero({ navLinks }: HeroProps) {
   const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [videoError, setVideoError] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
@@ -137,6 +139,16 @@ export default function Hero({ navLinks }: HeroProps) {
     if (lastIndex < text.length) parts.push(text.substring(lastIndex));
     return parts.length > 0 ? parts : [text];
   }
+
+  const handleNavClick = (event: MouseEvent<HTMLAnchorElement>, href: string) => {
+    const isHashLink = typeof href === 'string' && href.startsWith('#');
+    if (isHashLink) {
+      event.preventDefault();
+      const el = document.querySelector(href);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    setMobileMenuOpen(false);
+  };
 
   const announcementBarContent = (
     <>
@@ -317,14 +329,14 @@ export default function Hero({ navLinks }: HeroProps) {
       {/* Glassmorphic floating navbar - fixed, hide on scroll down / show on scroll up */}
       {!loading && (
         <nav
-          className={`fixed left-1/2 top-6 z-20 w-[85%] max-w-4xl -translate-x-1/2 transition-transform duration-300 ease-out ${
+          className={`fixed left-1/2 top-6 z-30 w-[85%] max-w-4xl -translate-x-1/2 transition-transform duration-300 ease-out ${
             headerVisible ? 'translate-y-0' : '-translate-y-[calc(100%+2rem)]'
           }`}
         >
-          <div className="navbar-dropdown flex items-center justify-between rounded-2xl bg-gray-800/90 backdrop-blur-xl px-6 py-2 shadow-2xl shadow-black/25 border border-gray-700/50">
+          <div className="navbar-dropdown flex items-center justify-between rounded-2xl bg-gray-800/90 backdrop-blur-xl px-4 py-2 shadow-2xl shadow-black/25 border border-gray-700/50">
             <div className="flex items-center">
               {logoSrc ? (
-                <div className="relative h-[34px] w-40 md:w-56">
+                <div className="relative h-[34px] w-36 md:w-56">
                   <Image
                     src={logoSrc as string}
                     alt="iSynergies Inc."
@@ -336,7 +348,7 @@ export default function Hero({ navLinks }: HeroProps) {
                   />
                 </div>
               ) : (
-                <div className="h-[34px] w-40 md:w-56 rounded-lg bg-white/10 border border-white/20" />
+                <div className="h-[34px] w-36 md:w-56 rounded-lg bg-white/10 border border-white/20" />
               )}
             </div>
             <div className="hidden md:flex items-center gap-8 text-sm font-medium">
@@ -344,13 +356,41 @@ export default function Hero({ navLinks }: HeroProps) {
                 <a
                   key={link.href}
                   href={link.href}
+                  onClick={(event) => handleNavClick(event, link.href)}
                   className="text-white transition-colors hover:text-blue-300 scroll-smooth"
                 >
                   {link.label}
                 </a>
               ))}
             </div>
+            {/* Mobile menu toggle */}
+            <button
+              type="button"
+              className="inline-flex items-center justify-center rounded-lg p-1.5 text-white md:hidden hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 focus-visible:ring-blue-400"
+              aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+              aria-expanded={mobileMenuOpen}
+              onClick={() => setMobileMenuOpen((open) => !open)}
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
+          {/* Mobile dropdown menu */}
+          {mobileMenuOpen && (
+            <div className="mt-2 rounded-2xl bg-gray-900/95 backdrop-blur-xl px-4 py-3 shadow-2xl shadow-black/40 border border-gray-700/70 md:hidden">
+              <div className="flex flex-col gap-2 text-sm font-medium">
+                {navLinks.map((link) => (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    onClick={(event) => handleNavClick(event, link.href)}
+                    className="block rounded-lg px-2 py-2 text-white/90 hover:text-blue-300 hover:bg-white/5 transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
         </nav>
       )}
 
