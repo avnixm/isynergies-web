@@ -322,7 +322,7 @@ export default function Hero({ navLinks }: HeroProps) {
               {tickerItems.map((item, index) => {
               // Parse markdown-style links [text](url)
               const parseTextWithLinks = (text: string): ReactNode[] => {
-                const linkRegex = /\[([^\z]]+)\]\(([^)]+)\)/g;
+                const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
                 const parts: ReactNode[] = [];
                 let lastIndex = 0;
                 let match;

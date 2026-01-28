@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
 import Loading from './ui/loading';
 
-type ProjectCategory = 'desktop' | 'mobile' | 'tools';
+type ProjectCategory = 'desktop' | 'mobile' | 'hardware';
 
 type Project = {
   id: string;
@@ -226,7 +226,7 @@ export default function Projects() {
         subtitle: 'Lorem ipsum dolor sit amet',
         description:
           'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed consequat quam. Sed vel lorem finibus enim consectetur eleifend sit amet vel neque.\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed consequat quam. Sed vel lorem finibus enim consectetur eleifend sit amet vel neque.',
-        category: 'tools',
+        category: 'hardware',
       },
       {
         id: 'project-6',
@@ -420,6 +420,7 @@ export default function Projects() {
     if (view === 'all') return 'Our Work';
     if (view === 'desktop') return 'Desktop';
     if (view === 'mobile') return 'Mobile';
+    if (view === 'hardware') return 'Hardware';
     return 'Hardware';
   }, [view]);
 
@@ -523,10 +524,10 @@ export default function Projects() {
 
             <button
               type="button"
-              onClick={() => setView('tools')}
+              onClick={() => setView('hardware')}
               className={[
                 'h-10 w-10 rounded-full border backdrop-blur-sm transition-all duration-200',
-                view === 'tools'
+                view === 'hardware'
                   ? 'border-white/40 bg-gradient-to-b from-[#2C68D8] to-[#0D1E66] text-white shadow-[0_10px_20px_rgba(0,0,0,0.18)]'
                   : 'border-black/10 bg-white/50 text-gray-700 hover:bg-[#0D1E66] hover:text-white hover:scale-110 hover:shadow-md',
               ].join(' ')}

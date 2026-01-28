@@ -108,7 +108,7 @@ export const projects = mysqlTable('projects', {
   year: varchar('year', { length: 4 }).notNull(),
   subtitle: varchar('subtitle', { length: 255 }).notNull(),
   description: text('description').notNull(),
-  category: varchar('category', { length: 50 }).notNull(), // desktop, mobile, tools
+  category: varchar('category', { length: 50 }).notNull(), // desktop, mobile, hardware
   thumbnail: varchar('thumbnail', { length: 255 }),
   screenshot1: varchar('screenshot1', { length: 255 }),
   screenshot2: varchar('screenshot2', { length: 255 }),

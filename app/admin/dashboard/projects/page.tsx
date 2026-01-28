@@ -40,7 +40,7 @@ export default function ProjectsPage() {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [orderError, setOrderError] = useState<string>('');
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'all' | 'desktop' | 'mobile' | 'tools'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'desktop' | 'mobile' | 'hardware'>('all');
   const [formData, setFormData] = useState({
     title: '',
     year: new Date().getFullYear().toString(),
@@ -250,12 +250,12 @@ export default function ProjectsPage() {
           {/* Tabs */}
           <div className="border-b border-border mb-6">
             <nav className="flex gap-1" aria-label="Project categories">
-              {(['all', 'desktop', 'mobile', 'tools'] as const).map((tab) => {
+              {(['all', 'desktop', 'mobile', 'hardware'] as const).map((tab) => {
                 const tabLabels: Record<typeof tab, string> = {
                   all: 'All Projects',
                   desktop: 'Desktop/Web',
                   mobile: 'Mobile',
-                  tools: 'Tools',
+                  hardware: 'Hardware',
                 };
                 const count = tab === 'all' 
                   ? projects.length 
@@ -332,7 +332,7 @@ export default function ProjectsPage() {
                   const categoryColors: Record<string, { bg: string; text: string; border: string }> = {
                     desktop: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
                     mobile: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
-                    tools: { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
+                    hardware: { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
                   };
                   const categoryColor = categoryColors[project.category] || categoryColors.desktop;
 
@@ -368,7 +368,7 @@ export default function ProjectsPage() {
                             inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border
                             ${categoryColor.bg} ${categoryColor.text} ${categoryColor.border}
                           `}>
-                            {project.category === 'desktop' ? 'Desktop/Web' : project.category.charAt(0).toUpperCase() + project.category.slice(1)}
+                            {project.category === 'desktop' ? 'Desktop/Web' : project.category === 'hardware' ? 'Hardware' : project.category.charAt(0).toUpperCase() + project.category.slice(1)}
                           </span>
                         </div>
                         <p className="text-sm text-muted-foreground line-clamp-1">
@@ -469,7 +469,7 @@ export default function ProjectsPage() {
               >
                 <option value="desktop">Desktop</option>
                 <option value="mobile">Mobile</option>
-                <option value="tools">Tools</option>
+                <option value="hardware">Hardware</option>
               </Select>
             </div>
           </div>
