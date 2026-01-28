@@ -257,16 +257,18 @@ export default function Projects() {
 
   const marqueeRow1 = useMemo(() => {
     if (view !== 'all') return [];
-    // Top row: Show all projects in order, duplicated multiple times for seamless infinite loop
-    // Repeat 4 times to ensure smooth looping (1,2,3,1,2,3,1,2,3,1,2,3)
+    // Row 1: projects in display order, repeated 4× for seamless loop
     return [...projects, ...projects, ...projects, ...projects];
   }, [projects, view]);
 
   const marqueeRow2 = useMemo(() => {
     if (view !== 'all') return [];
-    // Bottom row: Show all projects in order, duplicated multiple times for seamless infinite loop
-    // Repeat 4 times to ensure smooth looping (1,2,3,1,2,3,1,2,3,1,2,3)
-    return [...projects, ...projects, ...projects, ...projects];
+    // Row 2: rotated order (different from row 1) to avoid mirrored copies – alternating layout
+    const n = projects.length;
+    if (n <= 1) return [...projects, ...projects, ...projects, ...projects];
+    const half = Math.floor(n / 2);
+    const rotated = [...projects.slice(half), ...projects.slice(0, half)];
+    return [...rotated, ...rotated, ...rotated, ...rotated];
   }, [projects, view]);
 
   // Fetch projects from API

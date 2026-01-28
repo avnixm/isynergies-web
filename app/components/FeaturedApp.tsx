@@ -1160,14 +1160,14 @@ export default function FeaturedApp() {
         </div>
       )}
 
-      {/* Block 3: Footer / Downloads */}
+      {/* Block 3: Footer / Downloads (ACash section) */}
       {content && (
         <div 
           className="w-full py-4 relative bg-[#D7E1E4]"
         >
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6 px-4 md:px-6 lg:px-8">
-            {/* Left Side: App QR Codes or Website Hyperlink */}
-            <div className="flex flex-row gap-2 md:gap-3 items-center -ml-2 md:-ml-4 lg:-ml-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6 px-4 md:px-6">
+            {/* Left: Download text / badges — Right: Logo. Padding matches video block (pl/pr 4 md:6). */}
+            <div className="flex flex-row gap-2 md:gap-3 items-center">
               {content.itemType === 'app' ? (
                 /* App Mode: Download Badges */
                 <>
@@ -1226,9 +1226,9 @@ export default function FeaturedApp() {
               )}
             </div>
 
-            {/* Right Side: Logo (always in same position) */}
+            {/* Right Side: Logo (iSyn / ACash) */}
             {content.logoImage && (
-              <div className="flex-shrink-0 -mr-2 md:-mr-4 lg:-mr-6">
+              <div className="flex-shrink-0">
                 <img
                   src={getMediaUrl(content.logoImage, 'image')}
                   alt="Logo"
