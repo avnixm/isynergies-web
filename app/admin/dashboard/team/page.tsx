@@ -76,34 +76,36 @@ export default function TeamPage() {
   const [sortBy, setSortBy] = useState<SortOption>('displayOrder');
   const [membersFilter, setMembersFilter] = useState<MembersFilter>('all');
 
+  const safeMembers = Array.isArray(members) ? members : [];
+
   const filteredAndSortedMembers = useMemo(() => {
-    let list = members;
+    let list = safeMembers;
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
       list = list.filter(
         (m) =>
-          m.name.toLowerCase().includes(q) ||
-          m.position.toLowerCase().includes(q)
+          (typeof m?.name === 'string' && m.name.toLowerCase().includes(q)) ||
+          (typeof m?.position === 'string' && m.position.toLowerCase().includes(q))
       );
     }
     if (membersFilter === 'hasImage') {
-      list = list.filter((m) => m.image != null && String(m.image).trim() !== '');
+      list = list.filter((m) => m?.image != null && String(m.image).trim() !== '');
     } else if (membersFilter === 'missingOrder') {
       const duplicateOrders = new Set<number>();
       const orderCounts = new Map<number, number>();
-      members.forEach((m) => orderCounts.set(m.displayOrder, (orderCounts.get(m.displayOrder) ?? 0) + 1));
+      safeMembers.forEach((m) => orderCounts.set(m.displayOrder, (orderCounts.get(m.displayOrder) ?? 0) + 1));
       orderCounts.forEach((count, order) => { if (count > 1) duplicateOrders.add(order); });
       list = list.filter((m) => duplicateOrders.has(m.displayOrder));
     }
     if (sortBy === 'name') {
-      list = [...list].sort((a, b) => a.name.localeCompare(b.name));
+      list = [...list].sort((a, b) => (a?.name ?? '').localeCompare(b?.name ?? ''));
     } else {
-      list = [...list].sort((a, b) => a.displayOrder - b.displayOrder);
+      list = [...list].sort((a, b) => (a?.displayOrder ?? 0) - (b?.displayOrder ?? 0));
     }
     return list;
-  }, [members, searchQuery, sortBy, membersFilter]);
+  }, [safeMembers, searchQuery, sortBy, membersFilter]);
 
-  const usedOrders = members.filter(m => m.id !== editingMember?.id).map(m => m.displayOrder);
+  const usedOrders = safeMembers.filter(m => m.id !== editingMember?.id).map(m => m.displayOrder);
   const getNextAvailableOrder = () => {
     let order = 0;
     while (usedOrders.includes(order)) { order++; }
@@ -111,10 +113,10 @@ export default function TeamPage() {
   };
 
   const allMembersForDropdown = groupsData
-    ? [...groupsData.ungrouped, ...groupsData.groups.flatMap((g) => g.members)]
+    ? [...(groupsData.ungrouped ?? []), ...(groupsData.groups ?? []).flatMap((g) => g?.members ?? [])]
     : [];
   const nextGroupDisplayOrder = groupsData
-    ? Math.max(-1, ...groupsData.groups.map((g) => g.displayOrder)) + 1
+    ? Math.max(-1, ...(groupsData.groups ?? []).map((g) => g?.displayOrder ?? 0)) + 1
     : 0;
 
   useEffect(() => {
@@ -126,9 +128,19 @@ export default function TeamPage() {
     try {
       const response = await fetch('/api/admin/team');
       const data = await response.json();
-      setMembers(data);
+      if (response.ok && Array.isArray(data)) {
+        setMembers(data);
+      } else {
+        setMembers([]);
+        if (!response.ok) {
+          console.error('Error fetching team members:', data?.error ?? response.status);
+          toast.error('Failed to load team members');
+        }
+      }
     } catch (error) {
       console.error('Error fetching team members:', error);
+      setMembers([]);
+      toast.error('Failed to load team members');
     } finally {
       setLoading(false);
     }
@@ -137,15 +149,24 @@ export default function TeamPage() {
   const fetchTeamGroups = async () => {
     try {
       const response = await fetch('/api/admin/team-groups');
-      if (response.ok) {
-        const data: TeamGroupsData = await response.json();
-        setGroupsData(data);
+      const data = await response.json();
+      if (response.ok && data && Array.isArray(data.groups) && Array.isArray(data.ungrouped)) {
+        setGroupsData({
+          featuredMemberId: data.featuredMemberId ?? null,
+          groups: data.groups,
+          ungrouped: data.ungrouped,
+        });
       } else {
         setGroupsData({ featuredMemberId: null, groups: [], ungrouped: [] });
+        if (!response.ok) {
+          console.error('Error fetching team groups:', data?.error ?? response.status);
+          toast.error('Failed to load team groups');
+        }
       }
     } catch (error) {
       console.error('Error fetching team groups:', error);
       setGroupsData({ featuredMemberId: null, groups: [], ungrouped: [] });
+      toast.error('Failed to load team groups');
     } finally {
       setLoadingGroups(false);
     }
@@ -548,7 +569,7 @@ export default function TeamPage() {
     );
   }
 
-  const validMembersCount = members.filter((m) => typeof m.name === 'string' && m.name.trim() !== '').length;
+  const validMembersCount = safeMembers.filter((m) => typeof m?.name === 'string' && m.name.trim() !== '').length;
   const ungroupedCount = groupsData?.ungrouped?.length ?? 0;
 
   return (
@@ -565,7 +586,7 @@ export default function TeamPage() {
 
         <TabsContent value="members" className="mt-4">
           <MembersTab
-            members={members}
+            members={safeMembers}
             filteredAndSorted={filteredAndSortedMembers}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
