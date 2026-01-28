@@ -119,6 +119,15 @@ export const projects = mysqlTable('projects', {
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
 });
 
+// Team Groups (units; one member belongs to at most one group)
+export const teamGroups = mysqlTable('team_groups', {
+  id: int('id').primaryKey().autoincrement(),
+  name: varchar('name', { length: 255 }).notNull(),
+  displayOrder: int('display_order').notNull().unique(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
+});
+
 // Team Members
 export const teamMembers = mysqlTable('team_members', {
   id: int('id').primaryKey().autoincrement(),
@@ -126,6 +135,9 @@ export const teamMembers = mysqlTable('team_members', {
   position: varchar('position', { length: 255 }).notNull(),
   image: varchar('image', { length: 255 }),
   displayOrder: int('display_order').notNull().default(0),
+  groupId: int('group_id'),
+  groupOrder: int('group_order'),
+  isFeatured: boolean('is_featured').notNull().default(false),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
 });

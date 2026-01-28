@@ -848,6 +848,12 @@ body:not(.admin-dashboard-active) {
   animation: fadeIn 1.2s ease-out both;
 }
 
+/* Our Team section - watermark is an img in Team.tsx */
+.team-watermark {
+  position: relative;
+  overflow: hidden;
+}
+
 @keyframes featured-carousel-enter {
   from {
     transform: translateX(140px);

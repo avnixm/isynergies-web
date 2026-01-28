@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, ReactNode } from 'react';
 import { X } from 'lucide-react';
-import { Button } from './button';
 import { cn } from '@/app/lib/utils';
 
 interface DialogProps {
@@ -46,6 +45,8 @@ export function Dialog({
     }
   }, [open, preventBodyScroll]);
 
+  const prevOpenRef = useRef(open);
+
   // Handle ESC key and focus management
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -87,14 +88,19 @@ export function Dialog({
     if (open) {
       document.addEventListener('keydown', handleEscape);
       document.addEventListener('keydown', handleTab);
-      
-      // Focus the dialog content when it opens
-      setTimeout(() => {
-        const firstFocusable = contentRef.current?.querySelector(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        ) as HTMLElement | null;
-        firstFocusable?.focus();
-      }, 100);
+      // Only focus first field when dialog just opened (avoids stealing focus on every parent re-render)
+      const justOpened = !prevOpenRef.current;
+      prevOpenRef.current = true;
+      if (justOpened) {
+        setTimeout(() => {
+          const firstFocusable = contentRef.current?.querySelector(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          ) as HTMLElement | null;
+          firstFocusable?.focus();
+        }, 100);
+      }
+    } else {
+      prevOpenRef.current = false;
     }
 
     return () => {
