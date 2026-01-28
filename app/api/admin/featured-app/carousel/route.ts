@@ -51,54 +51,21 @@ export async function GET() {
       .from(featuredAppCarouselImages)
       .orderBy(asc(featuredAppCarouselImages.displayOrder));
     
-    // Map results to ensure mediaType has a default value if null/undefined
-    const mappedImages = images.map((img: any) => {
-      const mediaType = img.mediaType || img.media_type || 'image';
-      console.log(`Carousel item ${img.id}: mediaType=${mediaType}, image=${img.image}`);
+    const mappedImages = images.map((img: { id: number; image: string; alt: string; displayOrder: number; mediaType?: string | null }) => {
+      const mediaType = img.mediaType ?? 'image';
       return {
         id: img.id,
         image: img.image,
         alt: img.alt,
         displayOrder: img.displayOrder,
-        mediaType, // Handle both camelCase and snake_case
+        mediaType,
       };
     });
     
     return NextResponse.json(mappedImages);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching carousel images:', error);
-    console.error('Error details:', {
-      message: error?.message,
-      code: error?.code,
-      errno: error?.errno,
-      sqlState: error?.sqlState,
-      sqlMessage: error?.sqlMessage,
-      sql: error?.sql,
-      stack: error?.stack,
-    });
-    
-    // Provide more specific error messages
-    let errorMessage = 'Failed to fetch images';
-    if (error?.code === 'ER_CON_COUNT_ERROR' || error?.sqlMessage?.includes('Too many connections')) {
-      errorMessage = 'Database connection limit reached. Please try again in a moment.';
-    } else if (error?.code === 'ECONNREFUSED' || error?.code === 'ENOTFOUND') {
-      errorMessage = 'Database connection failed. Please check your database configuration.';
-    } else if (error?.sqlMessage) {
-      errorMessage = `Database error: ${error.sqlMessage}`;
-    } else if (error?.message) {
-      errorMessage = error.message;
-    }
-    
-    return NextResponse.json(
-      { 
-        error: errorMessage,
-        ...(process.env.NODE_ENV === 'development' && {
-          details: error?.message,
-          code: error?.code,
-        })
-      },
-      { status: 500 }
-    );
+    return NextResponse.json([]);
   }
 }
 

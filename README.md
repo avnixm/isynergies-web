@@ -147,6 +147,8 @@ npm run db:studio
 
 Additional `*:prod` scripts (e.g. `add-team-groups-migration:prod`, `clear-team-data:prod`) are for production DB operations. Use with care.
 
+**If `/api/admin/about-us/gallery-images` or `/api/admin/featured-app/carousel` return 500** (e.g. tables missing in production), call **`POST /api/admin/schema-ensure`** with admin auth. It creates `about_us_gallery_images` and `featured_app_carousel_images` if they don't exist. No data is deleted.
+
 ---
 
 ## Deploy (Vercel)

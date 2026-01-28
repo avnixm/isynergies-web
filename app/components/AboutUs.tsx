@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import Image from 'next/image';
 import Loading from './ui/loading';
 
 type AboutUsContent = {
@@ -208,13 +207,14 @@ export default function AboutUs() {
                       style={{ height: tileHeight }}
                     >
                       {item.src ? (
-                        <Image
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
                           src={item.src}
                           alt={item.alt}
                           width={600}
                           height={600}
+                          loading="eager"
                           className="w-full h-full object-cover"
-                          unoptimized
                         />
                       ) : (
                         <div className="w-full h-full bg-gray-300/40" />
