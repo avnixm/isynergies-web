@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
+import NumberFlow from '@number-flow/react';
 import Loading from './ui/loading';
 
 type HexImageProps = {
@@ -84,46 +85,43 @@ type AnimatedCounterProps = {
 };
 
 function AnimatedCounter({ value, isVisible }: AnimatedCounterProps) {
-  const [displayValue, setDisplayValue] = useState(0);
-  const [hasAnimated, setHasAnimated] = useState(false);
-
   // Extract numeric part and suffix (e.g. "5000+" -> 5000 and "+")
   const match = value.match(/([\d,.]+)/);
-  const numericPart = match ? match[1] : '';
-  const suffix = match ? value.slice(numericPart.length) : '';
-  const targetNumber = numericPart ? parseFloat(numericPart.replace(/,/g, '')) : 0;
+  const suffix = match ? value.slice(match[1].length) : '';
+  const targetNumber = match ? parseFloat(match[1].replace(/,/g, '')) : 0;
+  const [displayValue, setDisplayValue] = useState(0);
+  const [hasStarted, setHasStarted] = useState(false);
 
+  // Ramp value from 0 to target over time so NumberFlow animates every digit
   useEffect(() => {
-    if (!isVisible || hasAnimated || !targetNumber) return;
-
-    const duration = 1500; // ms
+    if (!isVisible || !match || hasStarted || !targetNumber) return;
+    setHasStarted(true);
+    const duration = 2800;
     const start = performance.now();
 
     const tick = (now: number) => {
       const elapsed = now - start;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
-
-      setDisplayValue(targetNumber * eased);
-
-      if (progress < 1) {
-        requestAnimationFrame(tick);
-      } else {
-        setHasAnimated(true);
-      }
+      const t = Math.min(elapsed / duration, 1);
+      const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      const current = Math.round(targetNumber * eased);
+      setDisplayValue(current);
+      if (t < 1) requestAnimationFrame(tick);
     };
-
     requestAnimationFrame(tick);
-  }, [isVisible, hasAnimated, targetNumber]);
+  }, [isVisible, hasStarted, targetNumber]);
 
-  // Fallback to original value if parsing fails
   if (!match) {
     return <span>{value}</span>;
   }
 
-  const formatted = `${Math.round(displayValue).toLocaleString()}${suffix}`;
-
-  return <span>{formatted}</span>;
+  return (
+    <NumberFlow
+      value={displayValue}
+      suffix={suffix}
+      transformTiming={{ duration: 400, easing: 'ease-out' }}
+      spinTiming={{ duration: 400, easing: 'ease-out' }}
+    />
+  );
 }
 
 export default function Services() {
