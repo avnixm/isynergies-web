@@ -301,29 +301,6 @@ body:not(.admin-dashboard-active) {
   animation-play-state: paused;
 }
 
-/* About Us gallery: vertical infinite scroll (same pattern as Our Work, but translateY) */
-.about-us-gallery-marquee {
-  overflow: hidden;
-}
-
-@keyframes aboutUsGalleryScroll {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(-50%);
-  }
-}
-
-.about-us-gallery-track {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: 200%;
-  animation: aboutUsGalleryScroll var(--about-us-scroll-duration, 40s) linear infinite;
-  will-change: transform;
-}
-
 .ticker-row {
   display: inline-flex;
   align-items: center;

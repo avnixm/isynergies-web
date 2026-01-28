@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import Image from 'next/image';
 import Loading from './ui/loading';
 
 type AboutUsContent = {
@@ -138,12 +139,10 @@ export default function AboutUs() {
       }))
     : [];
 
-  // Sort by order (displayOrder) and duplicate for seamless loop.
   const orderedGallery = [...baseGallery];
   const tiledGallery = [...orderedGallery, ...orderedGallery];
-  const n = orderedGallery.length;
-  const tileHeight = n > 0 ? `${100 / (2 * n)}%` : '0%'; /* 2n tiles => 100% of track; each set = 50% */
-  const scrollSeconds = Math.max(20, n * 6);
+  const tileHeight = orderedGallery.length > 0 ? `${100 / orderedGallery.length}%` : '0%';
+  const scrollSeconds = Math.max(20, baseGallery.length * 6);
 
   return (
       <section
@@ -192,14 +191,14 @@ export default function AboutUs() {
               </div>
             </div>
 
-            {/* Right Side - Auto-scrolling Image Gallery (same pattern as Our Work carousel) */}
+            {/* Right Side - Auto-scrolling Image Gallery */}
             {baseGallery.length > 0 && (
             <div className="hidden md:block md:w-1/2 -mt-0">
-              <div
-                className={`slide-up-container about-us-gallery-marquee relative h-[600px] w-full overflow-hidden shadow-lg ${isVisible ? 'animate' : ''}`}
-                style={{ ['--about-us-scroll-duration' as string]: `${scrollSeconds}s` }}
-              >
-                <div className="about-us-gallery-track absolute top-0 left-0 w-full flex flex-col">
+              <div className={`slide-up-container relative h-[600px] w-full overflow-hidden shadow-lg ${isVisible ? 'animate' : ''}`}>
+                <div
+                  className="scroll-animation absolute top-0 left-0 w-full flex flex-col"
+                  style={{ height: '200%', animationDuration: `${scrollSeconds}s` }}
+                >
                   {tiledGallery.map((item, idx) => (
                     <div
                       key={`${item.key}-${idx}`}
@@ -207,14 +206,13 @@ export default function AboutUs() {
                       style={{ height: tileHeight }}
                     >
                       {item.src ? (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img
+                        <Image
                           src={item.src}
                           alt={item.alt}
                           width={600}
                           height={600}
-                          loading="eager"
                           className="w-full h-full object-cover"
+                          unoptimized
                         />
                       ) : (
                         <div className="w-full h-full bg-gray-300/40" />
