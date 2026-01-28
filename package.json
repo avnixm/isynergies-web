@@ -14,6 +14,7 @@
     "db:setup": "tsx scripts/setup-database.ts",
     "db:setup:prod": "tsx scripts/setup-database-prod.ts",
     "add-team-groups-migration:prod": "tsx scripts/add-team-groups-migration-prod.ts",
+    "clear-team-data:prod": "tsx scripts/clear-team-data-prod.ts",
     "add-background-video-column:prod": "tsx scripts/add-background-video-column-prod.ts",
     "add-demo-columns:prod": "tsx scripts/add-demo-columns-prod.ts",
     "add-videos-table:prod": "tsx scripts/add-videos-table-prod.ts",

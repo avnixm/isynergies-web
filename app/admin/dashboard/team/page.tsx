@@ -72,6 +72,7 @@ export default function TeamPage() {
   const [savingGroup, setSavingGroup] = useState(false);
   const [assigningMemberId, setAssigningMemberId] = useState<number | null>(null);
   const [movingMemberId, setMovingMemberId] = useState<number | null>(null);
+  const [fixingDatabase, setFixingDatabase] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('displayOrder');
   const [membersFilter, setMembersFilter] = useState<MembersFilter>('all');
@@ -175,6 +176,31 @@ export default function TeamPage() {
   const refetchAll = () => {
     fetchMembers();
     fetchTeamGroups();
+  };
+
+  const handleFixDatabase = async () => {
+    setFixingDatabase(true);
+    const token = getToken();
+    try {
+      const res = await fetch('/api/admin/team-migrate', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (res.ok && data?.success) {
+        toast.success('Database fixed. Refreshing…');
+        setMembers([]);
+        setGroupsData({ featuredMemberId: null, groups: [], ungrouped: [] });
+        await fetchMembers();
+        await fetchTeamGroups();
+      } else {
+        toast.error(data?.error ?? 'Fix failed');
+      }
+    } catch (e) {
+      toast.error('Failed to fix database');
+    } finally {
+      setFixingDatabase(false);
+    }
   };
 
   const handleOpenAddDialog = () => {
@@ -574,7 +600,12 @@ export default function TeamPage() {
 
   return (
     <div className="space-y-6 -mt-6 pt-4 md:-mt-8 md:pt-5">
-      <TeamPageHeader onAddMember={handleOpenAddDialog} onAddGroup={handleOpenAddGroup} />
+      <TeamPageHeader
+        onAddMember={handleOpenAddDialog}
+        onAddGroup={handleOpenAddGroup}
+        onFixDatabase={handleFixDatabase}
+        fixingDatabase={fixingDatabase}
+      />
 
       <Tabs defaultValue="members" className="w-full">
         <TabsList className="w-full flex-wrap gap-1 sm:w-auto sm:flex-nowrap">
