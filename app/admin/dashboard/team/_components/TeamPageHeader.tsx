@@ -6,11 +6,9 @@ import { Plus } from 'lucide-react';
 type TeamPageHeaderProps = {
   onAddMember: () => void;
   onAddGroup: () => void;
-  onFixDatabase?: () => void;
-  fixingDatabase?: boolean;
 };
 
-export function TeamPageHeader({ onAddMember, onAddGroup, onFixDatabase, fixingDatabase }: TeamPageHeaderProps) {
+export function TeamPageHeader({ onAddMember, onAddGroup }: TeamPageHeaderProps) {
   return (
     <div className="sticky top-0 z-20 -mx-4 -mt-2 flex flex-col gap-4 border-b border-border bg-background px-4 pb-4 pt-2 sm:flex-row sm:items-end sm:justify-between md:-mx-8 md:px-8">
       <div>
@@ -20,17 +18,6 @@ export function TeamPageHeader({ onAddMember, onAddGroup, onFixDatabase, fixingD
         </p>
       </div>
       <div className="flex shrink-0 flex-wrap items-center gap-2">
-        {onFixDatabase && (
-          <Button
-            variant="outline"
-            size="default"
-            onClick={onFixDatabase}
-            disabled={fixingDatabase}
-            className="flex items-center gap-2"
-          >
-            {fixingDatabase ? 'Fixing…' : 'Fix database'}
-          </Button>
-        )}
         <Button size="default" onClick={onAddMember} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
           Add Team Member

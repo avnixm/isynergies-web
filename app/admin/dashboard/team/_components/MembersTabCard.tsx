@@ -37,27 +37,31 @@ export function MembersTabCard({ member, onEdit, onDelete }: MembersTabCardProps
 
   return (
     <Card className="group flex rounded-xl border border-border bg-white shadow-sm transition-shadow hover:border-primary/20 hover:shadow-md">
-      {/* 100×80 whole-image preview with hover + iS gray watermark */}
+      {/* 100×80 whole-image preview with hover + iSgrayNew logo */}
       <div
-        className="relative h-20 w-[100px] shrink-0 overflow-hidden rounded-l-xl bg-[length:12px_12px] bg-[linear-gradient(45deg,_#f0f0f0_25%,_transparent_25%,_transparent_75%,_#f0f0f0_75%),_linear-gradient(-45deg,_#f0f0f0_25%,_transparent_25%,_transparent_75%,_#f0f0f0_75%)]"
-        style={{ minWidth: 100, minHeight: 80 }}
+        className="relative h-20 w-[100px] shrink-0 overflow-hidden rounded-l-xl"
+        style={{
+          minWidth: 100,
+          minHeight: 80,
+          background: 'linear-gradient(202.54deg, #FFFFFF 6.1%, #A9C9E0 28.37%, #5393C1 50.65%, #062092 95.19%)',
+        }}
       >
-        <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none">
+        <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none overflow-hidden">
           <img
-            src="/logos/iSgray.png"
+            src="/isgraynew.png"
             alt=""
             aria-hidden
-            className="max-h-[55%] max-w-[55%] object-contain opacity-[0.35]"
+            className="max-h-[95%] max-w-[95%] object-contain brightness-[0.55] contrast-125"
           />
         </div>
         {src ? (
           <img
             src={src}
             alt={member.name}
-            className="relative z-10 h-full w-full object-contain object-center transition-transform duration-200 group-hover:scale-110"
+            className="relative z-[1] h-full w-full object-contain object-center transition-transform duration-200 group-hover:scale-110"
           />
         ) : (
-          <div className="relative z-10 flex h-full w-full flex-col items-center justify-center gap-1 text-muted-foreground">
+          <div className="relative z-[1] flex h-full w-full flex-col items-center justify-center gap-1 text-muted-foreground">
             <User className="h-6 w-6" aria-hidden />
             <span className="text-[10px] font-medium">No photo</span>
           </div>

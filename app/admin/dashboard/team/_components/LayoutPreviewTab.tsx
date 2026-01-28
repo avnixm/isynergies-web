@@ -122,16 +122,19 @@ export function LayoutPreviewTab({
     [groups]
   );
 
-  const isGrayWatermark = () => (
-    <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none">
+  const isGrayLogo = () => (
+    <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none overflow-hidden">
       <img
-        src="/logos/iSgray.png"
+        src="/isgraynew.png"
         alt=""
         aria-hidden
-        className="max-h-[65%] max-w-[65%] object-contain opacity-[0.35]"
+        className="max-h-[97%] max-w-[97%] object-contain brightness-[0.55] contrast-125"
       />
     </div>
   );
+
+  const blueCardGradient = 'linear-gradient(202.54deg, #FFFFFF 6.1%, #A9C9E0 28.37%, #5393C1 50.65%, #062092 95.19%)';
+  const bossCardGradient = 'linear-gradient(to top right, #920608 0%, #C16553 35%, #E0C5A9 70%, #FFFFFF 100%)';
 
   const SlotView = ({ slot, index }: { slot: Slot; index: number }) => {
     if (slot.type === 'empty') {
@@ -140,7 +143,7 @@ export function LayoutPreviewTab({
           className="relative flex aspect-square min-w-0 items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-border bg-muted/30"
           aria-hidden
         >
-          {isGrayWatermark()}
+          {isGrayLogo()}
           <span className="relative z-10 text-xs text-muted-foreground">—</span>
         </div>
       );
@@ -154,12 +157,15 @@ export function LayoutPreviewTab({
           isBoss ? 'aspect-[4/5] ring-2 ring-primary/50' : 'aspect-square'
         )}
       >
-        <div className="relative flex flex-1 items-center justify-center overflow-hidden rounded-t-xl bg-[length:10px_10px] bg-[linear-gradient(45deg,_#f0f0f0_25%,_transparent_25%,_transparent_75%,_#f0f0f0_75%),_linear-gradient(-45deg,_#f0f0f0_25%,_transparent_25%,_transparent_75%,_#f0f0f0_75%)]">
-          {isGrayWatermark()}
+        <div
+          className="relative flex flex-1 items-center justify-center overflow-hidden rounded-t-xl"
+          style={{ background: isBoss ? bossCardGradient : blueCardGradient }}
+        >
+          {isGrayLogo()}
           {src ? (
-            <img src={src} alt="" className="relative z-10 h-full w-full object-contain" />
+            <img src={src} alt="" className="relative z-[1] h-full w-full object-contain" />
           ) : (
-            <div className="relative z-10 flex flex-col items-center gap-1 text-muted-foreground">
+            <div className="relative z-[1] flex flex-col items-center gap-1 text-muted-foreground">
               <User className="h-6 w-6" />
               <span className="text-[10px]">No photo</span>
             </div>

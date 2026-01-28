@@ -68,23 +68,23 @@ export function FeaturedTabPanel({
         <CardContent className="p-0">
           {featured ? (
             <div className="relative flex aspect-[4/5] max-h-[320px] w-full flex-col overflow-hidden rounded-b-xl bg-gradient-to-br from-red-600 to-red-800">
-              <div className="relative flex flex-1 items-center justify-center bg-black/20">
-                <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none">
+              <div className="relative flex flex-1 items-center justify-center bg-black/20 overflow-hidden">
+                <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none overflow-hidden">
                   <img
-                    src="/logos/iSgray.png"
+                    src="/isgraynew.png"
                     alt=""
                     aria-hidden
-                    className="max-h-[75%] max-w-[75%] object-contain opacity-[0.35]"
+                    className="max-h-[98%] max-w-[98%] object-contain brightness-[0.55] contrast-125"
                   />
                 </div>
                 {resolveImageSrc(featured.image) ? (
                   <img
                     src={resolveImageSrc(featured.image)}
                     alt=""
-                    className="relative z-10 max-h-full max-w-full object-contain object-center"
+                    className="relative z-[1] max-h-full max-w-full object-contain object-center"
                   />
                 ) : (
-                  <div className="relative z-10 flex items-center justify-center text-white/80">
+                  <div className="relative z-[1] flex items-center justify-center text-white/80">
                     <User className="h-16 w-16" />
                   </div>
                 )}

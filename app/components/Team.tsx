@@ -54,6 +54,19 @@ type TeamGroupsApiResponse = {
   featuredMemberId?: number;
 };
 
+/**
+ * iSgrayNew logo on team cards — edit these to change size, position, and opacity.
+ * scale: size (e.g. 1 = base, 1.5 = 50% bigger)
+ * top, left: position in % (50 = center)
+ * opacity: 0–1 (1 = fully opaque, 0.5 = 50% transparent)
+ */
+const TEAM_CARD_LOGO = {
+  scale: 2,
+  top: 55,
+  left: 50,
+  opacity: 0.8,
+};
+
 const GROUP_KEYWORD_CONFIG: { name: string; keywords: string[] }[] = [
   {
     name: 'Finance, Admin & Accounting',
@@ -286,20 +299,26 @@ function TeamMemberCard({
       <div
         className="relative h-[200px] w-[165px] rounded-[24px] overflow-visible shadow-[0_10px_25px_rgba(0,0,0,0.25)]"
         style={{
-          background: 'linear-gradient(180deg, #7EB8E8 0%, #E0F2FE 50%, #FFFFFF 100%)',
+          background: 'linear-gradient(202.54deg, #FFFFFF 6.1%, #A9C9E0 28.37%, #5393C1 50.65%, #062092 95.19%)',
         }}
       >
-        {/* iS gray watermark inside card */}
-        <div className="absolute inset-0 z-0 flex items-center justify-center rounded-[24px] pointer-events-none">
+        {/* iSgrayNew logo: size/position via TEAM_CARD_LOGO */}
+        <div className="absolute inset-0 z-0 rounded-[24px] pointer-events-none overflow-hidden">
           <img
-            src="/logos/iSgray.png"
+            src="/isgraynew.png"
             alt=""
             aria-hidden
-            className="max-h-[65%] max-w-[65%] object-contain opacity-[0.35]"
+            className="absolute h-full w-full object-contain"
+            style={{
+              left: `${TEAM_CARD_LOGO.left}%`,
+              top: `${TEAM_CARD_LOGO.top}%`,
+              transform: `translate(-50%, -50%) scale(${TEAM_CARD_LOGO.scale})`,
+              opacity: TEAM_CARD_LOGO.opacity,
+            }}
           />
         </div>
         {src ? (
-          <div className="absolute inset-0 flex items-end justify-center overflow-visible">
+          <div className="absolute inset-0 z-[1] flex items-end justify-center overflow-visible">
             <Image
               src={src}
               alt={member.name}
@@ -318,12 +337,12 @@ function TeamMemberCard({
             />
           </div>
         ) : (
-          <div className="flex h-full items-center justify-center" />
+          <div className="absolute inset-0 z-[1] flex h-full items-center justify-center" />
         )}
 
         {/* per-card overlay: only when tray overlay hidden; hover or tap */}
         <div
-          className={`absolute inset-0 rounded-[24px] bg-gradient-to-b from-transparent via-transparent to-[#0D1E66] flex flex-col justify-end p-3 z-10 transition-opacity duration-300 ${
+          className={`absolute inset-0 rounded-[24px] bg-gradient-to-b from-transparent via-transparent to-[#0D1E66] flex flex-col justify-end p-3 z-10 transition-opacity duration-300 pointer-events-none ${
             !overlayHidden ? 'opacity-0 pointer-events-none' : showOverlay ? 'opacity-100' : 'opacity-0 group-hover/card:opacity-100'
           }`}
         >
@@ -381,17 +400,23 @@ function BossMemberCard({
         className="relative h-[240px] w-[172px] rounded-[24px] overflow-visible shadow-[0_18px_45px_rgba(0,0,0,0.35)] md:h-[240px] md:w-[176px]"
         style={{ background: boardCardGradient }}
       >
-        {/* iS gray watermark inside card (slightly larger for boss) */}
-        <div className="absolute inset-0 z-0 flex items-center justify-center rounded-[24px] pointer-events-none">
+        {/* iSgrayNew logo: size/position via TEAM_CARD_LOGO */}
+        <div className="absolute inset-0 z-0 rounded-[24px] pointer-events-none overflow-hidden">
           <img
-            src="/logos/iSgray.png"
+            src="/isgraynew.png"
             alt=""
             aria-hidden
-            className="max-h-[75%] max-w-[75%] object-contain opacity-[0.35]"
+            className="absolute h-full w-full object-contain"
+            style={{
+              left: `${TEAM_CARD_LOGO.left}%`,
+              top: `${TEAM_CARD_LOGO.top}%`,
+              transform: `translate(-50%, -50%) scale(${TEAM_CARD_LOGO.scale})`,
+              opacity: TEAM_CARD_LOGO.opacity,
+            }}
           />
         </div>
         {src ? (
-          <div className="absolute inset-0 flex items-end justify-center overflow-visible">
+          <div className="absolute inset-0 z-[1] flex items-end justify-center overflow-visible">
             <Image
               src={src}
               alt={member.name}
@@ -410,11 +435,11 @@ function BossMemberCard({
             />
           </div>
         ) : (
-          <div className="flex h-full items-center justify-center" />
+          <div className="absolute inset-0 z-[1] flex h-full items-center justify-center" />
         )}
 
         <div
-          className={`absolute inset-0 rounded-[24px] bg-gradient-to-b from-transparent via-transparent to-[#0D1E66] flex flex-col justify-end p-4 z-10 transition-opacity duration-300 ${
+          className={`absolute inset-0 rounded-[24px] bg-gradient-to-b from-transparent via-transparent to-[#0D1E66] flex flex-col justify-end p-4 z-10 transition-opacity duration-300 pointer-events-none ${
             !overlayHidden ? 'opacity-0 pointer-events-none' : showOverlay ? 'opacity-100' : 'opacity-0 group-hover/card:opacity-100'
           }`}
         >
@@ -467,10 +492,10 @@ function GroupTraySegment({
       onMouseLeave={() => setTrayHovered(false)}
     >
       <div className="relative flex w-fit flex-shrink-0 flex-wrap gap-4 self-start rounded-[32px] bg-[#3B6FAB]/50 px-4 py-5 shadow-[0_12px_30px_rgba(0,0,0,0.15)] backdrop-blur-sm overflow-visible">
-        {/* translucent overlay: 50% opacity, gradient #408DE6 → #303F58 */}
+        {/* translucent overlay: 35% opacity, gradient #408DE6 → #303F58 */}
         <div
           className={`absolute inset-0 z-20 rounded-[32px] bg-gradient-to-b from-[#408DE6] to-[#303F58] transition-opacity duration-300 ${
-            overlayHidden ? 'opacity-0 pointer-events-none' : 'opacity-[0.5] group-hover/tray:opacity-0 group-hover/tray:pointer-events-none'
+            overlayHidden ? 'opacity-0 pointer-events-none' : 'opacity-[0.35] group-hover/tray:opacity-0 group-hover/tray:pointer-events-none'
           }`}
         />
         {/* group name label: always visible above overlay, clamped inside card */}
