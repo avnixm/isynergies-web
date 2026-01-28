@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { Pencil, Trash2, Plus, Info, ChevronUp, ChevronDown } from 'lucide-react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { Info } from 'lucide-react';
 import Loading from '@/app/components/ui/loading';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -12,7 +12,12 @@ import { Dialog, DialogFooter } from '@/app/components/ui/dialog';
 import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
 import { Select } from '@/app/components/ui/select';
-import { User } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
+import { TeamPageHeader } from './_components/TeamPageHeader';
+import { MembersTab, type SortOption, type MembersFilter } from './_components/MembersTab';
+import { GroupsTab } from './_components/GroupsTab';
+import { FeaturedTabPanel } from './_components/FeaturedTabPanel';
+import { LayoutPreviewTab } from './_components/LayoutPreviewTab';
 
 type TeamMember = {
   id: number;
@@ -67,6 +72,36 @@ export default function TeamPage() {
   const [savingGroup, setSavingGroup] = useState(false);
   const [assigningMemberId, setAssigningMemberId] = useState<number | null>(null);
   const [movingMemberId, setMovingMemberId] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<SortOption>('displayOrder');
+  const [membersFilter, setMembersFilter] = useState<MembersFilter>('all');
+
+  const filteredAndSortedMembers = useMemo(() => {
+    let list = members;
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      list = list.filter(
+        (m) =>
+          m.name.toLowerCase().includes(q) ||
+          m.position.toLowerCase().includes(q)
+      );
+    }
+    if (membersFilter === 'hasImage') {
+      list = list.filter((m) => m.image != null && String(m.image).trim() !== '');
+    } else if (membersFilter === 'missingOrder') {
+      const duplicateOrders = new Set<number>();
+      const orderCounts = new Map<number, number>();
+      members.forEach((m) => orderCounts.set(m.displayOrder, (orderCounts.get(m.displayOrder) ?? 0) + 1));
+      orderCounts.forEach((count, order) => { if (count > 1) duplicateOrders.add(order); });
+      list = list.filter((m) => duplicateOrders.has(m.displayOrder));
+    }
+    if (sortBy === 'name') {
+      list = [...list].sort((a, b) => a.name.localeCompare(b.name));
+    } else {
+      list = [...list].sort((a, b) => a.displayOrder - b.displayOrder);
+    }
+    return list;
+  }, [members, searchQuery, sortBy, membersFilter]);
 
   const usedOrders = members.filter(m => m.id !== editingMember?.id).map(m => m.displayOrder);
   const getNextAvailableOrder = () => {
@@ -203,8 +238,8 @@ export default function TeamPage() {
 
   const handleDelete = async (id: number) => {
     const confirmed = await confirm(
-      'Are you sure you want to delete this team member? This action cannot be undone.',
-      'Delete Team Member'
+      'This will remove the member from the website.',
+      'Delete team member?'
     );
     
     if (!confirmed) return;
@@ -467,350 +502,211 @@ export default function TeamPage() {
     }
   };
 
+  const handleReorderInGroup = async (groupId: number, orderedMembers: TeamMember[]) => {
+    const token = getToken();
+    try {
+      const membersPayload = orderedMembers.map((m, i) => ({ memberId: m.id, groupOrder: i }));
+      const res = await fetch(`/api/admin/team-groups/${groupId}/members`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ members: membersPayload }),
+      });
+      if (res.ok) {
+        toast.success('Order updated');
+        fetchTeamGroups();
+      } else toast.error('Failed to reorder');
+    } catch (e) {
+      toast.error('Failed to reorder');
+    }
+  };
+
+  const handleReorderUngrouped = async (orderedMembers: TeamMember[]) => {
+    const token = getToken();
+    try {
+      await Promise.all(
+        orderedMembers.map((m, i) =>
+          fetch(`/api/admin/team/${m.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ displayOrder: i }),
+          })
+        )
+      );
+      toast.success('Order updated');
+      fetchTeamGroups();
+      fetchMembers();
+    } catch (e) {
+      toast.error('Failed to reorder');
+    }
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <Loading message="Loading team members" size="lg" />
+      <div className="flex flex-col items-center justify-center gap-4 py-24">
+        <Loading message="Loading team members…" size="lg" />
       </div>
     );
   }
 
+  const validMembersCount = members.filter((m) => typeof m.name === 'string' && m.name.trim() !== '').length;
+  const ungroupedCount = groupsData?.ungrouped?.length ?? 0;
+
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">Team members</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Manage your team members displayed on the website.
-        </p>
-      </div>
+    <div className="space-y-6 -mt-6 pt-4 md:-mt-8 md:pt-5">
+      <TeamPageHeader onAddMember={handleOpenAddDialog} onAddGroup={handleOpenAddGroup} />
 
-      {/* Featured (Boss) Member */}
-      {!loadingGroups && groupsData && (
-        <Card className="rounded-xl border border-border bg-white shadow-sm">
-          <CardContent className="p-6">
-            <Label htmlFor="featured-select" className="text-sm font-medium text-foreground">
-              Featured (Boss) Member
-            </Label>
-            <p className="mt-0.5 mb-3 text-xs text-muted-foreground">
-              Shown larger with a red gradient on the public “Our Team” section.
-            </p>
-            <Select
-              id="featured-select"
-              value={groupsData.featuredMemberId ?? ''}
-              onChange={(e) => {
-                const v = e.target.value;
-                handleSetFeatured(v === '' ? null : parseInt(v, 10));
-              }}
-              className="max-w-xs"
-            >
-              <option value="">— None —</option>
-              {allMembersForDropdown.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name} {m.isFeatured ? '(featured)' : ''}
-                </option>
-              ))}
-            </Select>
-          </CardContent>
-        </Card>
-      )}
+      <Tabs defaultValue="members" className="w-full">
+        <TabsList className="w-full flex-wrap gap-1 sm:w-auto sm:flex-nowrap">
+          <TabsTrigger value="members">Members</TabsTrigger>
+          <TabsTrigger value="groups">Groups</TabsTrigger>
+          <TabsTrigger value="featured">Featured</TabsTrigger>
+          <TabsTrigger value="preview">Preview</TabsTrigger>
+        </TabsList>
 
-      {/* Team Layout & Groups */}
-      {!loadingGroups && groupsData && (
-        <Card className="rounded-xl border border-border bg-white shadow-sm">
-          <div className="flex items-center justify-between p-6 border-b border-border">
-            <div>
-              <h2 className="text-lg font-medium text-foreground">Team Layout & Groups</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Create groups and assign members. Use “Assign to group” and the arrows to reorder.
-              </p>
-            </div>
-            <Button onClick={handleOpenAddGroup} className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Add Group
-            </Button>
-          </div>
-          <div className="p-6">
-            <div className="flex flex-wrap gap-4 items-start">
-              {/* Ungrouped column */}
-              <div className="min-w-[200px] rounded-lg border border-border bg-muted/30 p-4">
-                <h3 className="text-sm font-semibold text-foreground mb-3">Ungrouped</h3>
-                <div className="space-y-2">
-                  {[...(groupsData.ungrouped ?? [])]
-                    .sort((a, b) => a.displayOrder - b.displayOrder)
-                    .map((m) => (
-                      <div
-                        key={m.id}
-                        className="flex items-center gap-1 rounded border border-border bg-background p-2 text-sm"
-                      >
-                        <span className="flex-1 truncate" title={m.name}>{m.name}</span>
-                        <Select
-                          value={m.groupId ?? ''}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            handleAssignToGroup(m, v === '' ? null : parseInt(v, 10));
-                          }}
-                          disabled={assigningMemberId === m.id}
-                          className="h-8 w-32 text-xs"
-                        >
-                          <option value="">— Ungrouped —</option>
-                          {(groupsData.groups ?? []).map((gr) => (
-                            <option key={gr.id} value={gr.id}>{gr.name}</option>
-                          ))}
-                        </Select>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 w-7 p-0"
-                          onClick={() => handleMoveMemberInGroup(null, m, 'up')}
-                          disabled={movingMemberId === m.id}
-                        >
-                          <ChevronUp className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 w-7 p-0"
-                          onClick={() => handleMoveMemberInGroup(null, m, 'down')}
-                          disabled={movingMemberId === m.id}
-                        >
-                          <ChevronDown className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    ))}
-                  {(!groupsData.ungrouped || groupsData.ungrouped.length === 0) && (
-                    <p className="text-xs text-muted-foreground">No ungrouped members.</p>
-                  )}
-                </div>
-              </div>
-              {/* Group columns */}
-              {(groupsData.groups ?? [])
-                .sort((a, b) => a.displayOrder - b.displayOrder)
-                .map((g) => (
-                  <div key={g.id} className="min-w-[220px] rounded-lg border border-border bg-muted/20 p-4">
-                    <div className="flex items-center gap-1 mb-3 flex-wrap">
-                      <h3 className="text-sm font-semibold text-foreground truncate flex-1">{g.name}</h3>
-                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleOpenRenameGroup(g)} title="Rename">
-                        <Pencil className="h-3 w-3" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-red-600" onClick={() => handleDeleteGroup(g)} title="Delete">
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleMoveGroup(g, 'up')} title="Move up">
-                        <ChevronUp className="h-3 w-3" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleMoveGroup(g, 'down')} title="Move down">
-                        <ChevronDown className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <div className="space-y-2">
-                      {[...(g.members ?? [])]
-                        .sort((a, b) => (a.groupOrder ?? 0) - (b.groupOrder ?? 0))
-                        .map((m) => (
-                          <div
-                            key={m.id}
-                            className="flex items-center gap-1 rounded border border-border bg-background p-2 text-sm"
-                          >
-                            <span className="flex-1 truncate" title={m.name}>{m.name}</span>
-                            <Select
-                              value={m.groupId ?? ''}
-                              onChange={(e) => {
-                                const v = e.target.value;
-                                handleAssignToGroup(m, v === '' ? null : parseInt(v, 10));
-                              }}
-                              disabled={assigningMemberId === m.id}
-                              className="h-8 w-28 text-xs"
-                            >
-                              <option value="">Ungrouped</option>
-                              {(groupsData.groups ?? []).map((gr) => (
-                                <option key={gr.id} value={gr.id}>{gr.name}</option>
-                              ))}
-                            </Select>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0"
-                              onClick={() => handleMoveMemberInGroup(g.id, m, 'up')}
-                              disabled={movingMemberId === m.id}
-                            >
-                              <ChevronUp className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 p-0"
-                              onClick={() => handleMoveMemberInGroup(g.id, m, 'down')}
-                              disabled={movingMemberId === m.id}
-                            >
-                              <ChevronDown className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ))}
-                      {(!g.members || g.members.length === 0) && (
-                        <p className="text-xs text-muted-foreground">Empty.</p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </div>
-        </Card>
-      )}
+        <TabsContent value="members" className="mt-4">
+          <MembersTab
+            members={members}
+            filteredAndSorted={filteredAndSortedMembers}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            sortBy={sortBy}
+            onSortChange={setSortBy}
+            filter={membersFilter}
+            onFilterChange={setMembersFilter}
+            onAddMember={handleOpenAddDialog}
+            onEdit={handleOpenEditDialog}
+            onDelete={handleDelete}
+            onClearFilters={() => { setSearchQuery(''); setMembersFilter('all'); }}
+          />
+        </TabsContent>
 
-      {/* Team Members Section */}
-      <Card className="rounded-xl border border-border bg-white shadow-sm">
-        <div className="flex items-center justify-between p-6 border-b border-border">
-          <div>
-            <h2 className="text-lg font-medium text-foreground">Team Members</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Add, edit, or remove team members from your team
-            </p>
-          </div>
-          <Button onClick={handleOpenAddDialog} className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Add Team Member
-          </Button>
-        </div>
-        <div className="p-6 pb-8">
-          {members.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="mx-auto mb-4 h-12 w-12 text-muted-foreground">
-                <Plus className="h-full w-full" />
-              </div>
-              <h3 className="mb-1 text-lg font-medium text-foreground">No team members yet</h3>
-              <p className="text-sm text-muted-foreground">Get started by adding your first team member</p>
-            </div>
+        <TabsContent value="groups" className="mt-4">
+          {!loadingGroups && groupsData ? (
+            <GroupsTab
+              ungrouped={groupsData.ungrouped ?? []}
+              groups={groupsData.groups ?? []}
+              onAssignToGroup={handleAssignToGroup}
+              onMoveMemberInGroup={handleMoveMemberInGroup}
+              onReorderInGroup={handleReorderInGroup}
+              onReorderUngrouped={handleReorderUngrouped}
+              onRenameGroup={handleOpenRenameGroup}
+              onDeleteGroup={handleDeleteGroup}
+              onMoveGroup={handleMoveGroup}
+              assigningMemberId={assigningMemberId}
+              movingMemberId={movingMemberId}
+            />
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {members.map((member) => (
-                <Card key={member.id} className="overflow-hidden rounded-xl border border-border bg-white transition-shadow hover:shadow-md group">
-                  <div className="relative aspect-[3/4] bg-gradient-to-br from-gray-100 to-gray-200">
-                    {member.image ? (
-                      <img
-                        src={typeof member.image === 'string' && (member.image.startsWith('/api/images/') || member.image.startsWith('http'))
-                          ? member.image 
-                          : `/api/images/${member.image}`}
-                        alt={member.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-muted text-gray-800/60">
-                        <User className="h-8 w-8" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
-                      <div className="w-full space-y-1">
-                        <p className="text-white font-semibold text-sm">{member.name}</p>
-                        <p className="text-white/90 text-xs">{member.position}</p>
-                        <span className="inline-flex items-center rounded-full bg-background/90 backdrop-blur-sm px-2 py-0.5 text-xs font-medium text-muted-foreground border border-border/50">
-                          Order: {member.displayOrder}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <CardContent className="p-3">
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => handleOpenEditDialog(member)} className="flex-1">
-                        <Pencil className="h-3 w-3 mr-1" />
-                        Edit
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => handleDelete(member.id)} className="border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600" type="button">
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <Card className="rounded-xl border border-border bg-white shadow-sm">
+              <CardContent className="py-12 text-center text-sm text-muted-foreground">
+                Loading groups…
+              </CardContent>
+            </Card>
           )}
-        </div>
-      </Card>
+        </TabsContent>
+
+        <TabsContent value="featured" className="mt-4">
+          {!loadingGroups && groupsData ? (
+            <FeaturedTabPanel
+              featuredMemberId={groupsData.featuredMemberId}
+              onFeaturedChange={handleSetFeatured}
+              members={allMembersForDropdown}
+            />
+          ) : (
+            <Card className="rounded-xl border border-border bg-white shadow-sm">
+              <CardContent className="py-12 text-center text-sm text-muted-foreground">
+                Loading…
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="preview" className="mt-4">
+          <LayoutPreviewTab
+            groups={groupsData?.groups ?? []}
+            ungrouped={groupsData?.ungrouped ?? []}
+            featuredMemberId={groupsData?.featuredMemberId ?? null}
+            ungroupedCount={ungroupedCount}
+            validMembersCount={validMembersCount}
+          />
+        </TabsContent>
+      </Tabs>
 
       {/* Add/Edit Dialog */}
       <Dialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         title={editingMember ? 'Edit Team Member' : 'Add Team Member'}
+        footer={
+          <DialogFooter className="justify-end">
+            <Button variant="outline" onClick={handleCloseDialog} disabled={saving}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? 'Saving...' : editingMember ? 'Update' : 'Add'}
+            </Button>
+          </DialogFooter>
+        }
       >
-        <div className="space-y-4 mb-6">
-          {/* Compact HTML Tips */}
-          <div className="flex items-start gap-2 rounded-lg bg-muted/50 border border-border p-2">
-            <Info className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
-            <div className="text-xs text-muted-foreground leading-relaxed">
+        <div className="space-y-4">
+          <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/50 p-2">
+            <Info className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
+            <div className="text-xs leading-relaxed text-muted-foreground">
               <strong className="font-medium">Tip:</strong> You can use HTML tags for formatting:{' '}
-              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;strong&gt;</code>,{' '}
-              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;em&gt;</code>,{' '}
-              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;br&gt;</code>,{' '}
-              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;p&gt;</code>,{' '}
-              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;ul&gt;</code>,{' '}
-              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;ol&gt;</code>,{' '}
-              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;li&gt;</code>,{' '}
-              <code className="px-1 py-0.5 bg-background rounded text-xs">&lt;a&gt;</code>, and more.
+              <code className="rounded bg-background px-1 py-0.5 text-xs">&lt;strong&gt;</code>,{' '}
+              <code className="rounded bg-background px-1 py-0.5 text-xs">&lt;em&gt;</code>,{' '}
+              <code className="rounded bg-background px-1 py-0.5 text-xs">&lt;br&gt;</code>,{' '}
+              <code className="rounded bg-background px-1 py-0.5 text-xs">&lt;p&gt;</code>, etc.
             </div>
           </div>
-          <div className="space-y-2">
-            <Label>Photo</Label>
-            <ImageUpload
-              value={formData.image}
-              onChange={(url) => setFormData({ ...formData, image: url })}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="dialog-name">Full Name</Label>
-            <Input
-              id="dialog-name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="John Doe"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="dialog-position">Position</Label>
-            <Input
-              id="dialog-position"
-              value={formData.position}
-              onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-              placeholder="Software Developer"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="dialog-displayOrder">Display Order</Label>
-            <Input
-              id="dialog-displayOrder"
-              type="number"
-              value={formData.displayOrder}
-              onChange={(e) => {
-                setFormData({ ...formData, displayOrder: parseInt(e.target.value) || 0 });
-                setOrderError('');
-              }}
-              className={orderError ? 'border-red-500' : ''}
-            />
-            {orderError && <p className="text-xs text-red-600">{orderError}</p>}
-            <p className="text-xs text-muted-foreground">
-              Used: {usedOrders.sort((a, b) => a - b).join(', ') || 'None'} | Next: {getNextAvailableOrder()}
-            </p>
+          <div className="grid gap-6 md:grid-cols-[1fr,1.5fr]">
+            <div className="space-y-2">
+              <Label>Photo</Label>
+              <ImageUpload
+                value={formData.image}
+                onChange={(url) => setFormData({ ...formData, image: url })}
+              />
+            </div>
+            <div className="flex flex-col gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="dialog-name">Full Name</Label>
+                <Input
+                  id="dialog-name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="John Doe"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="dialog-position">Position</Label>
+                <Input
+                  id="dialog-position"
+                  value={formData.position}
+                  onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                  placeholder="Software Developer"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="dialog-displayOrder">Display Order</Label>
+                <Input
+                  id="dialog-displayOrder"
+                  type="number"
+                  value={formData.displayOrder}
+                  onChange={(e) => {
+                    setFormData({ ...formData, displayOrder: parseInt(e.target.value) || 0 });
+                    setOrderError('');
+                  }}
+                  className={orderError ? 'border-red-500' : ''}
+                />
+                {orderError && <p className="text-xs text-red-600">{orderError}</p>}
+                <p className="text-xs text-muted-foreground">
+                  Used: {[...usedOrders].sort((a, b) => a - b).join(', ') || 'None'} | Next: {getNextAvailableOrder()}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
-
-        <DialogFooter className="justify-end">
-          <Button
-            variant="outline"
-            onClick={handleCloseDialog}
-            disabled={saving}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={saving}
-          >
-            {saving ? 'Saving...' : editingMember ? 'Update' : 'Add'}
-          </Button>
-        </DialogFooter>
       </Dialog>
 
       {/* Add/Rename Group Dialog */}
@@ -818,8 +714,18 @@ export default function TeamPage() {
         open={isGroupDialogOpen}
         onOpenChange={handleGroupDialogOpenChange}
         title={editingGroupId ? 'Rename Group' : 'Add Group'}
+        footer={
+          <DialogFooter className="justify-end">
+            <Button variant="outline" onClick={handleCloseGroupDialog} disabled={savingGroup}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveGroup} disabled={savingGroup}>
+              {savingGroup ? 'Saving...' : editingGroupId ? 'Update' : 'Add'}
+            </Button>
+          </DialogFooter>
+        }
       >
-        <div className="space-y-4 mb-6">
+        <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="group-name">Group name</Label>
             <Input
@@ -841,14 +747,6 @@ export default function TeamPage() {
             />
           </div>
         </div>
-        <DialogFooter className="justify-end">
-          <Button variant="outline" onClick={handleCloseGroupDialog} disabled={savingGroup}>
-            Cancel
-          </Button>
-          <Button onClick={handleSaveGroup} disabled={savingGroup}>
-            {savingGroup ? 'Saving...' : editingGroupId ? 'Update' : 'Add'}
-          </Button>
-        </DialogFooter>
       </Dialog>
     </div>
   );

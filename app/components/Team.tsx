@@ -289,6 +289,15 @@ function TeamMemberCard({
           background: 'linear-gradient(180deg, #7EB8E8 0%, #E0F2FE 50%, #FFFFFF 100%)',
         }}
       >
+        {/* iS gray watermark inside card */}
+        <div className="absolute inset-0 z-0 flex items-center justify-center rounded-[24px] pointer-events-none">
+          <img
+            src="/logos/iSgray.png"
+            alt=""
+            aria-hidden
+            className="max-h-[65%] max-w-[65%] object-contain opacity-[0.35]"
+          />
+        </div>
         {src ? (
           <div className="absolute inset-0 flex items-end justify-center overflow-visible">
             <Image
@@ -372,6 +381,15 @@ function BossMemberCard({
         className="relative h-[240px] w-[172px] rounded-[24px] overflow-visible shadow-[0_18px_45px_rgba(0,0,0,0.35)] md:h-[240px] md:w-[176px]"
         style={{ background: boardCardGradient }}
       >
+        {/* iS gray watermark inside card (slightly larger for boss) */}
+        <div className="absolute inset-0 z-0 flex items-center justify-center rounded-[24px] pointer-events-none">
+          <img
+            src="/logos/iSgray.png"
+            alt=""
+            aria-hidden
+            className="max-h-[75%] max-w-[75%] object-contain opacity-[0.35]"
+          />
+        </div>
         {src ? (
           <div className="absolute inset-0 flex items-end justify-center overflow-visible">
             <Image
