@@ -451,6 +451,8 @@ function GroupTraySegment({
   const [coverHidden, setCoverHidden] = useState(false);
   const [trayHovered, setTrayHovered] = useState(false);
   const [activeCardId, setActiveCardId] = useState<number | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const touchStartX = useRef<number | null>(null);
 
   const memberSlots = slots.filter(
     (slot): slot is Extract<typeof slot, { type: 'member' }> => slot.type === 'member'
@@ -468,35 +470,125 @@ function GroupTraySegment({
     setActiveCardId((prev) => (prev === memberId ? null : memberId));
   }, []);
 
-  return (
-    <div
-      className="group/tray relative flex flex-shrink-0 items-stretch overflow-visible"
-      onClick={handleTrayClick}
-      onMouseEnter={() => setTrayHovered(true)}
-      onMouseLeave={() => setTrayHovered(false)}
-    >
-      <div className="relative flex w-fit flex-shrink-0 flex-wrap gap-4 self-start rounded-[32px] bg-[#3B6FAB]/50 px-4 py-5 shadow-[0_12px_30px_rgba(0,0,0,0.15)] backdrop-blur-sm overflow-visible">
-        {/* translucent overlay: 35% opacity, gradient #408DE6 → #303F58 */}
-        <div
-          className={`absolute inset-0 z-20 rounded-[32px] bg-gradient-to-b from-[#408DE6] to-[#303F58] transition-opacity duration-300 ${
-            overlayHidden ? 'opacity-0 pointer-events-none' : 'opacity-[0.35] group-hover/tray:opacity-0 group-hover/tray:pointer-events-none'
-          }`}
-        />
-        {/* group name label: always visible above overlay, clamped inside card */}
-        <div
-          className={`absolute inset-0 z-30 flex items-center justify-center overflow-hidden rounded-[32px] px-5 py-4 pointer-events-none transition-opacity duration-300 ${
-            overlayHidden ? 'opacity-0' : 'opacity-100 group-hover/tray:opacity-0'
-          }`}
-        >
-          <span
-            className={`${encodeSansExpanded.className} max-w-full text-center text-[20px] font-semibold leading-[100%] text-white break-words`}
-          >
-            {groupName ?? '\u2014'}
-          </span>
-        </div>
+  const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
+    touchStartX.current = e.touches[0]?.clientX ?? null;
+  }, []);
 
-        <div className="relative z-10 flex flex-wrap gap-4 overflow-visible">
-          {memberSlots.map((slot) => (
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent<HTMLDivElement>) => {
+      if (touchStartX.current == null) return;
+      const endX = e.changedTouches[0]?.clientX ?? touchStartX.current;
+      const diff = endX - touchStartX.current;
+      const threshold = 40;
+
+      if (Math.abs(diff) > threshold) {
+        if (diff < 0 && activeIndex < memberSlots.length - 1) {
+          setActiveIndex((prev) => Math.min(prev + 1, memberSlots.length - 1));
+        } else if (diff > 0 && activeIndex > 0) {
+          setActiveIndex((prev) => Math.max(prev - 1, 0));
+        }
+      }
+      touchStartX.current = null;
+    },
+    [activeIndex, memberSlots.length]
+  );
+
+  return (
+    <>
+      {/* Mobile: swipeable stacked-card carousel (title card first) */}
+      <div className="md:hidden">
+        <div className="relative w-full space-y-2">
+          {/* Mobile header banner for this group */}
+          <div className="px-6">
+            <div
+              className="relative mx-auto flex h-[52px] w-full max-w-sm items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-r from-[#2E5C97] via-[#3B6FAB] to-[#2E5C97] shadow-[0_6px_14px_rgba(0,0,0,0.20)]"
+            >
+              <span
+                className={`${encodeSansExpanded.className} relative z-10 px-4 text-center text-[15px] font-semibold leading-[110%] text-white`}
+              >
+                {groupName ?? '\u2014'}
+              </span>
+            </div>
+          </div>
+
+          {/* Swipe area – only the member cards move when swiping.
+              Extra top margin so cards don’t overlap the header banner. */}
+          <div
+            className="relative mt-6 h-[240px] w-full touch-pan-x"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            {memberSlots.map((slot, index) => {
+              const offset = index - activeIndex; // 0 = center, -1 left, 1 right
+              if (Math.abs(offset) > 2) return null; // hide far cards
+
+              const isActive = offset === 0;
+              const baseTranslate = 90; // distance between cards
+              const translateX = offset * baseTranslate;
+              const scale = isActive ? 1 : 0.85;
+              const opacity = isActive ? 1 : 0.45;
+              const zIndexCard = 10 - Math.abs(offset);
+
+              return (
+                <div
+                  key={slot.member.id}
+                  className="absolute left-1/2 top-0"
+                  style={{
+                    transform: `translateX(calc(-50% + ${translateX}px)) translateY(${
+                      isActive ? '0px' : '10px'
+                    }) scale(${scale})`,
+                    transition:
+                      'transform 220ms ease-out, opacity 220ms ease-out, box-shadow 220ms ease-out',
+                    opacity,
+                    zIndex: zIndexCard,
+                  }}
+                >
+                  <div className="relative mx-auto w-fit overflow-visible">
+                    <div data-card className="relative">
+                      <TeamMemberCard
+                        member={slot.member}
+                        overlayHidden
+                        active={activeCardId === slot.member.id}
+                        onToggleActive={() => handleCardToggle(slot.member.id)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop/tablet: existing tray behavior */}
+      <div
+        className="group/tray relative hidden flex-shrink-0 items-stretch overflow-visible md:flex"
+        onClick={handleTrayClick}
+        onMouseEnter={() => setTrayHovered(true)}
+        onMouseLeave={() => setTrayHovered(false)}
+      >
+        <div className="relative flex w-fit flex-shrink-0 flex-wrap gap-4 self-start rounded-[32px] bg-[#3B6FAB]/50 px-4 py-5 shadow-[0_12px_30px_rgba(0,0,0,0.15)] backdrop-blur-sm overflow-visible">
+          {/* translucent overlay: 35% opacity, gradient #408DE6 → #303F58 */}
+          <div
+            className={`absolute inset-0 z-20 rounded-[32px] bg-gradient-to-b from-[#408DE6] to-[#303F58] transition-opacity duration-300 ${
+              overlayHidden ? 'opacity-0 pointer-events-none' : 'opacity-[0.35] group-hover/tray:opacity-0 group-hover/tray:pointer-events-none'
+            }`}
+          />
+          {/* group name label: always visible above overlay, clamped inside card */}
+          <div
+            className={`absolute inset-0 z-30 flex items-center justify-center overflow-hidden rounded-[32px] px-5 py-4 pointer-events-none transition-opacity duration-300 ${
+              overlayHidden ? 'opacity-0' : 'opacity-100 group-hover/tray:opacity-0'
+            }`}
+          >
+            <span
+              className={`${encodeSansExpanded.className} max-w-full text-center text-[20px] font-semibold leading-[100%] text-white break-words`}
+            >
+              {groupName ?? '\u2014'}
+            </span>
+          </div>
+
+          <div className="relative z-10 flex flex-wrap gap-4 overflow-visible">
+            {memberSlots.map((slot) => (
               <div key={slot.member.id} data-card className="flex-shrink-0">
                 <TeamMemberCard
                   member={slot.member}
@@ -506,9 +598,10 @@ function GroupTraySegment({
                 />
               </div>
             ))}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -539,7 +632,7 @@ function TeamRowInner({
           isVisible ? 'animate' : 'opacity-0'
         }`}
       >
-        <div className="flex flex-wrap items-end justify-center gap-6">
+        <div className="flex flex-wrap items-end justify-center gap-2 md:gap-6">
           {bossSlot?.type === 'member' && bossSlot.variant === 'boss' && (
             <div className="flex-shrink-0">
               <BossMemberCard
@@ -565,7 +658,7 @@ function TeamRowInner({
 
     return (
       <div
-        className={`mx-auto flex w-full max-w-6xl items-start justify-center gap-6 ${animationClass} ${
+        className={`mx-auto flex w-full max-w-6xl items-start justify-center gap-2 md:gap-6 ${animationClass} ${
           isVisible ? 'animate' : 'opacity-0'
         }`}
       >
@@ -754,7 +847,7 @@ export default function Team() {
             <p className="text-lg text-gray-600">No team members to display</p>
           </div>
         ) : (
-          <div className="space-y-4" style={{ contain: 'layout' }}>
+          <div className="space-y-2 md:space-y-4" style={{ contain: 'layout' }}>
             <TeamRow rowIndex={0} slots={layout.row1} isVisible={isVisible} groups={groups} />
             <TeamRow rowIndex={1} slots={layout.row2} isVisible={isVisible} groups={groups} />
             <TeamRow rowIndex={2} slots={layout.row3} isVisible={isVisible} groups={groups} />
