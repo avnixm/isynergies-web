@@ -31,10 +31,37 @@ export async function POST(request: Request) {
     const db = config.database;
 
     const [tables] = (await connection.execute(
-      `SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME IN ('about_us_gallery_images', 'featured_app_carousel_images')`,
+      `SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME IN ('about_us_gallery_images', 'featured_app_carousel_images', 'services_list', 'services_section')`,
       [db]
     )) as [{ TABLE_NAME?: string }[], unknown];
     const existing = (Array.isArray(tables) ? tables : []).map((t) => t?.TABLE_NAME ?? '').filter(Boolean);
+
+    if (!existing.includes('services_list')) {
+      await connection.execute(`
+        CREATE TABLE services_list (
+          id int AUTO_INCREMENT NOT NULL,
+          label varchar(255) NOT NULL,
+          display_order int NOT NULL DEFAULT 0,
+          created_at timestamp DEFAULT (CURRENT_TIMESTAMP),
+          updated_at timestamp DEFAULT (CURRENT_TIMESTAMP) ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (id)
+        )
+      `);
+      created.push('services_list');
+    }
+
+    if (!existing.includes('services_section')) {
+      await connection.execute(`
+        CREATE TABLE services_section (
+          id int AUTO_INCREMENT NOT NULL,
+          title varchar(255) NOT NULL DEFAULT 'Our Services',
+          description text NOT NULL,
+          updated_at timestamp DEFAULT (CURRENT_TIMESTAMP) ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (id)
+        )
+      `);
+      created.push('services_section');
+    }
 
     if (!existing.includes('about_us_gallery_images')) {
       await connection.execute(`

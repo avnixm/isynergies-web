@@ -78,6 +78,12 @@ type TickerItem = {
   displayOrder: number;
 };
 
+type ServicesListItem = {
+  id: number;
+  label: string;
+  displayOrder: number;
+};
+
 type AnimatedCounterProps = {
   value: string;
   isVisible: boolean;
@@ -136,6 +142,11 @@ export default function Services() {
     icon2: null,
     icon3: null,
     icon4: null,
+  });
+  const [servicesListItems, setServicesListItems] = useState<ServicesListItem[]>([]);
+  const [servicesSection, setServicesSection] = useState<{ title: string; description: string }>({
+    title: 'Our Services',
+    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed consequat quam. Sed vel lorem finibus enim consectetur eleifend sit amet vel neque.',
   });
   const [loading, setLoading] = useState(true);
   const sectionRef = useRef<HTMLElement | null>(null);
@@ -218,6 +229,24 @@ export default function Services() {
         } else {
           console.error('Failed to fetch services:', servicesResponse.status, servicesResponse.statusText);
         }
+
+        const listResponse = await fetch('/api/admin/services-list');
+        if (listResponse.ok) {
+          const listData = await listResponse.json();
+          const sorted = (Array.isArray(listData) ? listData : []).sort((a: ServicesListItem, b: ServicesListItem) => a.displayOrder - b.displayOrder);
+          setServicesListItems(sorted);
+        } else {
+          setServicesListItems([]);
+        }
+
+        const sectionResponse = await fetch('/api/admin/services-section');
+        if (sectionResponse.ok) {
+          const sectionData = await sectionResponse.json();
+          setServicesSection({
+            title: sectionData.title ?? 'Our Services',
+            description: sectionData.description ?? 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed consequat quam. Sed vel lorem finibus enim consectetur eleifend sit amet vel neque.',
+          });
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -242,26 +271,34 @@ export default function Services() {
               isVisible ? 'animate' : 'opacity-0'
             }`}>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-white mb-3 md:mb-6">
-                Our Services
+                {servicesSection.title}
               </h2>
 
               <p className="text-xs leading-relaxed font-light text-white/85 max-w-xl mb-3 md:mb-6">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed
-                consequat quam. Sed vel lorem finibus enim consectetur eleifend sit
-                amet vel neque.
+                {servicesSection.description}
               </p>
 
               <ul className="space-y-2 sm:space-y-3 text-sm md:text-base font-semibold text-white">
-                {['Development', 'Support', 'Analysis & Design', 'Sales'].map(
-                  (t) => (
-                    <li key={t} className="flex items-center gap-2">
+                {(servicesListItems.length
+                  ? servicesListItems
+                  : [
+                      'Development',
+                      'Support',
+                      'Analysis & Design',
+                      'Sales',
+                      'Maintenance',
+                    ]).map((item) => {
+                  const label = typeof item === 'string' ? item : item.label;
+                  const key = typeof item === 'string' ? item : `list-${item.id}`;
+                  return (
+                    <li key={key} className="flex items-center gap-2">
                       <span className="text-base sm:text-[18px] leading-none text-white/90 shrink-0">
                         •
                       </span>
-                      <span>{t}</span>
+                      <span>{label}</span>
                     </li>
-                  )
-                )}
+                  );
+                })}
               </ul>
             </div>
 

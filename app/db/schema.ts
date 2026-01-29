@@ -83,6 +83,21 @@ export const tickerItems = mysqlTable('ticker_items', {
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
 });
 
+export const servicesList = mysqlTable('services_list', {
+  id: int('id').primaryKey().autoincrement(),
+  label: varchar('label', { length: 255 }).notNull(),
+  displayOrder: int('display_order').notNull().default(0),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
+});
+
+export const servicesSection = mysqlTable('services_section', {
+  id: int('id').primaryKey().autoincrement(),
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description').notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow(),
+});
+
 export const statistics = mysqlTable('statistics', {
   id: int('id').primaryKey().autoincrement(),
   label: varchar('label', { length: 100 }).notNull(),

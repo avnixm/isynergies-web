@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app
 import { Dialog, DialogFooter } from '@/app/components/ui/dialog';
 import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
+import { StickyFooter } from '../_components/sticky-footer';
 import { ImageUpload } from '@/app/components/ui/image-upload';
 import { Textarea } from '@/app/components/ui/textarea';
 import { HtmlTips } from '@/app/components/ui/html-tips';
@@ -36,25 +37,36 @@ type Service = {
   displayOrder: number;
 };
 
+type ServicesListItem = {
+  id: number;
+  label: string;
+  displayOrder: number;
+};
+
 export default function ServicesPage() {
   const toast = useToast();
   const { confirm } = useConfirm();
   const [statistics, setStatistics] = useState<Statistic[]>([]);
   const [tickerItems, setTickerItems] = useState<TickerItem[]>([]);
   const [services, setServices] = useState<Service[]>([]);
+  const [servicesListItems, setServicesListItems] = useState<ServicesListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isStatDialogOpen, setIsStatDialogOpen] = useState(false);
   const [isTickerDialogOpen, setIsTickerDialogOpen] = useState(false);
   const [isServiceDialogOpen, setIsServiceDialogOpen] = useState(false);
+  const [isListDialogOpen, setIsListDialogOpen] = useState(false);
   const [editingStat, setEditingStat] = useState<Statistic | null>(null);
   const [editingTicker, setEditingTicker] = useState<TickerItem | null>(null);
   const [editingService, setEditingService] = useState<Service | null>(null);
+  const [editingListItem, setEditingListItem] = useState<ServicesListItem | null>(null);
   const [orderError, setOrderError] = useState<string>('');
   const [tickerOrderError, setTickerOrderError] = useState<string>('');
   const [serviceOrderError, setServiceOrderError] = useState<string>('');
+  const [listOrderError, setListOrderError] = useState<string>('');
   const [savingStat, setSavingStat] = useState(false);
   const [savingTicker, setSavingTicker] = useState(false);
   const [savingService, setSavingService] = useState(false);
+  const [savingList, setSavingList] = useState(false);
   const [formData, setFormData] = useState({
     label: '',
     value: '',
@@ -68,6 +80,15 @@ export default function ServicesPage() {
     icon: '',
     displayOrder: 0,
   });
+  const [listFormData, setListFormData] = useState({
+    label: '',
+    displayOrder: 0,
+  });
+  const [servicesSection, setServicesSection] = useState<{ title: string; description: string }>({
+    title: 'Our Services',
+    description: '',
+  });
+  const [savingSection, setSavingSection] = useState(false);
 
   const usedOrders = (Array.isArray(statistics) ? statistics : []).filter(s => s.id !== editingStat?.id).map(s => s.displayOrder);
   const getNextAvailableOrder = () => {
@@ -90,10 +111,19 @@ export default function ServicesPage() {
     return order;
   };
 
+  const listUsedOrders = (Array.isArray(servicesListItems) ? servicesListItems : []).filter(s => s.id !== editingListItem?.id).map(s => s.displayOrder);
+  const getNextAvailableListOrder = () => {
+    let order = 0;
+    while (listUsedOrders.includes(order)) { order++; }
+    return order;
+  };
+
   useEffect(() => {
     fetchStatistics();
     fetchTickerItems();
     fetchServices();
+    fetchServicesList();
+    fetchServicesSection();
   }, []);
 
   const fetchStatistics = async () => {
@@ -146,6 +176,65 @@ export default function ServicesPage() {
     } catch (error) {
       console.error('Error fetching services:', error);
       setServices([]);
+    }
+  };
+
+  const fetchServicesList = async () => {
+    try {
+      const response = await fetch('/api/admin/services-list');
+      if (response.ok) {
+        const data = await response.json();
+        setServicesListItems(Array.isArray(data) ? data : []);
+      } else {
+        console.error('Error fetching services list:', response.status, response.statusText);
+        setServicesListItems([]);
+      }
+    } catch (error) {
+      console.error('Error fetching services list:', error);
+      setServicesListItems([]);
+    }
+  };
+
+  const fetchServicesSection = async () => {
+    try {
+      const response = await fetch('/api/admin/services-section');
+      if (response.ok) {
+        const data = await response.json();
+        setServicesSection({
+          title: data.title ?? 'Our Services',
+          description: data.description ?? '',
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching services section:', error);
+    }
+  };
+
+  const handleSaveSection = async () => {
+    setSavingSection(true);
+    const token = localStorage.getItem('admin_token');
+    try {
+      const res = await fetch('/api/admin/services-section', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title: servicesSection.title,
+          description: servicesSection.description,
+        }),
+      });
+      if (res.ok) {
+        toast.success('Our Services section saved');
+      } else {
+        toast.error('Failed to save');
+      }
+    } catch (error) {
+      console.error('Error saving services section:', error);
+      toast.error('An error occurred while saving');
+    } finally {
+      setSavingSection(false);
     }
   };
 
@@ -354,6 +443,98 @@ export default function ServicesPage() {
     }
   };
 
+  const handleOpenAddListDialog = () => {
+    setEditingListItem(null);
+    setListFormData({
+      label: '',
+      displayOrder: getNextAvailableListOrder(),
+    });
+    setListOrderError('');
+    setIsListDialogOpen(true);
+  };
+
+  const handleOpenEditListDialog = (item: ServicesListItem) => {
+    setEditingListItem(item);
+    setListFormData({
+      label: item.label,
+      displayOrder: item.displayOrder,
+    });
+    setListOrderError('');
+    setIsListDialogOpen(true);
+  };
+
+  const handleCloseListDialog = () => {
+    setIsListDialogOpen(false);
+    setEditingListItem(null);
+    setListFormData({
+      label: '',
+      displayOrder: getNextAvailableListOrder(),
+    });
+    setListOrderError('');
+  };
+
+  const handleSaveList = async () => {
+    setListOrderError('');
+    if (listUsedOrders.includes(listFormData.displayOrder)) {
+      setListOrderError(`Order ${listFormData.displayOrder} is already taken. Next available: ${getNextAvailableListOrder()}`);
+      return;
+    }
+    if (!listFormData.label.trim()) {
+      toast.error('Please enter a label');
+      return;
+    }
+    setSavingList(true);
+    const token = localStorage.getItem('admin_token');
+    try {
+      const url = editingListItem ? `/api/admin/services-list/${editingListItem.id}` : '/api/admin/services-list';
+      const method = editingListItem ? 'PUT' : 'POST';
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(listFormData),
+      });
+      if (response.ok) {
+        toast.success(editingListItem ? 'Services list item updated!' : 'Services list item added!');
+        handleCloseListDialog();
+        fetchServicesList();
+      } else {
+        toast.error('Failed to save services list item');
+      }
+    } catch (error) {
+      console.error('Error saving services list item:', error);
+      toast.error('An error occurred while saving');
+    } finally {
+      setSavingList(false);
+    }
+  };
+
+  const handleListDelete = async (id: number) => {
+    const confirmed = await confirm(
+      'Are you sure you want to delete this services list item? This action cannot be undone.',
+      'Delete Services List Item'
+    );
+    if (!confirmed) return;
+    const token = localStorage.getItem('admin_token');
+    try {
+      const response = await fetch(`/api/admin/services-list/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (response.ok) {
+        toast.success('Services list item deleted!');
+        fetchServicesList();
+      } else {
+        toast.error('Failed to delete services list item');
+      }
+    } catch (error) {
+      console.error('Error deleting services list item:', error);
+      toast.error('An error occurred while deleting');
+    }
+  };
+
   const handleOpenAddServiceDialog = () => {
     setEditingService(null);
     setServiceFormData({
@@ -481,15 +662,121 @@ export default function ServicesPage() {
       <div>
         <h1 className="text-2xl font-semibold text-foreground">Services management</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Manage the service icons, statistics, and ticker items in the Services section.
+          Manage the Our Services section (title, description, bullet points), service icons, statistics, and ticker items.
         </p>
         <div className="mt-4 flex flex-wrap gap-4 text-sm">
           <span className="text-muted-foreground">Jump to:</span>
+          <a href="#services-section" className="text-accent hover:underline">Our Services section</a>
           <a href="#service-icons" className="text-accent hover:underline">Service Icons</a>
           <a href="#statistics" className="text-accent hover:underline">Statistics</a>
           <a href="#ticker-items" className="text-accent hover:underline">Ticker Items</a>
         </div>
       </div>
+
+      {}
+      <Card id="services-section" className="rounded-xl border border-border bg-white shadow-sm">
+        <div className="p-6 border-b border-border">
+          <h2 className="text-lg font-medium text-foreground">Our Services section</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Title, description, and bullet points shown on the Services page
+          </p>
+        </div>
+        <div className="p-6 space-y-6">
+          <form
+            id="services-section-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSaveSection();
+            }}
+            className="space-y-4"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="section-title">Title</Label>
+              <Input
+                id="section-title"
+                value={servicesSection.title}
+                onChange={(e) => setServicesSection((s) => ({ ...s, title: e.target.value }))}
+                placeholder="Our Services"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="section-description">Description</Label>
+              <Textarea
+                id="section-description"
+                value={servicesSection.description}
+                onChange={(e) => setServicesSection((s) => ({ ...s, description: e.target.value }))}
+                placeholder="Lorem ipsum dolor sit amet, consectetur adipiscing elit..."
+                rows={4}
+                className="resize-y"
+              />
+            </div>
+          </form>
+
+          <div className="border-t border-border pt-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-medium text-foreground">Bullet points</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  e.g. Development, Support, Analysis &amp; Design, Sales, Maintenance
+                </p>
+              </div>
+              <Button onClick={handleOpenAddListDialog} size="sm" className="flex items-center gap-2">
+                <Plus className="h-3.5 w-3.5" />
+                Add item
+              </Button>
+            </div>
+            {servicesListItems.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-border bg-muted/30 py-8 text-center">
+                <p className="text-sm text-muted-foreground">No bullet points yet. Add items like Development, Support, Maintenance.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {servicesListItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-4 rounded-lg border border-border bg-white p-3 transition-colors hover:bg-muted/30"
+                  >
+                    {}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground line-clamp-1">
+                        {item.label}
+                      </p>
+                      <div className="mt-0.5">
+                        <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                          Order: {item.displayOrder}
+                        </span>
+                      </div>
+                    </div>
+                    {}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleOpenEditListDialog(item)}
+                        className="h-8"
+                        aria-label={`Edit ${item.label}`}
+                      >
+                        <Pencil className="h-3 w-3 mr-1" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleListDelete(item.id)}
+                        className="h-8 w-8 p-0 border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600"
+                        aria-label={`Delete ${item.label}`}
+                        type="button"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </Card>
 
       {}
       <Card id="service-icons" className="rounded-xl border border-border bg-white shadow-sm">
@@ -856,6 +1143,59 @@ export default function ServicesPage() {
 
       {}
       <Dialog
+        open={isListDialogOpen}
+        onOpenChange={setIsListDialogOpen}
+        title={editingListItem ? 'Edit Services list item' : 'Add Services list item'}
+      >
+        <div className="space-y-4 mb-6">
+          <div className="space-y-2">
+            <Label htmlFor="dialog-listLabel">Label</Label>
+            <Input
+              id="dialog-listLabel"
+              value={listFormData.label}
+              onChange={(e) => setListFormData({ ...listFormData, label: e.target.value })}
+              placeholder="e.g., Development, Support, Maintenance"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="dialog-listDisplayOrder">Display Order</Label>
+            <Input
+              id="dialog-listDisplayOrder"
+              type="number"
+              value={listFormData.displayOrder}
+              onChange={(e) => {
+                setListFormData({ ...listFormData, displayOrder: parseInt(e.target.value) || 0 });
+                setListOrderError('');
+              }}
+              placeholder="0"
+              className={listOrderError ? 'border-red-500' : ''}
+            />
+            {listOrderError && <p className="text-xs text-red-600">{listOrderError}</p>}
+            <p className="text-xs text-muted-foreground">
+              Used: {listUsedOrders.sort((a, b) => a - b).join(', ') || 'None'} | Next: {getNextAvailableListOrder()}
+            </p>
+          </div>
+        </div>
+        <DialogFooter className="justify-end">
+          <Button
+            variant="outline"
+            onClick={handleCloseListDialog}
+            disabled={savingList}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSaveList}
+            disabled={savingList}
+          >
+            {savingList ? 'Saving...' : editingListItem ? 'Update' : 'Add'}
+          </Button>
+        </DialogFooter>
+      </Dialog>
+
+      {}
+      <Dialog
         open={isServiceDialogOpen}
         onOpenChange={setIsServiceDialogOpen}
         title={editingService ? 'Edit Service Icon' : 'Add Service Icon'}
@@ -937,6 +1277,9 @@ export default function ServicesPage() {
           </Button>
         </DialogFooter>
       </Dialog>
+
+      {}
+      <StickyFooter formId="services-section-form" saving={savingSection} />
     </div>
   );
 }
