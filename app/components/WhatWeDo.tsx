@@ -186,9 +186,10 @@ export default function WhatWeDo() {
       )}
 
       {}
-      <div className="relative left-1/2 w-screen -translate-x-1/2 py-5" style={{
-        background: 'linear-gradient(180deg, #071B6E 0%, #004AB9 100%)',
-      }}>
+      <div
+        className="relative left-1/2 w-screen -translate-x-1/2 py-5"
+        style={{ background: 'rgba(115, 159, 202, 0.5)' }}
+      >
         <div className="container mx-auto max-w-7xl px-4 md:px-8 lg:px-16 relative z-10">
           {content && (
             <div
@@ -200,12 +201,12 @@ export default function WhatWeDo() {
               }}
             >
               <div
-                className="text-white/85 max-w-6xl mx-auto text-xs md:text-sm leading-relaxed font-sans text-center"
+                className="text-[#2A2A2A] max-w-6xl mx-auto text-xs md:text-sm leading-relaxed font-sans text-center"
                 dangerouslySetInnerHTML={{ __html: content.mainText }}
               />
-              <p 
-                className="text-white/85 mt-4 max-w-6xl mx-auto text-xs md:text-sm leading-relaxed font-sans text-center"
-                dangerouslySetInnerHTML={{ __html: content.tagline }} 
+              <p
+                className="text-[#2A2A2A] mt-4 max-w-6xl mx-auto text-xs md:text-sm leading-relaxed font-sans text-center"
+                dangerouslySetInnerHTML={{ __html: content.tagline }}
               />
             </div>
           )}

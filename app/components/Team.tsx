@@ -381,7 +381,7 @@ function BossMemberCard({
       aria-label={`${member.name}, ${member.position}`}
     >
       <div
-        className="relative h-[240px] w-[165px] rounded-[24px] overflow-visible shadow-[0_18px_45px_rgba(0,0,0,0.35)]"
+        className="relative h-[240px] w-[200px] rounded-[24px] overflow-visible shadow-[0_18px_45px_rgba(0,0,0,0.35)]"
         style={{ background: boardCardGradient }}
       >
         {}
