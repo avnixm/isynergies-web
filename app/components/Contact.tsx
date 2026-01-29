@@ -292,33 +292,33 @@ export default function Contact() {
   };
 
   return (
-    <section id="contact" className="relative bg-[#D7E1E4] py-4">
-      {/* Message bubble icon in bottom right - half hidden under container */}
-      <div className="absolute bottom-0 right-8 md:bottom-0 md:right-12 w-40 h-40 md:w-64 md:h-64 flex items-center justify-center opacity-10 pointer-events-none z-0">
+    <section id="contact" aria-label="Contact us" className="relative bg-[#D7E1E4] py-6 sm:py-8 md:py-10">
+      {/* Message bubble icon - scaled on mobile */}
+      <div className="absolute bottom-0 right-4 sm:right-6 md:right-12 w-28 h-28 sm:w-36 sm:h-36 md:w-64 md:h-64 flex items-center justify-center opacity-10 pointer-events-none z-0">
         <Message className="w-full h-full text-gray-900" strokeWidth={1} />
       </div>
-      <div className="mx-auto max-w-6xl px-4 md:px-6 md:pb-20 md:pt-8 relative z-10" >
-        <div className="grid grid-cols-1 lg:grid-cols-[0.42fr_0.58fr] gap-0 rounded-xl  overflow-hidden p-3 md:p-4">
+      <div className="mx-auto max-w-6xl px-3 sm:px-4 md:px-6 lg:px-16 pb-4 md:pb-20 pt-0 md:pt-8 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-[0.42fr_0.58fr] gap-0 rounded-xl overflow-hidden p-2 sm:p-3 md:p-4">
           {/* Left Panel - Contact Information */}
-          <div className="relative bg-[#A00000] text-white p-6 md:p-8 lg:p-10 overflow-hidden">
-            {/* Semi-transparent S logo in background */}
-            <div className="absolute right-[-60px] top-[-40px] text-[400px] font-black leading-none text-[#A00000]/25 select-none pointer-events-none">
+          <div className="relative bg-[#A00000] text-white p-4 sm:p-5 md:p-6 lg:p-10 overflow-hidden">
+            {/* Semi-transparent S logo - scaled on mobile */}
+            <div className="absolute right-[-30px] sm:right-[-40px] md:right-[-60px] top-[-20px] sm:top-[-30px] md:top-[-40px] text-[180px] sm:text-[260px] md:text-[400px] font-black leading-none text-[#A00000]/25 select-none pointer-events-none">
               S
             </div>
 
             <div className="relative z-10">
-              <h2 className="text-3xl md:text-4xl font-bold mb-5 font-sans leading-tight">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-5 font-sans leading-tight">
                 Let's get
                 <br />
                 in touch
               </h2>
 
-              <div className="space-y-4 font-sans">
+              <div className="space-y-3 sm:space-y-4 font-sans">
                 {/* Location */}
-                <div className="flex items-start gap-4">
-                  <div className="mt-1 flex-shrink-0">
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="mt-0.5 sm:mt-1 flex-shrink-0">
                     <svg
-                      className="w-6 h-6"
+                      className="w-5 h-5 sm:w-6 sm:h-6"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -338,16 +338,16 @@ export default function Contact() {
                       />
                     </svg>
                   </div>
-                  <p className="text-xs leading-relaxed">
+                  <p className="text-[11px] sm:text-xs leading-relaxed">
                     {settings.companyAddress}
                   </p>
                 </div>
 
                 {/* Phone */}
-                <div className="flex items-start gap-4">
-                  <div className="mt-1 flex-shrink-0">
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="mt-0.5 sm:mt-1 flex-shrink-0">
                     <svg
-                      className="w-6 h-6"
+                      className="w-5 h-5 sm:w-6 sm:h-6"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -361,15 +361,15 @@ export default function Contact() {
                       />
                     </svg>
                   </div>
-                  <p className="text-xs leading-relaxed">{settings.companyPhone}</p>
+                  <p className="text-[11px] sm:text-xs leading-relaxed">{settings.companyPhone}</p>
                 </div>
 
                 {/* Facebook */}
                 {settings.companyFacebook && (
-                  <div className="flex items-start gap-4">
-                    <div className="mt-1 flex-shrink-0">
+                  <div className="flex items-start gap-3 sm:gap-4">
+                    <div className="mt-0.5 sm:mt-1 flex-shrink-0">
                       <svg
-                        className="w-6 h-6"
+                        className="w-5 h-5 sm:w-6 sm:h-6"
                         fill="currentColor"
                         viewBox="0 0 24 24"
                         aria-hidden="true"
@@ -381,7 +381,7 @@ export default function Contact() {
                         />
                       </svg>
                     </div>
-                    <p className="text-xs leading-relaxed">
+                    <p className="text-[11px] sm:text-xs leading-relaxed break-all">
                       {settings.companyFacebook
                         .replace('https://', '')
                         .replace('http://', '')}
@@ -390,10 +390,10 @@ export default function Contact() {
                 )}
 
                 {/* Email */}
-                <div className="flex items-start gap-4">
-                  <div className="mt-1 flex-shrink-0">
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="mt-0.5 sm:mt-1 flex-shrink-0">
                     <svg
-                      className="w-6 h-6"
+                      className="w-5 h-5 sm:w-6 sm:h-6"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -407,12 +407,12 @@ export default function Contact() {
                       />
                     </svg>
                   </div>
-                  <p className="text-xs leading-relaxed">{settings.companyEmail}</p>
+                  <p className="text-[11px] sm:text-xs leading-relaxed break-all">{settings.companyEmail}</p>
                 </div>
                 {/* Map (hardcoded Google Maps embed, no API key) */}
                 {((settings.companyLat && settings.companyLng) || settings.companyAddress) && (
-                  <div className="mt-4">
-                    <div className="w-full h-40 sm:h-56 rounded-md overflow-hidden border border-white/20">
+                  <div className="mt-3 sm:mt-4">
+                    <div className="w-full h-32 sm:h-40 md:h-56 rounded-lg overflow-hidden border border-white/20">
                       <iframe
                         title="Company location"
                         src={GOOGLE_MAP_EMBED}
@@ -426,7 +426,7 @@ export default function Contact() {
                       href={GOOGLE_MAP_LINK}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-white underline mt-2 inline-block"
+                      className="text-[11px] sm:text-xs text-white underline mt-1.5 sm:mt-2 inline-block touch-manipulation"
                     >
                       Open in Google Maps
                     </a>
@@ -437,19 +437,19 @@ export default function Contact() {
           </div>
 
           {/* Right Panel - Contact Form */}
-          <div className="bg-white px-5 py-6 md:px-6 md:py-7 flex items-center">
-            <div className="w-full max-w-xl ml-auto">
-              <h3 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4 font-sans">
+          <div className="bg-white px-4 py-5 sm:px-5 sm:py-6 md:px-6 md:py-7 flex items-center">
+            <div className="w-full max-w-xl ml-0 lg:ml-auto">
+              <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-3 sm:mb-4 font-sans">
                 Send us a message
               </h3>
 
-            <form onSubmit={handleSubmit} className="space-y-3">
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
               {/* Email and Contact No. Row */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label
                     htmlFor="email"
-                    className="block text-sm font-medium text-gray-700 mb-2 font-sans"
+                    className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 font-sans"
                   >
                     Email
                   </label>
@@ -459,7 +459,7 @@ export default function Contact() {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A0D1A] focus:border-transparent text-gray-900 font-sans text-sm"
+                    className="w-full px-3 py-2.5 sm:px-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A0D1A] focus:border-transparent text-gray-900 font-sans text-sm touch-manipulation"
                     placeholder="Email"
                     required
                   />
@@ -468,7 +468,7 @@ export default function Contact() {
                 <div>
                   <label
                     htmlFor="contactNo"
-                    className="block text-sm font-medium text-gray-700 mb-2 font-sans"
+                    className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 font-sans"
                   >
                     Contact No.
                   </label>
@@ -479,17 +479,17 @@ export default function Contact() {
                     value={formData.contactNo}
                     onChange={handleChange}
                     maxLength={11}
-                    className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A0D1A] focus:border-transparent text-gray-900 font-sans text-sm ${
+                    className={`w-full px-3 py-2.5 sm:px-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A0D1A] focus:border-transparent text-gray-900 font-sans text-sm touch-manipulation ${
                       phoneError ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="09XXXXXXXXX"
                     required
                   />
                   {phoneError && (
-                    <p className="text-xs text-red-600 mt-1">{phoneError}</p>
+                    <p className="text-[11px] sm:text-xs text-red-600 mt-1">{phoneError}</p>
                   )}
                   {!phoneError && formData.contactNo && (
-                    <p className="text-xs text-gray-500 mt-1">Format: 11 digits starting with 09</p>
+                    <p className="text-[11px] sm:text-xs text-gray-500 mt-1">Format: 11 digits starting with 09</p>
                   )}
                 </div>
               </div>
@@ -498,7 +498,7 @@ export default function Contact() {
               <div>
                 <label
                   htmlFor="name"
-                  className="block text-sm font-medium text-gray-700 mb-2 font-sans"
+                  className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 font-sans"
                 >
                   Name
                 </label>
@@ -508,7 +508,7 @@ export default function Contact() {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A0D1A] focus:border-transparent text-gray-900 font-sans text-sm"
+                  className="w-full px-3 py-2.5 sm:px-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A0D1A] focus:border-transparent text-gray-900 font-sans text-sm touch-manipulation"
                   placeholder="Name"
                   required
                 />
@@ -516,11 +516,11 @@ export default function Contact() {
 
               {/* Do you want a demo? */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 font-sans">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 font-sans">
                   Would you like to book a demo?
                 </label>
-                <div className="flex gap-4">
-                  <label className="flex items-center cursor-pointer">
+                <div className="flex gap-3 sm:gap-4">
+                  <label className="flex items-center cursor-pointer touch-manipulation">
                     <input
                       type="radio"
                       name="wantsDemo"
@@ -528,9 +528,9 @@ export default function Contact() {
                       onChange={() => handleWantsDemoChange(true)}
                       className="w-4 h-4 text-[#7A0D1A] focus:ring-2 focus:ring-[#7A0D1A] border-gray-300"
                     />
-                    <span className="ml-2 text-sm text-gray-700 font-sans">Yes</span>
+                    <span className="ml-2 text-xs sm:text-sm text-gray-700 font-sans">Yes</span>
                   </label>
-                  <label className="flex items-center cursor-pointer">
+                  <label className="flex items-center cursor-pointer touch-manipulation">
                     <input
                       type="radio"
                       name="wantsDemo"
@@ -538,20 +538,20 @@ export default function Contact() {
                       onChange={() => handleWantsDemoChange(false)}
                       className="w-4 h-4 text-[#7A0D1A] focus:ring-2 focus:ring-[#7A0D1A] border-gray-300"
                     />
-                    <span className="ml-2 text-sm text-gray-700 font-sans">No</span>
+                    <span className="ml-2 text-xs sm:text-sm text-gray-700 font-sans">No</span>
                   </label>
                 </div>
               </div>
 
               {/* Demo Date/Time Fields (shown only if wantsDemo is true) */}
               {formData.wantsDemo && (
-                <div className="space-y-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-3 sm:space-y-4 p-3 sm:p-4 border border-gray-200 rounded-lg bg-gray-50">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                     {/* Month */}
                     <div>
                       <label
                         htmlFor="demoMonth"
-                        className="block text-sm font-medium text-gray-700 mb-2 font-sans"
+                        className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 font-sans"
                       >
                         Month
                       </label>
@@ -560,7 +560,7 @@ export default function Contact() {
                         name="demoMonth"
                         value={formData.demoMonth}
                         onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A0D1A] focus:border-transparent text-gray-900 font-sans text-sm"
+                        className="w-full px-3 py-2.5 sm:px-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A0D1A] focus:border-transparent text-gray-900 font-sans text-sm touch-manipulation"
                         required={formData.wantsDemo}
                       >
                         <option value="">Select Month</option>
@@ -583,7 +583,7 @@ export default function Contact() {
                     <div>
                       <label
                         htmlFor="demoDay"
-                        className="block text-sm font-medium text-gray-700 mb-2 font-sans"
+                        className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 font-sans"
                       >
                         Day
                       </label>
@@ -592,7 +592,7 @@ export default function Contact() {
                         name="demoDay"
                         value={formData.demoDay}
                         onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A0D1A] focus:border-transparent text-gray-900 font-sans text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        className="w-full px-3 py-2.5 sm:px-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A0D1A] focus:border-transparent text-gray-900 font-sans text-sm disabled:bg-gray-100 disabled:cursor-not-allowed touch-manipulation"
                         required={formData.wantsDemo}
                         disabled={!formData.demoMonth}
                       >
@@ -604,15 +604,15 @@ export default function Contact() {
                         ))}
                       </select>
                       {formData.demoMonth && formData.demoYear && getAvailableDays().length === 0 && (
-                        <p className="text-xs text-red-600 mt-1">No available weekdays in this month (past dates excluded)</p>
+                        <p className="text-[11px] sm:text-xs text-red-600 mt-1">No available weekdays in this month (past dates excluded)</p>
                       )}
                     </div>
 
                     {/* Year (present or future only) - Disabled, always current year */}
-                    <div>
+                    <div className="sm:col-span-2 md:col-span-1">
                       <label
                         htmlFor="demoYear"
-                        className="block text-sm font-medium text-gray-700 mb-2 font-sans"
+                        className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 font-sans"
                       >
                         Year
                       </label>
@@ -621,7 +621,7 @@ export default function Contact() {
                         name="demoYear"
                         value={formData.demoYear}
                         onChange={handleChange}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A0D1A] focus:border-transparent text-gray-900 font-sans text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        className="w-full px-3 py-2.5 sm:px-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A0D1A] focus:border-transparent text-gray-900 font-sans text-sm disabled:bg-gray-100 disabled:cursor-not-allowed touch-manipulation"
                         required={formData.wantsDemo}
                         disabled={true}
                       >
@@ -638,7 +638,7 @@ export default function Contact() {
                   <div>
                     <label
                       htmlFor="demoTime"
-                      className="block text-sm font-medium text-gray-700 mb-2 font-sans"
+                      className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 font-sans"
                     >
                       Time
                     </label>
@@ -647,7 +647,7 @@ export default function Contact() {
                       name="demoTime"
                       value={formData.demoTime}
                       onChange={handleChange}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A0D1A] focus:border-transparent text-gray-900 font-sans text-sm"
+                      className="w-full px-3 py-2.5 sm:px-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A0D1A] focus:border-transparent text-gray-900 font-sans text-sm touch-manipulation"
                       required={formData.wantsDemo}
                     >
                       <option value="">Select Time</option>
@@ -665,7 +665,7 @@ export default function Contact() {
               <div>
                 <label
                   htmlFor="message"
-                  className="block text-sm font-medium text-gray-700 mb-2 font-sans"
+                  className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 font-sans"
                 >
                   Message
                 </label>
@@ -674,20 +674,20 @@ export default function Contact() {
                   name="message"
                   value={formData.message}
                   onChange={handleChange}
-                  rows={5}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A0D1A] focus:border-transparent text-gray-900 font-sans text-sm resize-none"
+                  rows={4}
+                  className="w-full px-3 py-2.5 sm:px-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7A0D1A] focus:border-transparent text-gray-900 font-sans text-sm resize-none min-h-[100px] sm:min-h-[120px] touch-manipulation"
                   placeholder="Message"
                   required
                 />
               </div>
 
               {/* Submit Button */}
-              <div className="pt-2">
+              <div className="pt-1 sm:pt-2">
                 <div className="flex justify-end">
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="inline-flex items-center justify-center rounded-full px-8 py-3 text-sm font-semibold text-white font-sans transition-all duration-300 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex items-center justify-center rounded-full px-6 py-2.5 sm:px-8 sm:py-3 text-xs sm:text-sm font-semibold text-white font-sans transition-all duration-300 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation active:scale-[0.98]"
                     style={{
                       background: '#0D1E66',
                     }}

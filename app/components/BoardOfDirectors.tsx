@@ -85,11 +85,12 @@ export default function BoardOfDirectors() {
     <section
       id="board-of-directors"
       ref={sectionRef}
+      aria-label="Board of Directors"
       className="relative bg-[#D7E1E4] overflow-hidden"
     >
-      {/* Red gradient bar header (moved from About Us so sections never overlap) */}
+      {/* Red gradient bar header */}
       <div
-        className={`w-full h-[60px] z-10 flex items-center justify-center px-4 md:px-8 lg:px-16 mb-10 dropdown-smooth ${
+        className={`w-full h-[50px] sm:h-[56px] md:h-[60px] z-10 flex items-center justify-center px-3 sm:px-4 md:px-8 lg:px-16 mb-6 sm:mb-8 md:mb-10 dropdown-smooth ${
           isVisible ? 'animate' : ''
         }`}
         style={{
@@ -98,22 +99,22 @@ export default function BoardOfDirectors() {
           animationDelay: isVisible ? '0.3s' : '0s',
         }}
       >
-        <p className="text-2xl md:text-3xl font-semibold text-white text-center">Our Board of Directors</p>
+        <p className="text-xl sm:text-2xl md:text-3xl font-semibold text-white text-center">Our Board of Directors</p>
       </div>
 
-      {/* Muted background shape instead of hardcoded logo */}
-      <div className="absolute right-0 md:right-0 top-[100px] md:top-[120px] z-0 pointer-events-none">
+      {/* Muted background shape - scaled on mobile */}
+      <div className="absolute right-0 top-20 sm:top-24 md:top-[120px] z-0 pointer-events-none">
         <div
-          className="w-[400px] h-[800px] md:w-[600px] md:h-[1000px] bg-gradient-to-b from-gray-300/30 via-gray-200/20 to-transparent rounded-l-full"
+          className="w-[180px] h-[360px] sm:w-[280px] sm:h-[560px] md:w-[600px] md:h-[1000px] bg-gradient-to-b from-gray-300/30 via-gray-200/20 to-transparent rounded-l-full"
         />
       </div>
 
-      <div className="container mx-auto max-w-7xl px-4 md:px-8 lg:px-16 relative z-10">
+      <div className="container mx-auto max-w-7xl px-3 sm:px-4 md:px-8 lg:px-16 relative z-10">
         <div className="w-full relative">
 
-          {/* Red circle gradient between 4th and 5th board member */}
+          {/* Red circle gradient - scaled on mobile */}
           <div 
-            className="absolute top-10 left-[65%] md:left-[73%] -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] z-0 rounded-full"
+            className="absolute top-6 sm:top-8 md:top-10 left-[60%] sm:left-[65%] md:left-[73%] -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] sm:w-[280px] sm:h-[280px] md:w-[400px] md:h-[400px] z-0 rounded-full"
             style={{
               background: 'radial-gradient(circle, rgba(220, 38, 38, 0.4) 0%, rgba(220, 38, 38, 0.3) 20%, rgba(220, 38, 38, 0.2) 40%, rgba(220, 38, 38, 0.15) 50%, rgba(220, 38, 38, 0.1) 60%, rgba(220, 38, 38, 0.05) 75%, transparent 100%)',
               filter: 'blur(40px)',
@@ -121,11 +122,12 @@ export default function BoardOfDirectors() {
             }}
           />
 
-          {/* iSgray logo - same position as Team section */}
-          <div className="absolute bottom-[22rem] md:bottom-[26rem] left-[75%] md:left-[80%] -translate-x-1/2 translate-y-1/2 w-[500px] h-[500px] md:w-[600px] md:h-[600px] flex items-center justify-center z-0 pointer-events-none">
+          {/* iSgray logo - scaled on mobile */}
+          <div className="absolute bottom-[12rem] sm:bottom-[16rem] md:bottom-[26rem] left-[70%] sm:left-[75%] md:left-[80%] -translate-x-1/2 translate-y-1/2 w-[220px] h-[220px] sm:w-[320px] sm:h-[320px] md:w-[600px] md:h-[600px] flex items-center justify-center z-0 pointer-events-none">
             <img
               src="/logos/iSgray.png"
-              alt="iS logo"
+              alt=""
+              aria-hidden
               className="w-full h-full object-contain"
               style={{ filter: 'brightness(0.3) contrast(1.8)' }}
             />
@@ -133,7 +135,7 @@ export default function BoardOfDirectors() {
 
           {/* Board Members Grid */}
           <div
-            className={`flex justify-center relative z-10 pt-10 slide-left-bouncy ${
+            className={`flex justify-center relative z-10 pt-6 sm:pt-8 md:pt-10 slide-left-bouncy ${
               isVisible ? 'animate' : 'opacity-0'
             }`}
             style={{
@@ -141,18 +143,23 @@ export default function BoardOfDirectors() {
             }}
           >
             {loading ? (
-              <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-700"></div>
+              <div className="flex items-center justify-center min-h-[200px] sm:min-h-[280px]">
+                <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-gray-700" />
               </div>
             ) : boardMembers.length === 0 ? (
-              <div className="text-center py-16">
-                <p className="text-gray-600 text-lg">No board members to display</p>
+              <div className="text-center py-12 sm:py-16">
+                <p className="text-gray-600 text-base sm:text-lg">No board members to display</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-5 mb-8 w-fit mx-auto">
-                {boardMembers.map((member) => (
-                  <div key={member.id} className="relative group">
-                    <div className="relative rounded-[24px] overflow-visible w-[150px] h-[200px] md:w-[180px] md:h-[240px]"
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-x-4 gap-y-6 sm:gap-x-5 sm:gap-y-8 md:gap-5 mb-6 md:mb-8 w-fit mx-auto px-1 sm:px-0">
+                {boardMembers.map((member, index) => {
+                  const isLastAndOdd = index === boardMembers.length - 1 && boardMembers.length % 2 === 1;
+                  return (
+                  <div
+                    key={member.id}
+                    className={`relative group flex justify-center p-3 sm:p-3.5 md:p-0 ${isLastAndOdd ? 'col-span-2 md:col-span-1' : ''}`}
+                  >
+                    <div className="relative rounded-[16px] sm:rounded-[20px] md:rounded-[24px] overflow-visible w-[130px] h-[173px] sm:w-[150px] sm:h-[200px] md:w-[180px] md:h-[240px]"
                       style={{
                         background: 'linear-gradient(to top right, #920608 0%, #C16553 35%, #E0C5A9 70%, #FFFFFF 100%)',
                       }}
@@ -164,7 +171,7 @@ export default function BoardOfDirectors() {
                               ? member.image 
                               : `/api/images/${member.image}`}
                             alt={`${member.firstName} ${member.lastName}`}
-                            className="object-cover rounded-[24px]"
+                            className="object-cover rounded-[16px] sm:rounded-[20px] md:rounded-[24px]"
                             style={{
                               width: '120%',
                               height: '120%',
@@ -177,26 +184,26 @@ export default function BoardOfDirectors() {
                         </div>
                       ) : (
                         <div className="flex items-center justify-center h-full">
-                          <span className="text-6xl text-gray-300">👤</span>
+                          <span className="text-4xl sm:text-5xl md:text-6xl text-gray-300">👤</span>
                         </div>
                       )}
                       {/* Hover overlay with dark blue gradient showing name and position */}
-                      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0D1E66] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3 rounded-[24px] z-10">
-                        <p className={`${encodeSansExpanded.className} text-white font-bold text-[20px] mb-0.5`}>{member.firstName}</p>
-                        <p className={`${encodeSansExpanded.className} text-white font-bold text-[20px] mb-0.5`}>{member.lastName}</p>
-                        <p className="text-white text-[10px] font-normal uppercase">{member.position}</p>
+                      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0D1E66] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-2 sm:p-2.5 md:p-3 rounded-[16px] sm:rounded-[20px] md:rounded-[24px] z-10 touch-manipulation">
+                        <p className={`${encodeSansExpanded.className} text-white font-bold text-sm sm:text-base md:text-[18px] lg:text-[20px] mb-0.5 leading-tight`}>{member.firstName}</p>
+                        <p className={`${encodeSansExpanded.className} text-white font-bold text-sm sm:text-base md:text-[18px] lg:text-[20px] mb-0.5 leading-tight`}>{member.lastName}</p>
+                        <p className="text-white text-[9px] sm:text-[10px] font-normal uppercase">{member.position}</p>
                       </div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
 
-
           {/* Footer text */}
           <p
-            className={`text-center text-gray-700 text-sm font-sans pb-5 slide-up-content ${
+            className={`text-center text-gray-700 text-xs sm:text-sm font-sans px-3 sm:px-0 pb-4 sm:pb-5 slide-up-content ${
               isVisible ? 'animate' : 'opacity-0'
             }`}
             style={{

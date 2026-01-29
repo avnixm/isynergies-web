@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 const navLinks = [
   { label: "Home", href: "#home" },
   { label: "Services", href: "#services" },
@@ -25,8 +23,8 @@ import { ToastProvider } from './components/ui/toast';
 export default function Home() {
   return (
     <ToastProvider>
-      <div className="relative text-white overflow-x-hidden max-w-full">
-      {/* Hero Setion */}
+      <main className="relative text-white overflow-x-hidden max-w-full" id="main-content" tabIndex={-1}>
+      {/* Hero Section */}
       <Hero navLinks={navLinks} />
       
       {/* Featured App Section */}
@@ -35,7 +33,7 @@ export default function Home() {
       {/* Services Section */}
       <Services />
 
-      {/* What We Do Sectin */}
+      {/* What We Do Section */}
       <WhatWeDo />
 
       {/* Projects Section */}
@@ -66,7 +64,7 @@ export default function Home() {
 
       {/* Footer */}
       <Footer />
-      </div>
+      </main>
     </ToastProvider>
   );
 }

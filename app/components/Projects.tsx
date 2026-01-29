@@ -257,16 +257,18 @@ export default function Projects() {
 
   const marqueeRow1 = useMemo(() => {
     if (view !== 'all') return [];
-    // Top row: Show all projects in order, duplicated multiple times for seamless infinite loop
-    // Repeat 4 times to ensure smooth looping (1,2,3,1,2,3,1,2,3,1,2,3)
+    // Row 1: projects in display order, repeated 4× for seamless loop
     return [...projects, ...projects, ...projects, ...projects];
   }, [projects, view]);
 
   const marqueeRow2 = useMemo(() => {
     if (view !== 'all') return [];
-    // Bottom row: Show all projects in order, duplicated multiple times for seamless infinite loop
-    // Repeat 4 times to ensure smooth looping (1,2,3,1,2,3,1,2,3,1,2,3)
-    return [...projects, ...projects, ...projects, ...projects];
+    // Row 2: rotated order (different from row 1) to avoid mirrored copies – alternating layout
+    const n = projects.length;
+    if (n <= 1) return [...projects, ...projects, ...projects, ...projects];
+    const half = Math.floor(n / 2);
+    const rotated = [...projects.slice(half), ...projects.slice(0, half)];
+    return [...rotated, ...rotated, ...rotated, ...rotated];
   }, [projects, view]);
 
   // Fetch projects from API
@@ -425,7 +427,7 @@ export default function Projects() {
   }, [view]);
 
   return (
-    <section id="projects" ref={sectionRef} className="relative bg-[#D7E1E4] py-5">
+    <section id="projects" ref={sectionRef} aria-label="Our Work" className="relative bg-[#D7E1E4] py-5">
       <div className="container mx-auto max-w-7xl px-4 md:px-8 lg:px-16">
         <div className="text-center font-sans">
           <h2 className={`text-4xl md:text-5xl font-semibold text-gray-900 slide-down-slow ${

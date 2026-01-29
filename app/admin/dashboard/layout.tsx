@@ -80,7 +80,7 @@ export default function AdminLayout({
 
           <div className="flex flex-1 flex-col overflow-hidden min-w-0 h-screen" style={{ height: '100vh', overflow: 'hidden' }}>
             <Header user={user} />
-            <main className="flex-1 overflow-y-auto overflow-x-hidden bg-muted/40 min-w-0" style={{ overflowY: 'auto', overflowX: 'hidden' }}>
+            <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto overflow-x-hidden bg-muted/40 min-w-0" style={{ overflowY: 'auto', overflowX: 'hidden' }}>
               <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 md:px-8 md:py-8 w-full min-w-0">
           {children}
         </div>

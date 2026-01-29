@@ -159,6 +159,12 @@ Additional `*:prod` scripts (e.g. `add-team-groups-migration:prod`, `clear-team-
 
 ---
 
+## Documentation
+
+- **[Responsive layout plan](docs/RESPONSIVE-LAYOUT-PLAN.md)** — Mobile-first strategy, CMS → UI mapping, Tailwind conventions, and non-regression checklist for the landing page.
+
+---
+
 ## Tech stack
 
 - **Next.js 16** (App Router)

@@ -40,10 +40,14 @@ export default function Hero({ navLinks }: HeroProps) {
   const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [videoError, setVideoError] = useState(false);
+  const [videoCachedSrc, setVideoCachedSrc] = useState<string | null>(null);
+  const [videoCacheFailed, setVideoCacheFailed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
+  const videoObjectUrlRef = useRef<string | null>(null);
+  const previousVideoUrlRef = useRef<string | null>(null);
   const [headerVisible, setHeaderVisible] = useState(true);
   const announcementRef = useRef<HTMLDivElement>(null);
   const [useMarquee, setUseMarquee] = useState(false);
@@ -153,7 +157,7 @@ export default function Hero({ navLinks }: HeroProps) {
   const announcementBarContent = (
     <>
       {tickerItems.map((item, index) => (
-        <div key={item.id} className="flex items-center gap-4 text-[12px] font-medium text-white whitespace-nowrap">
+        <div key={item.id} className="flex items-center gap-3 text-[inherit] font-medium text-white whitespace-nowrap sm:gap-4">
           {index > 0 && <span className="text-white/50 font-bold">-</span>}
           <span>{parseTextWithLinks(item.text)}</span>
         </div>
@@ -161,7 +165,7 @@ export default function Hero({ navLinks }: HeroProps) {
     </>
   );
   const barClasses =
-    'flex items-center justify-center gap-4 rounded-2xl bg-gray-800/90 backdrop-blur-xl px-6 py-4 shadow-2xl shadow-black/25 border border-gray-700/50 w-fit ticker-slow-fade';
+    'flex items-center justify-center gap-3 rounded-xl sm:rounded-2xl bg-gray-800/90 backdrop-blur-xl px-4 py-3 text-[11px] sm:gap-4 sm:px-6 sm:py-4 sm:text-[12px] shadow-2xl shadow-black/25 border border-gray-700/50 w-fit ticker-slow-fade';
 
   // Header visibility: hide on scroll down, show on scroll up (dynamic, not permanently fixed)
   useEffect(() => {
@@ -198,6 +202,72 @@ export default function Hero({ navLinks }: HeroProps) {
     };
   }, [tickerItems]);
 
+  // Cache API: fetch hero video, store in cache, use object URL. Prevents re-download on revisit.
+  // Cache key = video URL; when CMS video changes we evict the old entry (cache-busting).
+  useEffect(() => {
+    if (!bgVideo || videoError || heroSection?.useHeroImages) return;
+    if (typeof caches === 'undefined') return;
+
+    setVideoCacheFailed(false);
+    const cacheName = 'hero-video-v1';
+    const request = new Request(bgVideo, { mode: 'cors' });
+    const previousUrl = previousVideoUrlRef.current;
+    let aborted = false;
+
+    const load = async () => {
+      try {
+        const cache = await caches.open(cacheName);
+        // Cache-bust: when CMS video URL changes, remove old entry so we don't accumulate.
+        if (previousUrl && previousUrl !== bgVideo) {
+          try {
+            await cache.delete(new Request(previousUrl, { mode: 'cors' }));
+          } catch {
+            // Ignore delete errors (e.g. entry already gone)
+          }
+        }
+        previousVideoUrlRef.current = bgVideo;
+
+        const res = await cache.match(request);
+        if (res?.ok && !aborted) {
+          const blob = await res.blob();
+          if (aborted) return;
+          const u = URL.createObjectURL(blob);
+          videoObjectUrlRef.current = u;
+          setVideoCachedSrc(u);
+          return;
+        }
+        if (aborted) return;
+        const fetchRes = await fetch(request, { mode: 'cors' });
+        if (!fetchRes.ok) throw new Error(`HTTP ${fetchRes.status}`);
+        await cache.put(request, fetchRes.clone());
+        if (aborted) return;
+        const blob = await fetchRes.blob();
+        if (aborted) return;
+        const u = URL.createObjectURL(blob);
+        videoObjectUrlRef.current = u;
+        setVideoCachedSrc(u);
+      } catch (e) {
+        if (!aborted) {
+          console.warn('Hero video cache fetch failed, using direct src:', e);
+          setVideoCacheFailed(true);
+          previousVideoUrlRef.current = null;
+        }
+      }
+    };
+
+    load();
+
+    return () => {
+      aborted = true;
+      const u = videoObjectUrlRef.current;
+      if (u) {
+        URL.revokeObjectURL(u);
+        videoObjectUrlRef.current = null;
+      }
+      setVideoCachedSrc(null);
+    };
+  }, [bgVideo, videoError, heroSection?.useHeroImages]);
+
   // Intersection Observer to play video only when hero section is visible
   useEffect(() => {
     if (!videoRef.current || !heroRef.current || !bgVideo || videoError) return;
@@ -207,32 +277,23 @@ export default function Hero({ navLinks }: HeroProps) {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            // Hero section is visible - play video
             video.play().catch((error) => {
               console.warn('Video autoplay failed:', error);
-              // Autoplay might be blocked by browser, but video will play when user interacts
             });
           } else {
-            // Hero section is not visible - pause video
             video.pause();
           }
         });
       },
-      {
-        threshold: 0.25, // Trigger when 25% of the hero section is visible
-      }
+      { threshold: 0.25 }
     );
 
     observer.observe(heroRef.current);
-
-    // Cleanup
-    return () => {
-      observer.disconnect();
-    };
-  }, [bgVideo, videoError]);
+    return () => observer.disconnect();
+  }, [bgVideo, videoError, videoCachedSrc, videoCacheFailed]);
 
   return (
-    <div ref={heroRef} className="relative min-h-screen overflow-hidden">
+    <section id="home" ref={heroRef} aria-label="Hero" className="relative min-h-[100dvh] min-h-screen overflow-hidden">
       {/* Background - Load first, before video - show different image based on mode */}
       <div className="absolute inset-0 z-0">
         {bgImage ? (
@@ -251,16 +312,16 @@ export default function Hero({ navLinks }: HeroProps) {
       </div>
 
       {/* Background Video - above background image but under logos - only show in Default Background Media mode */}
-      {!heroSection?.useHeroImages && bgVideo && !videoError && (
+      {!heroSection?.useHeroImages && bgVideo && !videoError && (typeof caches === 'undefined' || videoCacheFailed ? true : !!videoCachedSrc) && (
         <div className="absolute inset-0 z-[5] overflow-hidden">
           <video
             ref={videoRef}
-            src={bgVideo as string}
+            src={(typeof caches !== 'undefined' && !videoCacheFailed && videoCachedSrc ? videoCachedSrc : bgVideo) as string}
             loop
             muted
             playsInline
             autoPlay
-            preload="metadata"
+            preload={typeof caches !== 'undefined' && !videoCacheFailed && videoCachedSrc ? 'auto' : 'metadata'}
             crossOrigin="anonymous"
             className="w-full h-full object-cover opacity-40 scale-110"
             style={{ objectFit: 'cover', transform: 'scale(1.1)' }}
@@ -323,32 +384,29 @@ export default function Hero({ navLinks }: HeroProps) {
         </div>
       )}
 
-      {/* Invisible anchor for home */}
-      <div id="home" className="absolute top-0 h-0 w-0" aria-hidden />
-
       {/* Glassmorphic floating navbar - fixed, hide on scroll down / show on scroll up */}
       {!loading && (
         <nav
-          className={`fixed left-1/2 top-6 z-30 w-[85%] max-w-4xl -translate-x-1/2 transition-transform duration-300 ease-out ${
-            headerVisible ? 'translate-y-0' : '-translate-y-[calc(100%+2rem)]'
+          className={`fixed left-1/2 top-4 sm:top-6 z-30 w-[92%] max-w-4xl -translate-x-1/2 transition-transform duration-300 ease-out sm:w-[85%] ${
+            headerVisible ? 'translate-y-0' : '-translate-y-[calc(100%+1.5rem)] sm:-translate-y-[calc(100%+2rem)]'
           }`}
         >
-          <div className="navbar-dropdown flex items-center justify-between rounded-2xl bg-gray-800/90 backdrop-blur-xl px-4 py-2 shadow-2xl shadow-black/25 border border-gray-700/50">
-            <div className="flex items-center">
+          <div className="navbar-dropdown flex items-center justify-between rounded-xl sm:rounded-2xl bg-gray-800/90 backdrop-blur-xl px-3 py-2 shadow-2xl shadow-black/25 border border-gray-700/50 sm:px-4">
+            <div className="flex items-center min-w-0">
               {logoSrc ? (
-                <div className="relative h-[34px] w-36 md:w-56">
+                <div className="relative h-[28px] w-28 sm:h-[34px] sm:w-36 md:w-56 shrink-0">
                   <Image
                     src={logoSrc as string}
                     alt="iSynergies Inc."
                     fill
                     className="object-contain object-left"
-                    sizes="224px"
+                    sizes="(max-width: 640px) 112px, (max-width: 768px) 144px, 224px"
                     priority={false}
                     unoptimized
                   />
                 </div>
               ) : (
-                <div className="h-[34px] w-36 md:w-56 rounded-lg bg-white/10 border border-white/20" />
+                <div className="h-[28px] w-28 sm:h-[34px] sm:w-36 md:w-56 rounded-lg bg-white/10 border border-white/20 shrink-0" />
               )}
             </div>
             <div className="hidden md:flex items-center gap-8 text-sm font-medium">
@@ -366,7 +424,7 @@ export default function Hero({ navLinks }: HeroProps) {
             {/* Mobile menu toggle */}
             <button
               type="button"
-              className="inline-flex items-center justify-center rounded-lg p-1.5 text-white md:hidden hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 focus-visible:ring-blue-400"
+              className="inline-flex shrink-0 items-center justify-center rounded-lg p-2 text-white md:hidden hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 focus-visible:ring-blue-400 -mr-1"
               aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
               aria-expanded={mobileMenuOpen}
               onClick={() => setMobileMenuOpen((open) => !open)}
@@ -376,14 +434,14 @@ export default function Hero({ navLinks }: HeroProps) {
           </div>
           {/* Mobile dropdown menu */}
           {mobileMenuOpen && (
-            <div className="mt-2 rounded-2xl bg-gray-900/95 backdrop-blur-xl px-4 py-3 shadow-2xl shadow-black/40 border border-gray-700/70 md:hidden">
-              <div className="flex flex-col gap-2 text-sm font-medium">
+            <div className="mt-1.5 rounded-xl sm:rounded-2xl bg-gray-900/95 backdrop-blur-xl px-3 py-2.5 shadow-2xl shadow-black/40 border border-gray-700/70 md:hidden sm:mt-2 sm:px-4 sm:py-3">
+              <div className="flex flex-col gap-1 text-sm font-medium sm:gap-2">
                 {navLinks.map((link) => (
                   <a
                     key={link.href}
                     href={link.href}
                     onClick={(event) => handleNavClick(event, link.href)}
-                    className="block rounded-lg px-2 py-2 text-white/90 hover:text-blue-300 hover:bg-white/5 transition-colors"
+                    className="block rounded-lg px-2.5 py-2 text-white/90 hover:text-blue-300 hover:bg-white/5 transition-colors active:bg-white/10 touch-manipulation sm:px-2"
                   >
                     {link.label}
                   </a>
@@ -396,13 +454,13 @@ export default function Hero({ navLinks }: HeroProps) {
 
       {/* We make IT possible logo - Left side - only show if exists in database AND useHeroImages is true - Load with priority */}
       {weMakeItImage && heroSection?.useHeroImages && (
-        <div className="slide-right absolute left-8 md:left-11 top-[200px] -translate-y-1/2 z-20">
+        <div className="slide-right absolute left-4 top-[100px] z-20 w-[min(200px,55vw)] sm:left-6 sm:top-[130px] sm:w-[260px] md:left-11 md:top-[200px] md:w-[480px] md:-translate-y-1/2 lg:w-[580px]">
           <Image
             src={weMakeItImage as string}
             alt="We make IT possible"
             width={800}
             height={500}
-            className="w-[480px] h-[292px] md:w-[580px] md:h-[355px] object-contain"
+            className="h-auto w-full object-contain object-left"
             priority
             loading="eager"
             unoptimized
@@ -412,13 +470,13 @@ export default function Hero({ navLinks }: HeroProps) {
 
       {/* iS logo - Right side, large graphic - only show if exists in database AND useHeroImages is true - Load with priority */}
       {isLogoImage && heroSection?.useHeroImages && (
-        <div className="fade-in absolute right-0 md:right-0 top-[100px] -translate-y-1/4 z-10">
+        <div className="fade-in absolute right-2 top-[88px] z-10 w-[100px] opacity-90 sm:right-4 sm:top-[100px] sm:w-[140px] md:right-0 md:top-[100px] md:w-[500px] md:-translate-y-1/4 lg:w-[750px]">
           <Image
             src={isLogoImage as string}
             alt="iSynergies iS logo"
             width={1200}
             height={1200}
-            className="w-[500px] h-[500px] md:w-[750px] md:h-[750px] opacity-90 object-contain"
+            className="h-auto w-full object-contain object-right"
             priority
             loading="eager"
             unoptimized
@@ -428,13 +486,13 @@ export default function Hero({ navLinks }: HeroProps) {
 
       {/* Full iSynergies logo - Right side, below iS logo - only show if exists in database AND useHeroImages is true - Load with priority */}
       {fullLogoImage && heroSection?.useHeroImages && (
-        <div className="fade-in absolute right-2 md:right-[-40px] top-[45%] -translate-y-1/3 z-20 w-[600px] h-[300px] md:w-[700px] md:h-[350px]">
+        <div className="fade-in absolute left-1/2 top-[48%] z-20 w-[min(240px,72vw)] -translate-x-1/2 -translate-y-1/2 sm:w-[300px] md:left-auto md:right-2 md:top-[45%] md:w-[600px] md:translate-x-0 md:-translate-y-1/3 lg:right-[-40px] lg:w-[700px]">
           <Image
             src={fullLogoImage as string}
             alt="iSynergies Inc. full logo"
             width={750}
             height={375}
-            className="w-full h-full object-contain"
+            className="h-auto w-full object-contain"
             priority
             loading="eager"
             unoptimized
@@ -453,16 +511,16 @@ export default function Hero({ navLinks }: HeroProps) {
           >
             {announcementBarContent}
           </div>
-          <div className="pointer-events-auto absolute bottom-8 left-1/2 z-10 w-full max-w-[80vw] -translate-x-1/2 px-4">
+          <div className="pointer-events-auto absolute bottom-5 left-1/2 z-10 w-full max-w-[90vw] -translate-x-1/2 px-3 sm:bottom-8 sm:max-w-[80vw] sm:px-4">
             <div className="flex justify-center">
               {useMarquee ? (
-                <div className={`hero-announcement-marquee w-full max-w-full overflow-hidden rounded-2xl border border-gray-700/50 bg-gray-800/90 px-6 py-4 shadow-2xl shadow-black/25 backdrop-blur-xl ${'ticker-slow-fade'}`}>
+                <div className={`hero-announcement-marquee w-full max-w-full overflow-hidden rounded-xl border border-gray-700/50 bg-gray-800/90 px-4 py-3 text-[11px] shadow-2xl shadow-black/25 backdrop-blur-xl sm:rounded-2xl sm:px-6 sm:py-4 sm:text-[12px] ${'ticker-slow-fade'}`}>
                   <div className="hero-announcement-marquee-track">
-                    <div className="flex min-w-max items-center justify-center gap-4 text-[12px] font-medium text-white whitespace-nowrap">
+                    <div className="flex min-w-max items-center justify-center gap-3 font-medium text-white whitespace-nowrap sm:gap-4">
                       {announcementBarContent}
                     </div>
-                    <span className="flex-shrink-0 px-1 text-[12px] font-bold text-white/50">-</span>
-                    <div className="flex min-w-max items-center justify-center gap-4 text-[12px] font-medium text-white whitespace-nowrap">
+                    <span className="flex-shrink-0 px-1 text-[11px] font-bold text-white/50 sm:text-[12px]">-</span>
+                    <div className="flex min-w-max items-center justify-center gap-3 font-medium text-white whitespace-nowrap sm:gap-4">
                       {announcementBarContent}
                     </div>
                   </div>
@@ -476,6 +534,6 @@ export default function Hero({ navLinks }: HeroProps) {
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 }

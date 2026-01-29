@@ -815,7 +815,9 @@ export default function Team() {
 
   return (
     <section
+      id="team"
       ref={sectionRef}
+      aria-label="Our Team"
       className="team-watermark relative min-h-screen bg-[#D7E1E4] py-16"
     >
       {/* iSgray logo - same treatment as Board of Directors */}
