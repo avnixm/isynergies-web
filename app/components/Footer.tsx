@@ -43,7 +43,7 @@ export default function Footer() {
   }, []);
 
   return (
-    <footer className="relative text-white overflow-hidden" style={{
+    <footer className="relative text-white overflow-hidden" aria-label="Site footer" style={{
       background: 'linear-gradient(to bottom right, #0D1E66, #003C9D, #001A4F)'
     }}>
       {/* Hexagonal pattern background */}

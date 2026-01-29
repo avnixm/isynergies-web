@@ -609,7 +609,7 @@ export default function FeaturedApp() {
 
   if (loading) {
     return (
-      <section id="featured-app" ref={sectionRef} className="relative bg-white py-16">
+      <section id="featured-app" ref={sectionRef} aria-label="Featured App" className="relative bg-white py-10 sm:py-12 md:py-16">
         <Loading message="Loading Featured App section" />
       </section>
     );
@@ -676,63 +676,53 @@ export default function FeaturedApp() {
   const useCustomBanner = content && (content.appLogo || content.gradientFrom || content.gradientTo);
 
   return (
-    <section id="featured-app" ref={sectionRef} className="relative bg-white">
+    <section id="featured-app" ref={sectionRef} aria-label="Featured App" className="relative bg-white">
       {/* Block 1: Customizable Banner or Fallback to Header Image */}
       {useCustomBanner ? (
         <div
-          className={`w-full ${content.bannerHeight || 'h-60'} relative overflow-hidden`}
+          className="w-full h-36 sm:h-44 md:h-52 lg:h-60 relative overflow-hidden"
           style={{
             background: `linear-gradient(${getGradientDirection(content.gradientDirection || 'to-r')}, ${content.gradientFrom || '#2563eb'}, ${content.gradientTo || '#1e40af'})`,
           }}
         >
          
           <div 
-            className={`absolute top-4 right-4 z-10 ${
+            className={`absolute top-3 right-3 z-10 sm:top-4 sm:right-4 ${
               isVisible ? 'animate-fadeIn-slow' : 'opacity-0'
             }`}
             style={{
               animationDelay: isVisible ? '0.3s' : '0s',
             }}
           >
-            <div className="flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-sm px-4 py-2 border border-white/30">
-              <Star className="h-4 w-4 text-white fill-white" />
-              <span className="text-white text-sm font-semibold">Featured</span>
+            <div className="flex items-center gap-1.5 rounded-full bg-white/20 backdrop-blur-sm px-3 py-1.5 border border-white/30 sm:gap-2 sm:px-4 sm:py-2">
+              <Star className="h-3.5 w-3.5 text-white fill-white sm:h-4 sm:w-4 shrink-0" />
+              <span className="text-white text-xs font-semibold sm:text-sm">Featured</span>
             </div>
           </div>
 
          
           <div 
-            className={`absolute left-8 top-1/2 -translate-y-1/2 z-10 h-full flex items-center gap-1 ${
+            className={`absolute left-4 top-1/2 -translate-y-1/2 z-10 h-[70%] max-h-full flex items-center gap-1 sm:left-6 md:left-8 ${
               isVisible ? 'animate-fadeIn-slow' : 'opacity-0'
             }`}
             style={{
               animationDelay: isVisible ? '0.3s' : '0s',
-              maxHeight: '100%',
-              paddingTop: '1rem',
-              paddingBottom: '1rem',
+              paddingTop: '0.5rem',
+              paddingBottom: '0.5rem',
             }}
           >
             {content.appLogo && (
               <img
                 src={getMediaUrl(content.appLogo, 'image')}
                 alt="App Logo"
-                className="w-auto h-full object-contain"
-                style={{
-                  maxHeight: '100%',
-                  maxWidth: '100%',
-                }}
+                className="w-auto h-full max-w-[45vw] object-contain"
               />
             )}
             {content.poweredByImage && (
               <img
                 src={getMediaUrl(content.poweredByImage, 'image')}
                 alt="Powered By"
-                className="w-auto h-full object-contain"
-                style={{
-                  maxHeight: '100%',
-                  maxWidth: '100%',
-                  marginTop: '5rem',
-                }}
+                className="w-auto h-full max-w-[35vw] object-contain mt-6 sm:mt-8 md:mt-[5rem]"
               />
             )}
           </div>
@@ -740,7 +730,7 @@ export default function FeaturedApp() {
           {/* Feature Icons - Bottom Right */}
           {features.length > 0 && (
             <div 
-              className={`absolute bottom-[-5px] right-8 z-10 hidden md:flex items-center gap-4 max-w-md justify-end ${
+              className={`absolute bottom-0 right-4 z-10 flex items-center gap-2 max-w-[85%] justify-end overflow-x-auto py-2 md:bottom-[-5px] md:right-8 md:gap-4 md:overflow-visible md:py-0 ${
                 isVisible ? 'animate-fadeIn-slow' : 'opacity-0'
               }`}
               style={{
@@ -750,12 +740,12 @@ export default function FeaturedApp() {
               {features.map((feature) => {
                 const iconUrl = getMediaUrl(feature.iconImage, 'image');
                 return (
-                  <div key={feature.id} className="flex items-center">
+                  <div key={feature.id} className="flex shrink-0 items-center">
                     {iconUrl && (
                       <img
                         src={iconUrl}
                         alt={feature.label}
-                        className="h-28 w-28 object-contain"
+                        className="h-12 w-12 object-contain sm:h-16 sm:w-16 md:h-24 md:w-24 lg:h-28 lg:w-28"
                       />
                     )}
                   </div>
@@ -766,26 +756,26 @@ export default function FeaturedApp() {
         </div>
       ) : content?.headerImage ? (
         // Fallback to old header image for backward compatibility
-        <div className="w-full h-27 md:h-43 overflow-hidden">
+        <div className="w-full h-40 sm:h-52 md:h-64 overflow-hidden">
           <img
             src={getMediaUrl(content.headerImage, 'image')}
             alt="Featured App Header"
-            className="w-full h-full object-fill"
+            className="w-full h-full object-cover"
           />
         </div>
       ) : null}
 
       {/* Block 2: Horizontal Carousel with Navigation */}
       {carouselImages.length > 0 && (
-        <div className="w-full py-4 bg-[#D7E1E4] relative">
-          <div className="relative w-full flex flex-col md:flex-row items-stretch gap-4 md:gap-6 px-4 md:px-6">
+        <div className="w-full py-3 sm:py-4 bg-[#D7E1E4] relative">
+          <div className="relative w-full flex flex-col md:flex-row items-stretch gap-3 sm:gap-4 md:gap-6 px-3 sm:px-4 md:px-6">
             {/* Left: Video Section (30% width on desktop) */}
             {hasVideos && (
               <div className="w-full md:w-[30%] flex items-center justify-center">
                 {primaryVideoItem && (
                 <div 
                   ref={featuredVideoContainerRef} 
-                  className="relative w-full h-[180px] md:h-[220px]"
+                  className="relative w-full h-[150px] sm:h-[180px] md:h-[220px]"
                   onMouseEnter={() => {
                     // Hover autoplay (best-effort; may be blocked by browser policy)
                     setEmbedAutoplay(true);
@@ -841,8 +831,8 @@ export default function FeaturedApp() {
                         <div
                           className={`pointer-events-auto flex items-center shrink-0 transition-[gap,width] duration-300 ${
                             isLeftVideoPlaying || isVideoSliding
-                              ? 'w-full justify-between px-3 md:px-5'
-                              : 'justify-center gap-2 md:gap-3'
+                              ? 'w-full justify-between px-2 sm:px-3 md:px-5'
+                              : 'justify-center gap-1.5 sm:gap-2 md:gap-3'
                           }`}
                           style={{ backgroundColor: 'transparent' }}
                           onClick={(e) => {
@@ -866,17 +856,17 @@ export default function FeaturedApp() {
                                 e.stopPropagation();
                                 e.preventDefault();
                               }}
-                              className="w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center transition-transform hover:scale-110 shrink-0"
+                              className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center transition-transform hover:scale-110 active:scale-95 shrink-0 touch-manipulation"
                               style={{ backgroundColor: 'rgba(0,0,0,0.5)', border: 'none', outline: 'none' }}
                               aria-label="Previous video"
                             >
-                              <SkipBack className="w-5 h-5 md:w-6 md:h-6 text-white shrink-0 fill-white" />
+                              <SkipBack className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white shrink-0 fill-white" />
                             </button>
                           )}
                           {!isLeftVideoPlaying && !isVideoSliding && (
                             <button
                               type="button"
-                              className="w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center transition-transform hover:scale-110 shrink-0"
+                              className="w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center transition-transform hover:scale-110 active:scale-95 shrink-0 touch-manipulation"
                               style={{ backgroundColor: 'rgba(0,0,0,0.5)', border: 'none', outline: 'none' }}
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -899,7 +889,7 @@ export default function FeaturedApp() {
                               }}
                               aria-label="Play"
                             >
-                              <Play className="w-6 h-6 md:w-7 md:h-7 text-white fill-white ml-0.5 shrink-0" />
+                              <Play className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white fill-white ml-0.5 shrink-0" />
                             </button>
                           )}
                           {videoItems.length > 1 && (
@@ -914,11 +904,11 @@ export default function FeaturedApp() {
                                 e.stopPropagation();
                                 e.preventDefault();
                               }}
-                              className="w-10 h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center transition-transform hover:scale-110 shrink-0"
+                              className="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-full flex items-center justify-center transition-transform hover:scale-110 active:scale-95 shrink-0 touch-manipulation"
                               style={{ backgroundColor: 'rgba(0,0,0,0.5)', border: 'none', outline: 'none' }}
                               aria-label="Next video"
                             >
-                              <SkipForward className="w-5 h-5 md:w-6 md:h-6 text-white shrink-0 fill-white" />
+                              <SkipForward className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white shrink-0 fill-white" />
                             </button>
                           )}
                         </div>
@@ -967,10 +957,10 @@ export default function FeaturedApp() {
                     }}
                   >
                     <div
-                      className="projects-marquee-track flex gap-[10px] pl-0"
+                      className="projects-marquee-track flex gap-2 sm:gap-[10px] pl-0"
                       style={{
-                        paddingRight: 'clamp(60px, 8vw, 120px)', // Responsive padding: 60px mobile, scales up to 120px on larger screens
-                        ['--marquee-duration' as any]: '22s', // shorter = faster scroll movement (px/s)
+                        paddingRight: 'clamp(40px, 6vw, 120px)',
+                        ['--marquee-duration' as any]: '22s',
                         animationPlayState: isVisible ? 'running' : 'paused',
                       }}
                     >
@@ -981,12 +971,10 @@ export default function FeaturedApp() {
                       return (
                         <div
                           key={`${item.id}-${displayIndex}`}
-                          className={`group relative flex-shrink-0 overflow-hidden bg-gray-200 cursor-pointer ${
-                            isFirst ? 'rounded-lg' : ''
-                          } ${
+                          className={`group relative flex-shrink-0 overflow-hidden rounded-lg bg-gray-200 cursor-pointer touch-manipulation ${
                             isFirst
-                              ? 'w-[350px] h-[180px] md:w-[450px] md:h-[220px]'
-                              : 'w-[250px] h-[180px] md:w-[350px] md:h-[220px]'
+                              ? 'w-[260px] h-[140px] sm:w-[300px] sm:h-[160px] md:w-[450px] md:h-[220px]'
+                              : 'w-[180px] h-[140px] sm:w-[220px] sm:h-[160px] md:w-[350px] md:h-[220px]'
                           }`}
                           onClick={() => openModal(originalIndex)}
                         >
@@ -1051,7 +1039,7 @@ export default function FeaturedApp() {
       {/* Fullscreen Image Modal */}
       {isModalOpen && (
         <div 
-          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 md:p-8"
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-3 sm:p-4 md:p-8"
           onClick={() => {
             setIsModalOpen(false);
             // Allow carousel videos to play again when modal closes
@@ -1067,10 +1055,10 @@ export default function FeaturedApp() {
               setPauseCarouselVideos(false);
               setPlayingVideoIndex(null); // Reset playing video when modal closes
             }}
-            className="absolute top-4 right-4 z-60 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110"
+            className="absolute top-3 right-3 z-60 w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95 touch-manipulation sm:top-4 sm:right-4"
             aria-label="Close"
           >
-            <X className="w-5 h-5 md:w-6 md:h-6 text-gray-800" />
+            <X className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-gray-800" />
           </button>
 
           {/* Modal Carousel Container */}
@@ -1082,10 +1070,10 @@ export default function FeaturedApp() {
             {modalShowLeftArrow && (
               <button
                 onClick={() => navigateModal('left')}
-                className="absolute left-2 md:left-4 z-20 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110"
+                className="absolute left-1 sm:left-2 md:left-4 z-20 w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95 touch-manipulation"
                 aria-label="Previous"
               >
-                <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-gray-800" />
+                <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-gray-800" />
               </button>
             )}
 
@@ -1118,8 +1106,8 @@ export default function FeaturedApp() {
                       data-index={index}
                       className={`flex-shrink-0 transition-all duration-300 flex items-center justify-center ${
                         isActive 
-                          ? 'w-[85vw] max-w-5xl h-[75vh] max-h-[700px]' 
-                          : 'w-[120px] h-[80px] md:w-[150px] md:h-[100px] opacity-40'
+                          ? 'w-[90vw] max-w-5xl h-[70vh] max-h-[700px] sm:w-[85vw] sm:h-[75vh]' 
+                          : 'w-[64px] h-[44px] sm:w-[90px] sm:h-[60px] md:w-[150px] md:h-[100px] opacity-40'
                       }`}
                     >
                       {mediaUrl ? (
@@ -1150,10 +1138,10 @@ export default function FeaturedApp() {
             {modalShowRightArrow && modalIndex < modalDisplayItems.length - 1 && (
               <button
                 onClick={() => navigateModal('right')}
-                className="absolute right-2 md:right-4 z-20 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110"
+                className="absolute right-1 sm:right-2 md:right-4 z-20 w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95 touch-manipulation"
                 aria-label="Next"
               >
-                <ChevronRight className="w-6 h-6 md:w-8 md:h-8 text-gray-800" />
+                <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-gray-800" />
               </button>
             )}
           </div>
@@ -1163,52 +1151,54 @@ export default function FeaturedApp() {
       {/* Block 3: Footer / Downloads (ACash section) */}
       {content && (
         <div 
-          className="w-full py-4 relative bg-[#D7E1E4]"
+          className="w-full py-3 sm:py-4 relative bg-[#D7E1E4]"
         >
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6 px-4 md:px-6">
-            {/* Left: Download text / badges — Right: Logo. Padding matches video block (pl/pr 4 md:6). */}
-            <div className="flex flex-row gap-2 md:gap-3 items-center">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-6 px-3 sm:px-4 md:px-6">
+            {/* Left: Download text / badges — Right: Logo. Padding matches video block. */}
+            <div className="flex flex-wrap justify-center md:justify-start gap-2 sm:gap-3 items-center">
               {content.itemType === 'app' ? (
                 /* App Mode: Download Badges */
                 <>
                   {content.downloadText && (
-                    <p className="text-gray-900 text-sm md:text-base font-medium whitespace-nowrap">
+                    <p className="text-gray-900 text-xs sm:text-sm md:text-base font-medium whitespace-nowrap w-full text-center md:w-auto md:text-left">
                       {content.downloadText}
                     </p>
                   )}
-                  {content.appStoreImage && (
-                    <div className="flex-shrink-0">
-                      <img
-                        src={getMediaUrl(content.appStoreImage, 'image')}
-                        alt="App Store"
-                        className="h-20 md:h-24 object-contain"
-                      />
-                    </div>
-                  )}
-                  {content.googlePlayImage && (
-                    <div className="flex-shrink-0">
-                      <img
-                        src={getMediaUrl(content.googlePlayImage, 'image')}
-                        alt="Google Play"
-                        className="h-20 md:h-24 object-contain"
-                      />
-                    </div>
-                  )}
-                  {content.appGalleryImage && (
-                    <div className="flex-shrink-0">
-                      <img
-                        src={getMediaUrl(content.appGalleryImage, 'image')}
-                        alt="App Gallery"
-                        className="h-20 md:h-24 object-contain"
-                      />
-                    </div>
-                  )}
+                  <div className="flex flex-wrap justify-center md:justify-start gap-1.5 sm:gap-2">
+                    {content.appStoreImage && (
+                      <div className="flex-shrink-0">
+                        <img
+                          src={getMediaUrl(content.appStoreImage, 'image')}
+                          alt="App Store"
+                          className="h-12 sm:h-16 md:h-20 lg:h-24 object-contain"
+                        />
+                      </div>
+                    )}
+                    {content.googlePlayImage && (
+                      <div className="flex-shrink-0">
+                        <img
+                          src={getMediaUrl(content.googlePlayImage, 'image')}
+                          alt="Google Play"
+                          className="h-12 sm:h-16 md:h-20 lg:h-24 object-contain"
+                        />
+                      </div>
+                    )}
+                    {content.appGalleryImage && (
+                      <div className="flex-shrink-0">
+                        <img
+                          src={getMediaUrl(content.appGalleryImage, 'image')}
+                          alt="App Gallery"
+                          className="h-12 sm:h-16 md:h-20 lg:h-24 object-contain"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </>
               ) : (
                 /* Website Mode: Visit Link */
                 <>
                   {content.visitText && (
-                    <p className="text-gray-900 text-sm md:text-base font-medium whitespace-nowrap">
+                    <p className="text-gray-900 text-xs sm:text-sm md:text-base font-medium whitespace-nowrap">
                       {content.visitText}
                     </p>
                   )}
@@ -1217,7 +1207,7 @@ export default function FeaturedApp() {
                       href={content.websiteUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-gray-900 text-sm md:text-base font-medium underline hover:text-blue-600 transition-colors"
+                      className="text-gray-900 text-xs sm:text-sm md:text-base font-medium underline hover:text-blue-600 transition-colors break-all text-center md:text-left"
                     >
                       {content.websiteUrl}
                     </a>
@@ -1232,7 +1222,7 @@ export default function FeaturedApp() {
                 <img
                   src={getMediaUrl(content.logoImage, 'image')}
                   alt="Logo"
-                  className="h-10 md:h-12 object-contain"
+                  className="h-8 sm:h-10 md:h-12 object-contain"
                 />
               </div>
             )}

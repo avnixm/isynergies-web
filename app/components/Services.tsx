@@ -30,8 +30,7 @@ function HexImage({ src, alt, className, emphasized }: HexImageProps) {
       <div
         className={[
           'relative',
-          'w-[150px] h-[150px]',
-          'md:w-[180px] md:h-[180px]',
+          'w-[88px] h-[88px] sm:w-[116px] sm:h-[116px] md:w-[180px] md:h-[180px]',
           'transition-transform duration-300 ease-in-out',
           'group-hover:scale-[1.03]',
           emphasized ? '' : '',
@@ -43,7 +42,7 @@ function HexImage({ src, alt, className, emphasized }: HexImageProps) {
             alt={alt}
             fill
             className="object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.18)] transition-[filter] duration-300 ease-in-out group-hover:drop-shadow-[0_14px_24px_rgba(0,0,0,0.22)]"
-            sizes="(min-width: 768px) 180px, 150px"
+            sizes="(min-width: 768px) 180px, (min-width: 640px) 116px, 88px"
             priority={false}
             unoptimized
             onError={(e) => {
@@ -230,32 +229,33 @@ export default function Services() {
   }, []);
 
   return (
-    <section id="services" ref={sectionRef} className="relative text-white overflow-visible">
+    <section id="services" ref={sectionRef} aria-label="Our Services" className="relative text-white overflow-visible">
       <div className="relative overflow-visible" style={{
         background: 'linear-gradient(180deg, #07186E 0%, #004AB9 50%, #07186E 100%)',
       }}>
         {/* Layout wrapper (fits in one desktop viewport) */}
-        <div className="container mx-auto flex max-w-7xl flex-col px-4 pt-1 pb-0 md:px-6 md:pt-2 md:pb-0 lg:px-12">
+        <div className="container mx-auto flex max-w-7xl flex-col px-3 pt-6 pb-6 sm:px-4 sm:pt-8 sm:pb-8 md:px-6 md:pt-10 md:pb-8 lg:px-12">
           {/* Top area: Our Services - left copy + right hex cluster */}
-          <div className="grid w-full items-center gap-2 md:grid-cols-2 md:gap-3">
-            <div className={`pr-4 md:pr-6 font-sans ml-4 md:ml-12 -mt-8 md:-mt-10 slide-right-content ${
+          <div className="grid w-full items-start gap-5 md:items-center md:grid-cols-2 md:gap-3">
+            {/* Text first on mobile, left column on desktop */}
+            <div className={`order-1 pl-4 pr-4 sm:pl-5 sm:pr-2 md:pl-0 md:pr-6 font-sans ml-0 sm:ml-2 md:ml-12 mt-0 md:-mt-10 slide-right-content ${
               isVisible ? 'animate' : 'opacity-0'
             }`}>
-              <h2 className="text-3xl md:text-4xl font-semibold text-white mb-6">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-white mb-3 md:mb-6">
                 Our Services
               </h2>
 
-              <p className="text-xs leading-relaxed font-light text-white/85 max-w-xl mb-6">
+              <p className="text-xs leading-relaxed font-light text-white/85 max-w-xl mb-3 md:mb-6">
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed
                 consequat quam. Sed vel lorem finibus enim consectetur eleifend sit
                 amet vel neque.
               </p>
 
-              <ul className="space-y-3 text-sm md:text-base font-semibold text-white">
+              <ul className="space-y-2 sm:space-y-3 text-sm md:text-base font-semibold text-white">
                 {['Development', 'Support', 'Analysis & Design', 'Sales'].map(
                   (t) => (
                     <li key={t} className="flex items-center gap-2">
-                      <span className="text-[18px] leading-none text-white/90">
+                      <span className="text-base sm:text-[18px] leading-none text-white/90 shrink-0">
                         •
                       </span>
                       <span>{t}</span>
@@ -265,51 +265,39 @@ export default function Services() {
               </ul>
             </div>
 
-            {/* Right hex cluster */}
-            <div className="flex justify-center md:justify-end">
-              <div className="w-full max-w-[760px]">
-                <div className="grid grid-cols-3 grid-rows-2 place-items-center gap-x-[60px] md:gap-x-[70px] gap-y-0 mt-4 md:mt-8">
-                  {/* top row */}
-                  <div className={`col-start-2 row-start-1 slide-down-slow ${
-                    isVisible ? 'animate' : 'opacity-0'
-                  }`}>
-                    <HexImage
-                      src={serviceIcons.icon1}
-                      alt="Sales"
-                      className=""
-                      emphasized
-                    />
+            {/* Icons below text on mobile, right column on desktop */}
+            <div className="order-2 flex justify-center md:justify-end overflow-hidden">
+              {/* Mobile & tablet: symmetrical 2×2 grid */}
+              <div className="md:hidden w-full max-w-[260px] sm:max-w-[300px]">
+                <div className="grid grid-cols-2 grid-rows-2 place-items-center gap-4 sm:gap-5">
+                  <div className={`slide-down-slow ${isVisible ? 'animate' : 'opacity-0'}`}>
+                    <HexImage src={serviceIcons.icon1} alt="Sales" className="" emphasized />
                   </div>
-                  <div className={`col-start-3 row-start-1 slide-down-slow ${
-                    isVisible ? 'animate' : 'opacity-0'
-                  }`}
-                  style={{ animationDelay: isVisible ? '0.2s' : '0s' }}>
-                    <HexImage
-                      src={serviceIcons.icon2}
-                      alt="Analysis & Design"
-                      className=""
-                    />
+                  <div className={`slide-down-slow ${isVisible ? 'animate' : 'opacity-0'}`} style={{ animationDelay: isVisible ? '0.15s' : '0s' }}>
+                    <HexImage src={serviceIcons.icon2} alt="Analysis & Design" className="" />
                   </div>
-
-                  {/* bottom row (offset upward for honeycomb) */}
-                  <div className={`col-start-1 row-start-2 -mt-4 md:-mt-[100px] translate-x-[90px] md:translate-x-[110px] slide-up-slow ${
-                    isVisible ? 'animate' : 'opacity-0'
-                  }`}>
-                    <HexImage
-                      src={serviceIcons.icon3}
-                      alt="Development"
-                      className=""
-                    />
+                  <div className={`slide-up-slow ${isVisible ? 'animate' : 'opacity-0'}`}>
+                    <HexImage src={serviceIcons.icon3} alt="Development" className="" />
                   </div>
-                  <div className={`col-start-2 row-start-2 -mt-4 md:-mt-[100px] translate-x-[80px] md:translate-x-[105px] slide-up-slow ${
-                    isVisible ? 'animate' : 'opacity-0'
-                  }`}
-                  style={{ animationDelay: isVisible ? '0.2s' : '0s' }}>
-                    <HexImage
-                      src={serviceIcons.icon4}
-                      alt="Support"
-                      className=""
-                    />
+                  <div className={`slide-up-slow ${isVisible ? 'animate' : 'opacity-0'}`} style={{ animationDelay: isVisible ? '0.15s' : '0s' }}>
+                    <HexImage src={serviceIcons.icon4} alt="Support" className="" />
+                  </div>
+                </div>
+              </div>
+              {/* Desktop: honeycomb layout */}
+              <div className="hidden md:block w-full max-w-[760px]">
+                <div className="grid grid-cols-3 grid-rows-2 place-items-center gap-x-[70px] gap-y-0 mt-8">
+                  <div className={`col-start-2 row-start-1 slide-down-slow ${isVisible ? 'animate' : 'opacity-0'}`}>
+                    <HexImage src={serviceIcons.icon1} alt="Sales" className="" emphasized />
+                  </div>
+                  <div className={`col-start-3 row-start-1 slide-down-slow ${isVisible ? 'animate' : 'opacity-0'}`} style={{ animationDelay: isVisible ? '0.2s' : '0s' }}>
+                    <HexImage src={serviceIcons.icon2} alt="Analysis & Design" className="" />
+                  </div>
+                  <div className={`col-start-1 row-start-2 -mt-[100px] translate-x-[110px] slide-up-slow ${isVisible ? 'animate' : 'opacity-0'}`}>
+                    <HexImage src={serviceIcons.icon3} alt="Development" className="" />
+                  </div>
+                  <div className={`col-start-2 row-start-2 -mt-[100px] translate-x-[105px] slide-up-slow ${isVisible ? 'animate' : 'opacity-0'}`} style={{ animationDelay: isVisible ? '0.2s' : '0s' }}>
+                    <HexImage src={serviceIcons.icon4} alt="Support" className="" />
                   </div>
                 </div>
               </div>
@@ -320,12 +308,12 @@ export default function Services() {
 
       {/* Red Scrolling Ticker Bar - Separator */}
       <div
-        className="relative left-1/2 w-screen -translate-x-1/2 services-ticker-bg py-2 md:py-2.5"
+        className="relative left-1/2 w-screen -translate-x-1/2 services-ticker-bg services-ticker-strip py-2.5 sm:py-3 md:py-3 flex items-center min-h-[2.5rem] sm:min-h-[2.75rem]"
         style={{
           background: 'linear-gradient(90deg, #680000 0%, #A00000 50%, #680000 100%)',
         }}
       >
-        <div className="ticker-container ticker-fade">
+        <div className="ticker-container ticker-fade w-full">
           <div className="ticker-content">
             {/* One loop */}
             <div className="ticker-row">
@@ -351,36 +339,37 @@ export default function Services() {
       </div>
 
       {/* By the Numbers (kept compact so it stays visible) */}
-      <div className="relative left-1/2 w-screen -translate-x-1/2 bg-[#D7E1E4] pt-4 pb-4 md:pt-6 md:pb-6 overflow-visible">
-        <div className={`container mx-auto max-w-7xl px-4 md:px-6 lg:px-12 slide-up-content relative ${
+      <div className="relative left-1/2 w-screen -translate-x-1/2 bg-[#D7E1E4] pt-4 pb-4 sm:pt-5 sm:pb-5 md:pt-6 md:pb-6 overflow-visible">
+        <div className={`container mx-auto max-w-7xl px-3 sm:px-4 md:px-6 lg:px-12 slide-up-content relative z-10 ${
           isVisible ? 'animate' : 'opacity-0'
         }`}>
           <div className="text-center font-sans">
-            <h3 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8 text-gray-900">
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 md:mb-8 text-gray-900">
               By the Numbers
             </h3>
 
-            <div className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-4 md:gap-x-8 md:gap-y-6 relative">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-4 sm:gap-x-6 sm:gap-y-4 md:grid-cols-4 md:gap-x-8 md:gap-y-6 relative">
               {loading ? (
                 <div className="col-span-2 md:col-span-4">
                   <Loading message="Loading statistics" size="md" className="text-gray-900" />
                 </div>
               ) : (
                 statistics.map((stat) => (
-                  <div key={stat.id}>
+                  <div key={stat.id} className="min-w-0 relative z-10">
                     <div 
-                      className="font-sans text-center text-gray-900"
+                      className="font-sans text-center tabular-nums text-gray-900"
                       style={{
                         fontFamily: 'Encode Sans Expanded',
                         fontWeight: 600,
-                        fontSize: '64px',
+                        fontSize: 'clamp(2rem, 8vw, 4rem)',
                         lineHeight: '100%',
                         letterSpacing: '0%',
+                        color: '#111827',
                       }}
                     >
                       <AnimatedCounter value={stat.value} isVisible={isVisible} />
                     </div>
-                    <div className="mt-1 text-sm md:text-base font-semibold text-gray-900">
+                    <div className="mt-1 text-xs sm:text-sm md:text-base font-semibold text-gray-900" style={{ color: '#111827' }}>
                       {stat.label}
                     </div>
                   </div>
@@ -392,10 +381,11 @@ export default function Services() {
       </div>
       {/* iSgray logo under the last item position - overflows to next section */}
       {!loading && statistics.length > 0 && (
-        <div className="absolute bottom-[-150px] md:bottom-[-200px] left-[70%] md:left-[82%] -translate-x-1/2 w-[400px] h-[400px] md:w-[500px] md:h-[500px] flex items-center justify-center z-0 pointer-events-none">
+        <div className="absolute bottom-[-60px] sm:bottom-[-90px] md:bottom-[-200px] left-[68%] md:left-[82%] -translate-x-1/2 w-[160px] h-[160px] max-w-[45vw] sm:w-[220px] sm:h-[220px] sm:max-w-[40vw] md:w-[500px] md:h-[500px] md:max-w-none flex items-center justify-center z-0 pointer-events-none">
           <img
             src="/logos/iSgray.png"
-            alt="iS logo"
+            alt=""
+            aria-hidden
             className="w-full h-full object-contain"
             style={{ filter: 'brightness(0.3) contrast(1.8)' }}
           />

@@ -47,38 +47,22 @@ export default function CategoryStrip({ name, text, image, className = '' }: Cat
         );
       })()}
       
-      {/* Text Overlay - Rotated Vertically, First Letter Alignment */}
+      {/* Text Overlay - Rotated Vertically; position higher on mobile so full word isn't clipped */}
       <div 
-        className="absolute pointer-events-none z-10"
-        style={{
-          bottom: 'clamp(20px, 8vh, 55px)',
-          right: 'clamp(2px, 1vw, 5px)',
-          width: '1px',
-          height: '1px',
-        }}
+        className="absolute pointer-events-none z-10 right-0.5 bottom-8 sm:bottom-10 md:bottom-12 lg:bottom-14 w-px h-px"
       >
         <div
+          className="absolute bottom-0 left-0 whitespace-nowrap origin-bottom-left"
           style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
             transform: 'rotate(-90deg)',
-            transformOrigin: 'bottom left',
-            whiteSpace: 'nowrap',
           }}
         >
           <span
-            className={image ? 'text-white' : 'text-gray-600'}
+            className={`inline-block text-[1.25rem] sm:text-[1.5rem] md:text-[2rem] lg:text-[2.5rem] xl:text-[3rem] font-semibold uppercase leading-tight tracking-wide ${image ? 'text-white' : 'text-gray-600'}`}
             style={{
-              fontSize: 'clamp(1.5rem, 4vw, 5rem)',
-              textShadow: image ? '4px 4px 12px rgba(0,0,0,0.9)' : '1px 1px 3px rgba(0,0,0,0.1)',
-              fontWeight: 600,
               fontFamily: '"Teko", sans-serif',
-              textTransform: 'uppercase',
-              letterSpacing: 'clamp(0.05em, 0.2em, 0.2em)',
-              lineHeight: '1.2',
               fontStretch: 'condensed',
-              display: 'inline-block',
+              textShadow: image ? '4px 4px 12px rgba(0,0,0,0.9)' : '1px 1px 3px rgba(0,0,0,0.1)',
             }}
           >
             {text}

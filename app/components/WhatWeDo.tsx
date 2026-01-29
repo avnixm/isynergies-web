@@ -107,6 +107,7 @@ export default function WhatWeDo() {
       <section
         id="what-we-do"
         ref={sectionRef}
+        aria-label="What We Do"
         className="relative bg-[#D7E1E4] py-16"
       >
         <Loading message="Loading What We Do section" />
@@ -126,6 +127,7 @@ export default function WhatWeDo() {
     <section
       id="what-we-do"
       ref={sectionRef}
+      aria-label="What We Do"
       className="relative bg-[#D7E1E4] overflow-visible"
     >
       {/* Blue gradient bar header (moved from About Us so sections never overlap) */}
