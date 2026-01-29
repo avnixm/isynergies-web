@@ -202,8 +202,6 @@ export default function Hero({ navLinks }: HeroProps) {
     };
   }, [tickerItems]);
 
-  // Cache API: fetch hero video, store in cache, use object URL. Prevents re-download on revisit.
-  // Cache key = video URL; when CMS video changes we evict the old entry (cache-busting).
   useEffect(() => {
     if (!bgVideo || videoError || heroSection?.useHeroImages) return;
     if (typeof caches === 'undefined') return;
