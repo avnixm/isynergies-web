@@ -40,10 +40,14 @@ export default function Hero({ navLinks }: HeroProps) {
   const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [videoError, setVideoError] = useState(false);
+  const [videoCachedSrc, setVideoCachedSrc] = useState<string | null>(null);
+  const [videoCacheFailed, setVideoCacheFailed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
+  const videoObjectUrlRef = useRef<string | null>(null);
+  const previousVideoUrlRef = useRef<string | null>(null);
   const [headerVisible, setHeaderVisible] = useState(true);
   const announcementRef = useRef<HTMLDivElement>(null);
   const [useMarquee, setUseMarquee] = useState(false);
@@ -198,6 +202,72 @@ export default function Hero({ navLinks }: HeroProps) {
     };
   }, [tickerItems]);
 
+  // Cache API: fetch hero video, store in cache, use object URL. Prevents re-download on revisit.
+  // Cache key = video URL; when CMS video changes we evict the old entry (cache-busting).
+  useEffect(() => {
+    if (!bgVideo || videoError || heroSection?.useHeroImages) return;
+    if (typeof caches === 'undefined') return;
+
+    setVideoCacheFailed(false);
+    const cacheName = 'hero-video-v1';
+    const request = new Request(bgVideo, { mode: 'cors' });
+    const previousUrl = previousVideoUrlRef.current;
+    let aborted = false;
+
+    const load = async () => {
+      try {
+        const cache = await caches.open(cacheName);
+        // Cache-bust: when CMS video URL changes, remove old entry so we don't accumulate.
+        if (previousUrl && previousUrl !== bgVideo) {
+          try {
+            await cache.delete(new Request(previousUrl, { mode: 'cors' }));
+          } catch {
+            // Ignore delete errors (e.g. entry already gone)
+          }
+        }
+        previousVideoUrlRef.current = bgVideo;
+
+        const res = await cache.match(request);
+        if (res?.ok && !aborted) {
+          const blob = await res.blob();
+          if (aborted) return;
+          const u = URL.createObjectURL(blob);
+          videoObjectUrlRef.current = u;
+          setVideoCachedSrc(u);
+          return;
+        }
+        if (aborted) return;
+        const fetchRes = await fetch(request, { mode: 'cors' });
+        if (!fetchRes.ok) throw new Error(`HTTP ${fetchRes.status}`);
+        await cache.put(request, fetchRes.clone());
+        if (aborted) return;
+        const blob = await fetchRes.blob();
+        if (aborted) return;
+        const u = URL.createObjectURL(blob);
+        videoObjectUrlRef.current = u;
+        setVideoCachedSrc(u);
+      } catch (e) {
+        if (!aborted) {
+          console.warn('Hero video cache fetch failed, using direct src:', e);
+          setVideoCacheFailed(true);
+          previousVideoUrlRef.current = null;
+        }
+      }
+    };
+
+    load();
+
+    return () => {
+      aborted = true;
+      const u = videoObjectUrlRef.current;
+      if (u) {
+        URL.revokeObjectURL(u);
+        videoObjectUrlRef.current = null;
+      }
+      setVideoCachedSrc(null);
+    };
+  }, [bgVideo, videoError, heroSection?.useHeroImages]);
+
   // Intersection Observer to play video only when hero section is visible
   useEffect(() => {
     if (!videoRef.current || !heroRef.current || !bgVideo || videoError) return;
@@ -207,29 +277,20 @@ export default function Hero({ navLinks }: HeroProps) {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            // Hero section is visible - play video
             video.play().catch((error) => {
               console.warn('Video autoplay failed:', error);
-              // Autoplay might be blocked by browser, but video will play when user interacts
             });
           } else {
-            // Hero section is not visible - pause video
             video.pause();
           }
         });
       },
-      {
-        threshold: 0.25, // Trigger when 25% of the hero section is visible
-      }
+      { threshold: 0.25 }
     );
 
     observer.observe(heroRef.current);
-
-    // Cleanup
-    return () => {
-      observer.disconnect();
-    };
-  }, [bgVideo, videoError]);
+    return () => observer.disconnect();
+  }, [bgVideo, videoError, videoCachedSrc, videoCacheFailed]);
 
   return (
     <section id="home" ref={heroRef} aria-label="Hero" className="relative min-h-[100dvh] min-h-screen overflow-hidden">
@@ -251,16 +312,16 @@ export default function Hero({ navLinks }: HeroProps) {
       </div>
 
       {/* Background Video - above background image but under logos - only show in Default Background Media mode */}
-      {!heroSection?.useHeroImages && bgVideo && !videoError && (
+      {!heroSection?.useHeroImages && bgVideo && !videoError && (typeof caches === 'undefined' || videoCacheFailed ? true : !!videoCachedSrc) && (
         <div className="absolute inset-0 z-[5] overflow-hidden">
           <video
             ref={videoRef}
-            src={bgVideo as string}
+            src={(typeof caches !== 'undefined' && !videoCacheFailed && videoCachedSrc ? videoCachedSrc : bgVideo) as string}
             loop
             muted
             playsInline
             autoPlay
-            preload="metadata"
+            preload={typeof caches !== 'undefined' && !videoCacheFailed && videoCachedSrc ? 'auto' : 'metadata'}
             crossOrigin="anonymous"
             className="w-full h-full object-cover opacity-40 scale-110"
             style={{ objectFit: 'cover', transform: 'scale(1.1)' }}
