@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, ReactNode, MouseEvent } from 'react';
 import Image from 'next/image';
 import { Menu, X } from 'lucide-react';
 import Loading from './ui/loading';
+import { getLogoImageSrc } from '@/app/lib/resolve-image-src';
 
 type HeroSection = {
   weMakeItLogo: string | null;
@@ -89,25 +90,20 @@ export default function Hero({ navLinks }: HeroProps) {
   }, []);
 
   
-  const getImageUrl = (value: string | null, fallback?: string): string | null => {
-    if (!value) return fallback || null;
-    
-    if (value.startsWith('/api/images/') || value.startsWith('http')) return value;
-    
+  const getImageUrl = (value: string | null): string | null => {
+    if (!value) return null;
+    if (value.startsWith('/api/images/') || value.startsWith('/api/media/') || value.startsWith('http') || value.startsWith('/')) return value;
     return `/api/images/${value}`;
   };
 
-  
-  const bgImage = heroSection?.useHeroImages 
-    ? getImageUrl(heroSection?.heroImagesBackgroundImage ?? null) 
-    : getImageUrl(heroSection?.backgroundImage ?? null); 
-  
+  const bgImage = heroSection?.useHeroImages
+    ? getImageUrl(heroSection?.heroImagesBackgroundImage ?? null)
+    : getImageUrl(heroSection?.backgroundImage ?? null);
   const bgVideo = getImageUrl(heroSection?.backgroundVideo ?? null);
-  
   const weMakeItImage = getImageUrl(heroSection?.weMakeItLogo ?? null);
   const isLogoImage = getImageUrl(heroSection?.isLogo ?? null);
   const fullLogoImage = getImageUrl(heroSection?.fullLogo ?? null);
-  const logoSrc = getImageUrl(siteSettings?.logoImage ?? null);
+  const logoSrc = getLogoImageSrc(siteSettings?.logoImage ?? null);
 
   
   const tickerItems = heroTickerItems;

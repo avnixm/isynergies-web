@@ -821,15 +821,6 @@ export default function Team() {
       className="team-watermark relative min-h-screen bg-[#D7E1E4] py-16"
     >
       {}
-      <div className="absolute bottom-[30rem] md:bottom-[34rem] left-[75%] md:left-[80%] -translate-x-1/2 translate-y-1/2 w-[500px] h-[500px] md:w-[600px] md:h-[600px] flex items-center justify-center z-0 pointer-events-none">
-        <img
-          src="/logos/iSgray.png"
-          alt=""
-          aria-hidden
-          className="w-full h-full object-contain"
-          style={{ filter: 'brightness(0.3) contrast(1.8)' }}
-        />
-      </div>
       <div className="container relative z-10 mx-auto max-w-7xl px-4 md:px-8 lg:px-16">
         {}
         <div className="mx-auto mb-10 w-full max-w-5xl overflow-hidden rounded-2xl">

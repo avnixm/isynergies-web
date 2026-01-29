@@ -13,8 +13,9 @@
     "db:push:do": "node scripts/push-schema-do.js",
     "db:studio": "drizzle-kit studio",
     "db:setup": "tsx scripts/setup-database.ts",
-    "db:setup:prod": "tsx scripts/setup-database-prod.ts"
-    
+    "db:setup:prod": "tsx scripts/setup-database-prod.ts",
+    "create-isyn-admin": "tsx scripts/create-isyn-admin.ts",
+    "create-isyn-admin:do": "node scripts/create-isyn-admin-do.js"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

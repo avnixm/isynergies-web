@@ -376,54 +376,45 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
 
   
   useEffect(() => {
-    if (value && value.match(/^\d+$/)) {
-      
+    if (!value) {
+      setResolvedMediaUrl('');
+      setResolvedMediaType(null);
+      setIsFetchingMedia(false);
+      return;
+    }
+    if (value.match(/^\d+$/)) {
+      setResolvedMediaUrl('');
+      setResolvedMediaType(null);
       setIsFetchingMedia(true);
+      const id = value;
+      let cancelled = false;
       const fetchMediaRecord = async () => {
         try {
           const token = localStorage.getItem('admin_token');
           if (!token) {
-            
-            console.log('No auth token, falling back to /api/images/ route');
-            setIsFetchingMedia(false);
+            if (!cancelled) setIsFetchingMedia(false);
             return;
           }
-
-          console.log(`Fetching media record for ID: ${value}`);
-          const response = await fetch(`/api/admin/media/${value}`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-            },
+          const response = await fetch(`/api/admin/media/${id}`, {
+            headers: { 'Authorization': `Bearer ${token}` },
           });
-
+          if (cancelled) return;
           if (response.ok) {
             const mediaRecord = await response.json();
-            
-            if (mediaRecord && mediaRecord.url) {
-              
-              console.log(`Resolved media ID ${value} to URL: ${mediaRecord.url.substring(0, 50)}...`);
+            if (mediaRecord?.url && !cancelled) {
               setResolvedMediaUrl(mediaRecord.url);
-              setResolvedMediaType(mediaRecord.type);
-            } else {
-              console.warn(`Media record ${value} found but has no URL`);
+              setResolvedMediaType(mediaRecord.type ?? null);
             }
-          } else if (response.status === 404) {
-            
-            console.log(`Media ID ${value} not found in media table, falling back to images table`);
-            
-          } else {
-            console.error(`Failed to fetch media record: ${response.status} ${response.statusText}`);
           }
-        } catch (e) {
-          console.error('Error fetching media record:', e);
-          
+        } catch {
+          /* ignore */
         } finally {
-          setIsFetchingMedia(false);
+          if (!cancelled) setIsFetchingMedia(false);
         }
       };
       fetchMediaRecord();
-    } else if (!value) {
-      
+      return () => { cancelled = true; };
+    } else {
       setResolvedMediaUrl('');
       setResolvedMediaType(null);
       setIsFetchingMedia(false);

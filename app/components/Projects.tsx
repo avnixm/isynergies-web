@@ -181,66 +181,6 @@ export default function Projects() {
   };
   
   
-  const fallbackProjects: Project[] = useMemo(
-    () => [
-      {
-        id: 'project-1',
-        title: 'eCompacct',
-        year: '2026',
-        subtitle: 'Lorem ipsum dolor sit amet',
-        description:
-          'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed consequat quam. Sed vel lorem finibus enim consectetur eleifend sit amet vel neque.\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed consequat quam. Sed vel lorem finibus enim consectetur eleifend sit amet vel neque.',
-        category: 'desktop',
-      },
-      {
-        id: 'project-2',
-        title: 'eCash',
-        year: '2026',
-        subtitle: 'Lorem ipsum dolor sit amet',
-        description:
-          'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed consequat quam. Sed vel lorem finibus enim consectetur eleifend sit amet vel neque.\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed consequat quam. Sed vel lorem finibus enim consectetur eleifend sit amet vel neque.',
-        category: 'mobile',
-      },
-      {
-        id: 'project-3',
-        title: 'eStaff',
-        year: '2026',
-        subtitle: 'Lorem ipsum dolor sit amet',
-        description:
-          'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed consequat quam. Sed vel lorem finibus enim consectetur eleifend sit amet vel neque.\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed consequat quam. Sed vel lorem finibus enim consectetur eleifend sit amet vel neque.',
-        category: 'mobile',
-      },
-      {
-        id: 'project-4',
-        title: 'askiLMS',
-        year: '2026',
-        subtitle: 'Lorem ipsum dolor sit amet',
-        description:
-          'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed consequat quam. Sed vel lorem finibus enim consectetur eleifend sit amet vel neque.\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed consequat quam. Sed vel lorem finibus enim consectetur eleifend sit amet vel neque.',
-        category: 'desktop',
-      },
-      {
-        id: 'project-5',
-        title: 'Prototype',
-        year: '2026',
-        subtitle: 'Lorem ipsum dolor sit amet',
-        description:
-          'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed consequat quam. Sed vel lorem finibus enim consectetur eleifend sit amet vel neque.\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed consequat quam. Sed vel lorem finibus enim consectetur eleifend sit amet vel neque.',
-        category: 'hardware',
-      },
-      {
-        id: 'project-6',
-        title: 'Cover',
-        year: '2026',
-        subtitle: 'Lorem ipsum dolor sit amet',
-        description:
-          'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed consequat quam. Sed vel lorem finibus enim consectetur eleifend sit amet vel neque.\n\nLorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed consequat quam. Sed vel lorem finibus enim consectetur eleifend sit amet vel neque.',
-        category: 'desktop',
-      },
-    ],
-    []
-  );
-
   const [selected, setSelected] = useState<Project | null>(null);
   const [view, setView] = useState<ProjectView>('all');
 
@@ -294,18 +234,18 @@ export default function Projects() {
             screenshot4: p.screenshot4,
           })));
         } else {
-          setProjects(fallbackProjects);
+          setProjects([]);
         }
       } catch (error) {
         console.error('Error fetching projects:', error);
-        setProjects(fallbackProjects);
+        setProjects([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchProjects();
-  }, [fallbackProjects]);
+  }, []);
 
   useEffect(() => {
     if (!selected) return;

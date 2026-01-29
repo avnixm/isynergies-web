@@ -7,7 +7,8 @@ import { verifyPassword, createToken } from '@/app/lib/auth';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { username, password } = body;
+    const username = typeof body?.username === 'string' ? body.username.trim() : '';
+    const password = typeof body?.password === 'string' ? body.password : '';
 
     if (!username || !password) {
       return NextResponse.json(
@@ -16,7 +17,6 @@ export async function POST(request: Request) {
       );
     }
 
-    
     const [user] = await db
       .select()
       .from(adminUsers)
@@ -24,19 +24,18 @@ export async function POST(request: Request) {
       .limit(1);
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
+      const msg = process.env.NODE_ENV === 'development'
+        ? 'Invalid credentials. User not found — ensure the admin exists in the DB this app uses (e.g. run create-isyn-admin against that DB).'
+        : 'Invalid credentials';
+      return NextResponse.json({ error: msg }, { status: 401 });
     }
 
-    
     const isValid = await verifyPassword(password, user.password);
     if (!isValid) {
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
+      const msg = process.env.NODE_ENV === 'development'
+        ? 'Invalid credentials. Password mismatch — use exact username/password (case-sensitive).'
+        : 'Invalid credentials';
+      return NextResponse.json({ error: msg }, { status: 401 });
     }
 
     
@@ -80,8 +79,8 @@ export async function POST(request: Request) {
     let errorMessage = 'Internal server error';
     if (error?.code === 'ER_CON_COUNT_ERROR' || error?.sqlMessage?.includes('Too many connections')) {
       errorMessage = 'Database connection limit reached. Please try again in a moment.';
-    } else if (error?.code === 'ECONNREFUSED' || error?.code === 'ENOTFOUND') {
-      errorMessage = 'Database connection failed. Please check your database configuration.';
+    } else if (error?.code === 'ECONNREFUSED' || error?.code === 'ENOTFOUND' || error?.code === 'ETIMEDOUT') {
+      errorMessage = 'Database connection failed. If using a managed DB (e.g. DigitalOcean), ensure Trusted Sources allow your deployment (e.g. allow 0.0.0.0/0 for Vercel).';
     } else if (error?.code === 'ER_ACCESS_DENIED_ERROR') {
       errorMessage = 'Database access denied. Please check your credentials.';
     } else if (error?.code === 'ER_BAD_DB_ERROR') {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { getLogoImageSrc } from '@/app/lib/resolve-image-src';
 
 type SiteSettings = {
   companyName: string;
@@ -16,11 +17,11 @@ type SiteSettings = {
 
 export default function Footer() {
   const [settings, setSettings] = useState<SiteSettings>({
-    companyName: 'iSynergies Inc.',
-    companyAddress: '105 Maharlika Highway, Cabanatuan City, 3100, Philippines',
-    companyPhone: '(044) 329 2400',
-    companyEmail: 'infoho@isynergiesinc.com',
-    companyFacebook: 'https://facebook.com/isynergiesinc',
+    companyName: '',
+    companyAddress: '',
+    companyPhone: '',
+    companyEmail: '',
+    companyFacebook: '',
     companyTwitter: '',
     companyInstagram: '',
     logoImage: null,
@@ -63,20 +64,21 @@ export default function Footer() {
           <div className="space-y-3 font-sans">
             {}
             <div className="relative h-10 md:h-12 w-48 md:w-56">
-              {settings.logoImage ? (
-                <Image
-                  src={typeof settings.logoImage === 'string' && (settings.logoImage.startsWith('/api/images/') || settings.logoImage.startsWith('http') || settings.logoImage.startsWith('/'))
-                    ? settings.logoImage 
-                    : `/api/images/${settings.logoImage}`}
-                  alt="iSynergies Inc."
-                  fill
-                  className="object-contain object-left"
-                  sizes="224px"
-                  priority={false}
-                />
-              ) : (
-                <div className="h-full w-full rounded-lg bg-white/10 border border-white/20" />
-              )}
+              {(() => {
+                const logoSrc = getLogoImageSrc(settings.logoImage);
+                return logoSrc ? (
+                  <Image
+                    src={logoSrc}
+                    alt="iSynergies Inc."
+                    fill
+                    className="object-contain object-left"
+                    sizes="224px"
+                    priority={false}
+                  />
+                ) : (
+                  <div className="h-full w-full rounded-lg bg-white/10 border border-white/20" />
+                );
+              })()}
             </div>
 
             {}

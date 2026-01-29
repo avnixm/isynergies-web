@@ -115,18 +115,11 @@ export default function AboutUs() {
 
   if (!content) return null;
 
-  const getImageSrc = (value: string | null | undefined, fallback?: string) => {
-    if (value && value.toString().trim() !== '') {
-      const v = value.toString();
-      if (v.startsWith('/api/images/') || v.startsWith('http') || v.startsWith('/')) return v;
-      return `/api/images/${v}`;
-    }
-    if (fallback && fallback.toString().trim() !== '') {
-      const v = fallback.toString();
-      if (v.startsWith('/api/images/') || v.startsWith('http') || v.startsWith('/')) return v;
-      return `/api/images/${v}`;
-    }
-    return '';
+  const getImageSrc = (value: string | null | undefined) => {
+    if (!value || value.toString().trim() === '') return '';
+    const v = value.toString().trim();
+    if (v.startsWith('/api/images/') || v.startsWith('http') || v.startsWith('/')) return v;
+    return `/api/images/${v}`;
   };
 
   // Get gallery images from database, sorted by display order

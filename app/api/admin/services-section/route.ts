@@ -5,8 +5,8 @@ import { requireAuth } from '@/app/lib/auth-middleware';
 import { ensureServicesTables } from '@/app/lib/ensure-services-tables';
 import { eq } from 'drizzle-orm';
 
-const DEFAULT_TITLE = 'Our Services';
-const DEFAULT_DESCRIPTION = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed consequat quam. Sed vel lorem finibus enim consectetur eleifend sit amet vel neque.';
+const DEFAULT_TITLE = '';
+const DEFAULT_DESCRIPTION = '';
 
 function isNoSuchTable(e: unknown): boolean {
   const err = e as { errno?: number; code?: string };
@@ -48,7 +48,7 @@ export async function PUT(request: Request) {
   if (authResult instanceof NextResponse) return authResult;
 
   const body = await request.json();
-  const title = typeof body?.title === 'string' ? body.title : 'Our Services';
+  const title = typeof body?.title === 'string' ? body.title : '';
   const description = typeof body?.description === 'string' ? body.description : '';
 
   try {

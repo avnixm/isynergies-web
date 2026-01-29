@@ -32,16 +32,11 @@ type AuthorizedDealer = {
 export default function Shop() {
   const [content, setContent] = useState<ShopContent>({
     title: 'Shop',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+    description: '',
     salesIcon: '',
     authorizedDealerImage: '',
   });
-  const [categories, setCategories] = useState<ShopCategory[]>([
-    { id: 1, name: 'Laptops', text: 'LAPTOPS', image: '', displayOrder: 0 },
-    { id: 2, name: 'Mobiles', text: 'MOBILES', image: '', displayOrder: 1 },
-    { id: 3, name: 'Printers', text: 'PRINTERS', image: '', displayOrder: 2 },
-    { id: 4, name: 'Hardware', text: 'HARDWARE', image: '', displayOrder: 3 },
-  ]);
+  const [categories, setCategories] = useState<ShopCategory[]>([]);
   const [authorizedDealers, setAuthorizedDealers] = useState<AuthorizedDealer[]>([]);
   const [loading, setLoading] = useState(true);
   const sectionRef = useRef<HTMLElement | null>(null);
@@ -190,16 +185,6 @@ export default function Shop() {
               }}>
                 {content.description}
               </p>
-              {}
-              <img
-                src="/logos/iSgray.png"
-                alt=""
-                aria-hidden
-                className="absolute top-20 right-0 opacity-[0.15] pointer-events-none z-0 hidden md:block w-[180px] h-[180px] lg:w-[250px] lg:h-[250px]"
-                style={{
-                  filter: 'brightness(2) contrast(1.2) invert(0.1)',
-                }}
-              />
             </div>
 
             {/* Middle Section: Sales hexagon */}
@@ -222,19 +207,6 @@ export default function Shop() {
                   </div>
                 )}
               </div>
-              {}
-              <img
-                src="/logos/iSgray.png"
-                alt=""
-                aria-hidden
-                className="absolute pointer-events-none hidden xl:block w-[400px] h-[400px] 2xl:w-[500px] 2xl:h-[500px]"
-                style={{
-                  filter: 'brightness(2) contrast(1.2) invert(0.1)',
-                  bottom: '10px',
-                  left: '460px',
-                  transform: 'translateX(-50%)'
-                }}
-              />
             </div>
 
             {/* Bottom Section: Authorized Dealer strip - all dealers shown */}

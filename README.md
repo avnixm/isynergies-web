@@ -87,11 +87,14 @@ npm run db:setup:prod
 
 ### 4. Create an admin user
 
-Use your preferred method to insert an admin into `admin_users` (email, hashed password). The app uses **bcrypt** for passwords. You can use a small script or Drizzle Studio:
+**Option A — create `isyn_admin` / `admin_of_isyn`:**
 
-```bash
-npm run db:studio
-```
+- Local DB (uses `.env`): `npm run create-isyn-admin`
+- Production DB / DigitalOcean (uses `.env.do`): `npm run create-isyn-admin:do`
+
+**Option B:** Use Drizzle Studio (`npm run db:studio`) or another tool to insert into `admin_users`. The app uses **bcrypt** for passwords.
+
+**"Invalid credentials" when logging in:** Usually the admin doesn't exist in the DB the app uses. If you log in on **production** (Vercel), the app uses the **production** DB (Vercel env vars). Create the admin in that same DB (e.g. `create-isyn-admin:do` if production uses the DigitalOcean DB from `.env.do`). Use the **exact** username/password (case-sensitive).
 
 ---
 
@@ -119,6 +122,7 @@ npm run db:studio
 | `DB_PASSWORD` | Yes* | MySQL password |
 | `DB_NAME` | No | Database name (default: `isynergies`) |
 | `DB_SSL` | No | `"true"` for SSL (e.g. cloud MySQL) |
+| `DB_CONNECT_TIMEOUT` | No | Connect timeout in ms (default: `15000`) |
 | `JWT_SECRET` | Yes (admin) | Secret for admin JWT; use a strong random value in production |
 | `EMAIL_USER` | No | SMTP user / Gmail address for contact form |
 | `EMAIL_APP_PASSWORD` | No | App password (Gmail) or SMTP password; alt: `APP_PASSWORD` |
@@ -156,6 +160,10 @@ Additional `*:prod` scripts (e.g. `add-team-groups-migration:prod`, `clear-team-
 1. Connect the repo to [Vercel](https://vercel.com).
 2. Add all required env vars in **Project → Settings → Environment Variables** (including `DB_*`, `JWT_SECRET`, and `BLOB_READ_WRITE_TOKEN` if you use Blob).
 3. Deploy. The app uses the **Next.js** framework and is compatible with Vercel’s default build settings.
+
+---
+
+**Vercel + DigitalOcean MySQL (`ETIMEDOUT`):** If you see `connect ETIMEDOUT` when logging in or calling DB APIs, Vercel can't reach MySQL. In **Databases → your cluster → Settings → Trusted Sources**, add **Allow all (0.0.0.0/0)**. Keep `DB_SSL=true` and correct `DB_*` env vars. Optional: `DB_CONNECT_TIMEOUT=15000` (default 15s).
 
 ---
 

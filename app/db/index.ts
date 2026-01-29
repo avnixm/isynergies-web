@@ -21,11 +21,10 @@ const connection = mysql.createPool({
   
   
   
-  connectionLimit: isDevelopment ? 5 : 1, 
-  queueLimit: isDevelopment ? 10 : 3, 
-  idleTimeout: 5000, 
-  
-  connectTimeout: 3000, 
+  connectionLimit: isDevelopment ? 5 : 1,
+  queueLimit: isDevelopment ? 10 : 3,
+  idleTimeout: 5000,
+  connectTimeout: parseInt(process.env.DB_CONNECT_TIMEOUT || '15000', 10), 
   
   waitForConnections: true, 
   

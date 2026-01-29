@@ -30,7 +30,6 @@ export function MembersTabCard({ member, onEdit, onDelete }: MembersTabCardProps
 
   return (
     <Card className="group flex rounded-xl border border-border bg-white shadow-sm transition-shadow hover:border-primary/20 hover:shadow-md">
-      {/* 100×80 whole-image preview with hover + iSgrayNew logo */}
       <div
         className="relative h-20 w-[100px] shrink-0 overflow-hidden rounded-l-xl"
         style={{
@@ -39,14 +38,6 @@ export function MembersTabCard({ member, onEdit, onDelete }: MembersTabCardProps
           background: 'linear-gradient(202.54deg, #FFFFFF 6.1%, #A9C9E0 28.37%, #5393C1 50.65%, #062092 95.19%)',
         }}
       >
-        <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none overflow-hidden">
-          <img
-            src="/isgraynew.png"
-            alt=""
-            aria-hidden
-            className="max-h-[95%] max-w-[95%] object-contain brightness-[0.55] contrast-125"
-          />
-        </div>
         {src ? (
           <img
             src={src}

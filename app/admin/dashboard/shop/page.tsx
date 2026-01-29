@@ -45,7 +45,7 @@ export default function ShopPage() {
   const { confirm } = useConfirm();
   const [content, setContent] = useState<ShopContent>({
     title: 'Shop',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+    description: '',
     salesIcon: '',
     authorizedDealerImage: '',
     shopUrl: '',

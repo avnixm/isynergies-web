@@ -123,17 +123,6 @@ export default function BoardOfDirectors() {
           />
 
           {}
-          <div className="absolute bottom-[12rem] sm:bottom-[16rem] md:bottom-[26rem] left-[70%] sm:left-[75%] md:left-[80%] -translate-x-1/2 translate-y-1/2 w-[220px] h-[220px] sm:w-[320px] sm:h-[320px] md:w-[600px] md:h-[600px] flex items-center justify-center z-0 pointer-events-none">
-            <img
-              src="/logos/iSgray.png"
-              alt=""
-              aria-hidden
-              className="w-full h-full object-contain"
-              style={{ filter: 'brightness(0.3) contrast(1.8)' }}
-            />
-          </div>
-
-          {}
           <div
             className={`flex justify-center relative z-10 pt-6 sm:pt-8 md:pt-10 slide-left-bouncy ${
               isVisible ? 'animate' : 'opacity-0'

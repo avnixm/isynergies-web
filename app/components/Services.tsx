@@ -145,8 +145,8 @@ export default function Services() {
   });
   const [servicesListItems, setServicesListItems] = useState<ServicesListItem[]>([]);
   const [servicesSection, setServicesSection] = useState<{ title: string; description: string }>({
-    title: 'Our Services',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed consequat quam. Sed vel lorem finibus enim consectetur eleifend sit amet vel neque.',
+    title: '',
+    description: '',
   });
   const [loading, setLoading] = useState(true);
   const sectionRef = useRef<HTMLElement | null>(null);
@@ -186,32 +186,15 @@ export default function Services() {
           const data = await statsResponse.json();
           setStatistics(data);
         } else {
-          
-          setStatistics([
-            { id: 1, label: 'Clients', value: '30+', displayOrder: 0 },
-            { id: 2, label: 'Customers', value: '5000+', displayOrder: 1 },
-            { id: 3, label: 'Projects', value: '100+', displayOrder: 2 },
-            { id: 4, label: 'Dedicated Staff', value: '16', displayOrder: 3 },
-          ]);
+          setStatistics([]);
         }
 
-        
         const tickerResponse = await fetch('/api/admin/ticker');
         if (tickerResponse.ok) {
           const data = await tickerResponse.json();
           setTickerItems(data);
         } else {
-          
-          setTickerItems([
-            { id: 1, text: 'SOFTWARE DEVELOPMENT', displayOrder: 0 },
-            { id: 2, text: 'UI/UX DESIGN', displayOrder: 1 },
-            { id: 3, text: 'SOFTWARE INSTALLATION', displayOrder: 2 },
-            { id: 4, text: 'HARDWARE REPAIRS', displayOrder: 3 },
-            { id: 5, text: 'CCTV INSTALLATION', displayOrder: 4 },
-            { id: 6, text: 'GADGETS', displayOrder: 5 },
-            { id: 7, text: 'PRINTERS', displayOrder: 6 },
-            { id: 8, text: 'LAPTOP', displayOrder: 7 },
-          ]);
+          setTickerItems([]);
         }
 
         
@@ -243,8 +226,8 @@ export default function Services() {
         if (sectionResponse.ok) {
           const sectionData = await sectionResponse.json();
           setServicesSection({
-            title: sectionData.title ?? 'Our Services',
-            description: sectionData.description ?? 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sed consequat quam. Sed vel lorem finibus enim consectetur eleifend sit amet vel neque.',
+            title: sectionData.title ?? '',
+            description: sectionData.description ?? '',
           });
         }
       } catch (error) {
@@ -279,15 +262,7 @@ export default function Services() {
               </p>
 
               <ul className="space-y-2 sm:space-y-3 text-sm md:text-base font-semibold text-white">
-                {(servicesListItems.length
-                  ? servicesListItems
-                  : [
-                      'Development',
-                      'Support',
-                      'Analysis & Design',
-                      'Sales',
-                      'Maintenance',
-                    ]).map((item) => {
+                {servicesListItems.map((item) => {
                   const label = typeof item === 'string' ? item : item.label;
                   const key = typeof item === 'string' ? item : `list-${item.id}`;
                   return (
@@ -417,17 +392,7 @@ export default function Services() {
         </div>
       </div>
       {}
-      {!loading && statistics.length > 0 && (
-        <div className="absolute bottom-[-60px] sm:bottom-[-90px] md:bottom-[-200px] left-[68%] md:left-[82%] -translate-x-1/2 w-[160px] h-[160px] max-w-[45vw] sm:w-[220px] sm:h-[220px] sm:max-w-[40vw] md:w-[500px] md:h-[500px] md:max-w-none flex items-center justify-center z-0 pointer-events-none">
-          <img
-            src="/logos/iSgray.png"
-            alt=""
-            aria-hidden
-            className="w-full h-full object-contain"
-            style={{ filter: 'brightness(0.3) contrast(1.8)' }}
-          />
-        </div>
-      )}
+      {}
     </section>
   );
 }

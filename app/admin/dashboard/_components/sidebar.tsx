@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import Image from "next/image"
 import {
   LayoutDashboard,
   Film,
@@ -55,15 +54,8 @@ export function Sidebar({ pathname, user, onLogout }: SidebarProps) {
     <aside className="hidden md:flex w-64 h-full bg-white text-gray-800 flex-col border-r border-border overflow-hidden flex-shrink-0">
       {}
       <div className="p-6 border-b border-border flex-shrink-0">
-        <div className="relative h-12 w-full">
-          <Image
-            src="/logos/isynergiesinclogo.png"
-            alt="iSynergies Inc."
-            fill
-            className="object-contain"
-          />
-        </div>
-        <p className="text-xs text-gray-800 mt-2">Admin CMS</p>
+        <p className="text-lg font-semibold text-primary truncate">iSynergies Inc.</p>
+        <p className="text-xs text-gray-800 mt-1">Admin CMS</p>
       </div>
 
       {}

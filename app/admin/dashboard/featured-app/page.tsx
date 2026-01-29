@@ -241,7 +241,7 @@ export default function FeaturedAppPage() {
     !!value && /^\d+$/.test(value.trim());
 
   const getMediaUrl = (value: string | null, kind: 'image' | 'video' = 'image'): string => {
-    if (!value) return '/placeholder-image.png';
+    if (!value) return '';
     if (value.startsWith('/api/images/') || value.startsWith('/api/media/') || value.startsWith('http') || value.startsWith('/')) {
       return value;
     }

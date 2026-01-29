@@ -115,17 +115,6 @@ export function LayoutPreviewTab({
     [groups]
   );
 
-  const isGrayLogo = () => (
-    <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none overflow-hidden">
-      <img
-        src="/isgraynew.png"
-        alt=""
-        aria-hidden
-        className="max-h-[97%] max-w-[97%] object-contain brightness-[0.55] contrast-125"
-      />
-    </div>
-  );
-
   const blueCardGradient = 'linear-gradient(202.54deg, #FFFFFF 6.1%, #A9C9E0 28.37%, #5393C1 50.65%, #062092 95.19%)';
   const bossCardGradient = 'linear-gradient(to top right, #920608 0%, #C16553 35%, #E0C5A9 70%, #FFFFFF 100%)';
 
@@ -136,8 +125,7 @@ export function LayoutPreviewTab({
           className="relative flex aspect-square min-w-0 items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-border bg-muted/30"
           aria-hidden
         >
-          {isGrayLogo()}
-          <span className="relative z-10 text-xs text-muted-foreground">—</span>
+          <span className="text-xs text-muted-foreground">—</span>
         </div>
       );
     }
@@ -154,7 +142,6 @@ export function LayoutPreviewTab({
           className="relative flex flex-1 items-center justify-center overflow-hidden rounded-t-xl"
           style={{ background: isBoss ? bossCardGradient : blueCardGradient }}
         >
-          {isGrayLogo()}
           {src ? (
             <img src={src} alt="" className="relative z-[1] h-full w-full object-contain" />
           ) : (

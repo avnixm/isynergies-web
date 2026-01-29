@@ -9,7 +9,6 @@ import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { ImageUpload } from '@/app/components/ui/image-upload';
-import Image from 'next/image';
 import { useToast } from '@/app/components/ui/toast';
 import { Info } from 'lucide-react';
 
@@ -85,6 +84,7 @@ export default function SiteSettingsPage() {
 
       if (response.ok) {
         success('Site settings updated successfully.');
+        await fetchSettings();
       } else {
         error('Failed to update site settings.');
       }
@@ -279,18 +279,6 @@ export default function SiteSettingsPage() {
                 value={settings.logoImage || ''}
                 onChange={(url: string) => setSettings({ ...settings, logoImage: url })}
               />
-              {settings.logoImage && (
-                <div className="relative h-16 w-48 rounded-md overflow-hidden border border-gray-200 bg-white">
-                  <Image
-                    src={typeof settings.logoImage === 'string' && (settings.logoImage.startsWith('/api/images/') || settings.logoImage.startsWith('http') || settings.logoImage.startsWith('/'))
-                      ? settings.logoImage 
-                      : `/api/images/${settings.logoImage}`}
-                    alt="Company Logo"
-                    fill
-                    className="object-contain p-2"
-                  />
-                </div>
-              )}
               <p className="text-xs text-muted-foreground">
                 Logo displayed in navbar and footer. Recommended size: 200×60px PNG with transparent background.
               </p>

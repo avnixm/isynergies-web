@@ -9,30 +9,28 @@ export async function GET() {
     const [settings] = await db.select().from(siteSettings).limit(1);
     
     if (!settings) {
-      
       return NextResponse.json({
-        companyName: 'iSynergies Inc.',
-        companyAddress: 'ASKI Building 105 Maharlika Highway, Cabanatuan City, Nueva Ecija',
-        companyPhone: '+63 123 456 7890',
-        companyEmail: 'info@isynergies.com',
+        companyName: '',
+        companyAddress: '',
+        companyPhone: '',
+        companyEmail: '',
         contactForwardEmail: '',
-        companyFacebook: 'https://facebook.com/isynergies',
+        companyFacebook: '',
         companyTwitter: '',
         companyInstagram: '',
         logoImage: null,
       });
     }
-    
     return NextResponse.json(settings);
   } catch (error) {
     console.error('Error fetching site settings:', error);
     return NextResponse.json({
-      companyName: 'iSynergies Inc.',
-      companyAddress: 'ASKI Building 105 Maharlika Highway, Cabanatuan City, Nueva Ecija',
-      companyPhone: '+63 123 456 7890',
-      companyEmail: 'info@isynergies.com',
+      companyName: '',
+      companyAddress: '',
+      companyPhone: '',
+      companyEmail: '',
       contactForwardEmail: '',
-      companyFacebook: 'https://facebook.com/isynergies',
+      companyFacebook: '',
       companyTwitter: '',
       companyInstagram: '',
       logoImage: null,

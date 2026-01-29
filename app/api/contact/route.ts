@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 import { db } from '@/app/db';
 import { contactMessages, siteSettings } from '@/app/db/schema';
+import { getLogoImageSrc } from '@/app/lib/resolve-image-src';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -84,13 +85,16 @@ export async function POST(request: Request) {
       return '';
     })();
 
-    const logoUrl = (() => {
-      if (!settings?.logoImage) return null;
-      const val = settings.logoImage;
-      if (/^https?:\/\//.test(val)) return val;
-      if (val.startsWith('/')) return baseUrl ? `${baseUrl}${val}` : val;
-      return baseUrl ? `${baseUrl}/api/images/${val}` : `/api/images/${val}`;
-    })();
+    const logoPath = getLogoImageSrc(settings?.logoImage ?? null);
+    const logoUrl = !logoPath
+      ? null
+      : /^https?:\/\//.test(logoPath)
+        ? logoPath
+        : baseUrl
+          ? `${baseUrl}${logoPath.startsWith('/') ? logoPath : `/${logoPath}`}`
+          : logoPath.startsWith('/')
+            ? logoPath
+            : `/${logoPath}`;
 
     if (!forwardTo || !senderUser || !senderPass) {
       console.warn('Email configuration missing: ensure EMAIL_USER and EMAIL_APP_PASSWORD/APP_PASSWORD are set.');

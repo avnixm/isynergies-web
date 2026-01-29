@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { Lock, User } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
@@ -51,16 +50,8 @@ export default function AdminLogin() {
         <Card className="border-border/20 bg-white/95 shadow-xl backdrop-blur-md">
           <CardHeader className="space-y-4 text-center">
             <div className="flex justify-center">
-              <div className="relative h-14 w-40">
-              <Image
-                src="/logos/isynergiesinclogo.png"
-                alt="iSynergies Inc."
-                fill
-                className="object-contain"
-                priority
-              />
+              <p className="text-2xl font-bold text-primary">iSynergies Inc.</p>
             </div>
-          </div>
             <CardTitle className="text-xl">Admin Login</CardTitle>
             <CardDescription>Secure access to the iSynergies CMS</CardDescription>
           </CardHeader>
