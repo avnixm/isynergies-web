@@ -20,6 +20,7 @@
     "add-videos-table:prod": "tsx scripts/add-videos-table-prod.ts",
     "create-media-table:prod": "tsx scripts/create-media-table-prod.ts",
     "create-upload-sessions-table:prod": "tsx scripts/create-upload-sessions-table-prod.ts",
+    "add-services-tables:prod": "tsx scripts/add-services-tables-prod.ts",
     "migrate-images-to-media": "tsx scripts/migrate-images-to-media.ts"
   },
   "dependencies": {
