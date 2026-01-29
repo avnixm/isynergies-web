@@ -4,8 +4,8 @@ import { images, imageChunks } from '@/app/db/schema';
 import { requireAuth } from '@/app/lib/auth-middleware';
 import { eq } from 'drizzle-orm';
 
-// Handle chunked uploads for large files (> 4 MB)
-// Vercel has a 4.5 MB limit, so we chunk files client-side and upload pieces
+
+
 export const maxDuration = 300;
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -28,17 +28,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Read chunk as buffer and convert to base64
+    
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     const base64Chunk = buffer.toString('base64');
 
-    // Generate safe filename
+    
     const timestamp = Date.now();
     const originalName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
     const filename = `${timestamp}-${originalName}`;
 
-    // If this is the first chunk, create the main image record
+    
     if (chunkIndex === 0) {
       const result: { id: number }[] = await db.insert(images).values({
         filename,
@@ -54,14 +54,14 @@ export async function POST(request: Request) {
         throw new Error('Failed to create image record');
       }
 
-      // Store metadata in a temporary table or use filename to track uploadId
-      // For now, we'll store uploadId in the filename temporarily
-      // Better approach: create a separate upload_sessions table, but for now use filename
+      
+      
+      
       await db.update(images)
         .set({ filename: `${uploadId}:${filename}` })
         .where(eq(images.id, imageId));
 
-      // Insert the actual first chunk
+      
       await db.insert(imageChunks).values({
         imageId,
         chunkIndex: 0,
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
         totalChunks 
       });
     } else {
-      // Find the image record by uploadId (stored in filename)
+      
       const allImages = await db
         .select()
         .from(images)
@@ -94,7 +94,7 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Upload session not found' }, { status: 404 });
       }
 
-      // Insert this chunk
+      
       await db.insert(imageChunks).values({
         imageId: targetImageId,
         chunkIndex,

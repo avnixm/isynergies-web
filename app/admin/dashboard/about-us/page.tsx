@@ -272,7 +272,7 @@ export default function AboutUsPage() {
       )}
 
       <form id="about-us-form" onSubmit={handleSubmit} className="space-y-8">
-        {/* Main Content */}
+        {}
         <Card id="main-content" className="rounded-xl border border-border bg-white shadow-sm">
           <div className="flex items-center justify-between p-6 border-b border-border">
             <div>
@@ -282,7 +282,7 @@ export default function AboutUsPage() {
           </div>
           <CardContent className="p-6">
             <div className="max-w-4xl space-y-6">
-              {/* Compact HTML Tips */}
+              {}
               <div className="flex items-start gap-2 rounded-lg bg-muted/50 border border-border p-2">
                 <Info className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
                 <div className="text-xs text-muted-foreground leading-relaxed">
@@ -371,7 +371,7 @@ export default function AboutUsPage() {
           </CardContent>
         </Card>
 
-        {/* Mission & Vision */}
+        {}
         <Card id="mission-vision" className="rounded-xl border border-border bg-white shadow-sm">
           <div className="p-6 border-b border-border">
             <h2 className="text-lg font-medium text-foreground">Mission & Vision</h2>
@@ -441,7 +441,7 @@ export default function AboutUsPage() {
         </Card>
       </form>
 
-      {/* Gallery Images Section */}
+      {}
       <Card id="gallery-images" className="rounded-xl border border-border bg-white shadow-sm">
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
@@ -469,7 +469,7 @@ export default function AboutUsPage() {
                     key={gi.id}
                     className="flex items-center gap-4 rounded-lg border border-border bg-white p-4 transition-colors hover:bg-muted/30"
                   >
-                    {/* Thumbnail */}
+                    {}
                     <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted/30">
                       {imageUrl ? (
                         <Image
@@ -486,7 +486,7 @@ export default function AboutUsPage() {
                       )}
                     </div>
 
-                    {/* Alt Text and Order */}
+                    {}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-foreground line-clamp-1">
                         {gi.alt}
@@ -498,7 +498,7 @@ export default function AboutUsPage() {
                       </div>
                     </div>
 
-                    {/* Actions */}
+                    {}
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <Button
                         variant="outline"
@@ -529,10 +529,10 @@ export default function AboutUsPage() {
         </CardContent>
       </Card>
 
-      {/* Sticky Footer Save Button */}
+      {}
       <StickyFooter formId="about-us-form" saving={saving} />
 
-      {/* Add/Edit Gallery Image Dialog */}
+      {}
       <Dialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}

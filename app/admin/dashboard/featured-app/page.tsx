@@ -15,7 +15,7 @@ import { useConfirm } from '@/app/components/ui/confirm-dialog';
 import { HtmlTips } from '@/app/components/ui/html-tips';
 import Image from 'next/image';
 
-// Reusable preview frame component for consistent image previews
+
 interface MediaPreviewFrameProps {
   value: string;
   onChange: (value: string) => void;
@@ -31,7 +31,7 @@ function MediaPreviewFrame({ value, onChange, getImageUrl, size = 'logo', disabl
   if (value && imageUrl) {
     return (
       <div className={`relative ${frameHeight} w-full rounded-xl border border-border bg-muted/20 p-3 overflow-hidden`}>
-        {/* Preview Image - Centered and scaled to 50% */}
+        {}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="relative w-1/2 h-1/2 flex items-center justify-center">
             <Image
@@ -43,7 +43,7 @@ function MediaPreviewFrame({ value, onChange, getImageUrl, size = 'logo', disabl
             />
           </div>
         </div>
-        {/* Delete Button */}
+        {}
         <button
           type="button"
           onClick={() => onChange('')}
@@ -125,7 +125,7 @@ export default function FeaturedAppPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Dialog states
+  
   const [isCarouselDialogOpen, setIsCarouselDialogOpen] = useState(false);
   const [editingCarouselImage, setEditingCarouselImage] = useState<FeaturedAppCarouselImage | null>(null);
   const [formCarouselImage, setFormCarouselImage] = useState({
@@ -245,17 +245,17 @@ export default function FeaturedAppPage() {
     if (value.startsWith('/api/images/') || value.startsWith('/api/media/') || value.startsWith('http') || value.startsWith('/')) {
       return value;
     }
-    // Videos uploaded via Vercel Blob are stored in the `media` table with numeric IDs.
+    
     if (kind === 'video' && isNumericId(value)) {
       return `/api/media/${value}`;
     }
     return `/api/images/${value}`;
   };
 
-  // Backward-compat helper name used by preview frames (images only)
+  
   const getImageUrl = (imageId: string | null): string => getMediaUrl(imageId, 'image');
 
-  // Carousel Image Dialog Handlers
+  
   const usedCarouselOrders = carouselImages.filter(img => img.id !== editingCarouselImage?.id).map(img => img.displayOrder);
   const getNextAvailableCarouselOrder = () => {
     let order = 0;
@@ -320,9 +320,9 @@ export default function FeaturedAppPage() {
         : '/api/admin/featured-app/carousel';
       const method = editingCarouselImage ? 'PUT' : 'POST';
 
-      // Prepare the data to send
+      
       const dataToSend = {
-        image: formCarouselImage.image, // This will be either image ID or video URL
+        image: formCarouselImage.image, 
         alt: formCarouselImage.alt,
         mediaType: formCarouselImage.mediaType,
         displayOrder: formCarouselImage.displayOrder,
@@ -385,7 +385,7 @@ export default function FeaturedAppPage() {
     }
   };
 
-  // Feature Dialog Handlers
+  
   const usedFeatureOrders = features.filter(f => f.id !== editingFeature?.id).map(f => f.displayOrder);
   const getNextAvailableFeatureOrder = () => {
     let order = 0;
@@ -434,7 +434,7 @@ export default function FeaturedAppPage() {
       return;
     }
 
-    // Check if it's a string and empty
+    
     if (typeof formFeature.iconImage === 'string' && formFeature.iconImage.trim() === '') {
       toast.error('Please select an icon image');
       return;
@@ -529,7 +529,7 @@ export default function FeaturedAppPage() {
         </div>
       </div>
 
-      {/* Main Content */}
+      {}
       <form id="featured-app-form" onSubmit={(e) => { e.preventDefault(); handleSaveContent(); }} className="space-y-8">
       <Card id="main-config" className="rounded-xl border border-border bg-white shadow-sm w-full min-w-0 max-w-full">
         <div className="flex items-center justify-between p-6 border-b border-border">
@@ -542,7 +542,7 @@ export default function FeaturedAppPage() {
         </div>
         <div className="p-6">
           <div className="max-w-4xl space-y-8">
-          {/* Section Type & Links */}
+          {}
           <div className="space-y-4">
             <div>
               <h3 className="text-base font-medium text-foreground mb-3">Section Type & Links</h3>
@@ -566,7 +566,7 @@ export default function FeaturedAppPage() {
             </div>
           </div>
 
-          {/* Banner Style */}
+          {}
           <div className="space-y-4">
             <div>
               <h3 className="text-base font-medium text-foreground mb-3">Banner Style</h3>
@@ -629,7 +629,7 @@ export default function FeaturedAppPage() {
                 </select>
               </div>
             </div>
-              {/* Gradient Preview */}
+              {}
               <div className="mt-2">
                 <div
                   className="h-24 w-full rounded border border-border"
@@ -638,7 +638,7 @@ export default function FeaturedAppPage() {
                   }}
                 />
               </div>
-              {/* Banner Height */}
+              {}
               <div className="space-y-2">
                 <Label htmlFor="bannerHeight" className="text-xs">Banner Height</Label>
                 <select
@@ -662,13 +662,13 @@ export default function FeaturedAppPage() {
             </div>
           </div>
 
-          {/* Branding Images */}
+          {}
           <div className="space-y-4">
             <div>
               <h3 className="text-base font-medium text-foreground mb-3">Branding Images</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* App Logo Card */}
+              {}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="appLogo" className="text-sm font-medium">
@@ -686,7 +686,7 @@ export default function FeaturedAppPage() {
                 </p>
               </div>
 
-              {/* Powered By Image Card */}
+              {}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="poweredByImage" className="text-sm font-medium">
@@ -706,7 +706,7 @@ export default function FeaturedAppPage() {
             </div>
           </div>
 
-          {/* Download Area (App mode only) */}
+          {}
           {content.itemType === 'app' && (
             <div className="space-y-4">
               <div>
@@ -767,7 +767,7 @@ export default function FeaturedAppPage() {
             </div>
           )}
 
-          {/* Website Links (Website mode only) */}
+          {}
           {content.itemType === 'website' && (
             <div className="space-y-4">
               <div className="space-y-2">
@@ -803,7 +803,7 @@ export default function FeaturedAppPage() {
             </div>
           )}
 
-          {/* Footer Logo */}
+          {}
           <div className="space-y-2">
             <Label htmlFor="logoImage" className="text-sm font-medium">
               Logo Image (Footer)
@@ -823,7 +823,7 @@ export default function FeaturedAppPage() {
       </Card>
       </form>
 
-          {/* Carousel Images */}
+          {}
           <Card id="carousel-media" className="rounded-xl border border-border bg-white shadow-sm w-full min-w-0 max-w-full">
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
@@ -861,7 +861,7 @@ export default function FeaturedAppPage() {
                     key={img.id}
                     className="flex items-center gap-4 rounded-lg border border-border bg-white p-4 transition-colors hover:bg-muted/30"
                   >
-                    {/* Thumbnail */}
+                    {}
                     <div className="relative w-24 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-muted/30">
                       {displayUrl ? (
                         isVideo ? (
@@ -888,7 +888,7 @@ export default function FeaturedAppPage() {
                       )}
                     </div>
 
-                    {/* Media Info */}
+                    {}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground">
                         {img.alt || (isVideo ? 'Video' : 'Image')}
@@ -903,7 +903,7 @@ export default function FeaturedAppPage() {
                       </div>
                     </div>
 
-                    {/* Actions */}
+                    {}
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <Button
                         variant="outline"
@@ -932,7 +932,7 @@ export default function FeaturedAppPage() {
         </div>
       </Card>
 
-          {/* Features Management */}
+          {}
           <Card id="banner-features" className="rounded-xl border border-border bg-white shadow-sm w-full min-w-0 max-w-full">
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
@@ -967,7 +967,7 @@ export default function FeaturedAppPage() {
                     key={feature.id}
                     className="flex items-center gap-4 rounded-lg border border-border bg-white p-4 transition-colors hover:bg-muted/30"
                   >
-                    {/* Icon */}
+                    {}
                     <div className="relative w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-muted/30 flex items-center justify-center">
                       {iconUrl ? (
                         <Image
@@ -983,7 +983,7 @@ export default function FeaturedAppPage() {
                       )}
                     </div>
 
-                    {/* Feature Info */}
+                    {}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground">
                         {feature.label}
@@ -995,7 +995,7 @@ export default function FeaturedAppPage() {
                       </div>
                     </div>
 
-                    {/* Actions */}
+                    {}
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <Button
                         variant="outline"
@@ -1024,10 +1024,10 @@ export default function FeaturedAppPage() {
         </div>
       </Card>
 
-      {/* Sticky Footer Save Button */}
+      {}
       <StickyFooter formId="featured-app-form" saving={saving} />
 
-      {/* Feature Dialog */}
+      {}
       <Dialog
         open={isFeatureDialogOpen}
         onOpenChange={setIsFeatureDialogOpen}
@@ -1082,14 +1082,14 @@ export default function FeaturedAppPage() {
         </DialogFooter>
       </Dialog>
 
-      {/* Carousel Image Dialog */}
+      {}
       <Dialog
         open={isCarouselDialogOpen}
         onOpenChange={setIsCarouselDialogOpen}
         title={editingCarouselImage ? 'Edit Carousel Media' : 'Add Carousel Media'}
       >
         <div className="space-y-4 mb-6">
-          {/* Compact HTML Tips */}
+          {}
           <div className="flex items-start gap-2 rounded-lg bg-muted/50 border border-border p-2">
             <Info className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
             <div className="text-xs text-muted-foreground leading-relaxed">

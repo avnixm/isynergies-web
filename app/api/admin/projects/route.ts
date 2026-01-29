@@ -4,7 +4,7 @@ import { projects } from '@/app/db/schema';
 import { requireAuth } from '@/app/lib/auth-middleware';
 import { asc } from 'drizzle-orm';
 
-// GET all projects
+
 export async function GET() {
   try {
     const allProjects = await db
@@ -22,7 +22,7 @@ export async function GET() {
   }
 }
 
-// POST create new project
+
 export async function POST(request: Request) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;

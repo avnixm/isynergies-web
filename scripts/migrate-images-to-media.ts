@@ -3,24 +3,24 @@ import { db } from '../app/db';
 import { images, media } from '../app/db/schema';
 import { eq, isNotNull, sql } from 'drizzle-orm';
 
-/**
- * Migration script: Move images.url records to media table
- * 
- * This script migrates records from the legacy images table to the modern media table.
- * Only migrates records that have a URL (not base64 data).
- * 
- * Safety features:
- * - Dry-run mode (default) - shows what would be migrated without making changes
- * - Verification step - checks for duplicates before migrating
- * - Rollback capability - can be reversed if needed
- * 
- * Usage:
- *   Dry-run: pnpm run migrate-images-to-media
- *   Execute: pnpm run migrate-images-to-media -- --execute
- * Or directly:
- *   Dry-run: pnpm tsx scripts/migrate-images-to-media.ts
- *   Execute: pnpm tsx scripts/migrate-images-to-media.ts --execute
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 interface MigrationStats {
   total: number;
@@ -59,7 +59,7 @@ async function migrateImagesToMedia(execute: boolean = false): Promise<Migration
       return stats;
     }
 
-    // Check for existing media records to avoid duplicates
+    
     const existingMediaUrls = new Set<string>();
     const existingMedia = await db
       .select({ url: media.url })
@@ -93,9 +93,9 @@ async function migrateImagesToMedia(execute: boolean = false): Promise<Migration
 
       if (execute) {
         try {
-          // Create media record
+          
           await db.insert(media).values({
-            userId: 1, // Default user ID - adjust if needed
+            userId: 1, 
             url: image.url,
             type,
             contentType: image.mimeType || 'application/octet-stream',
@@ -110,7 +110,7 @@ async function migrateImagesToMedia(execute: boolean = false): Promise<Migration
           stats.errors++;
         }
       } else {
-        // Dry-run: just log what would be migrated
+        
         console.log(`📋 Would migrate image ${image.id}: ${image.filename} (${type})`);
         stats.migrated++;
       }
@@ -138,7 +138,7 @@ async function migrateImagesToMedia(execute: boolean = false): Promise<Migration
   }
 }
 
-// Parse command line arguments
+
 const args = process.argv.slice(2);
 const execute = args.includes('--execute');
 

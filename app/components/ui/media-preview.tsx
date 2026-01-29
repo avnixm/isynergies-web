@@ -12,12 +12,12 @@ interface MediaPreviewProps {
   controls?: boolean;
 }
 
-/**
- * MediaPreview component - renders images or videos based on type
- * 
- * Usage:
- * <MediaPreview url={media.url} type={media.type} />
- */
+
+
+
+
+
+
 export function MediaPreview({ 
   url, 
   type, 
@@ -67,11 +67,11 @@ export function MediaPreview({
             console.error('Video element error code:', video.error?.code);
             console.error('Video element error message:', video.error?.message);
             
-            // Error code meanings:
-            // 1 = MEDIA_ERR_ABORTED - fetching aborted
-            // 2 = MEDIA_ERR_NETWORK - network error
-            // 3 = MEDIA_ERR_DECODE - decoding error
-            // 4 = MEDIA_ERR_SRC_NOT_SUPPORTED - format not supported
+            
+            
+            
+            
+            
             
             if (video.error?.code === 4) {
               console.error('Video format not supported. URL:', url);
@@ -97,7 +97,7 @@ export function MediaPreview({
     );
   }
 
-  // Image type
+  
   return (
     <div className={`relative w-full ${className}`}>
       {loading && (

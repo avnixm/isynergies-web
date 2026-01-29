@@ -4,7 +4,7 @@ require('dotenv').config();
 async function insertAdmin() {
   let connection;
   try {
-    // Create connection
+    
     connection = await mysql.createConnection({
       host: process.env.DB_HOST || 'localhost',
       port: parseInt(process.env.DB_PORT || '3306'),
@@ -15,7 +15,7 @@ async function insertAdmin() {
 
     console.log('✅ Connected to database');
 
-    // Insert admin user
+    
     const [result] = await connection.execute(
       `INSERT INTO admin_users (username, password, email, created_at, updated_at) 
        VALUES (?, ?, ?, NOW(), NOW())`,
@@ -34,7 +34,7 @@ async function insertAdmin() {
     console.log('  Password: admin');
     console.log('  URL: http://localhost:3000/admin/login');
 
-    // Verify
+    
     const [rows] = await connection.execute(
       'SELECT id, username, email FROM admin_users WHERE username = ?',
       ['nikka']

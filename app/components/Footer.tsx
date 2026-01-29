@@ -46,7 +46,7 @@ export default function Footer() {
     <footer className="relative text-white overflow-hidden" aria-label="Site footer" style={{
       background: 'linear-gradient(to bottom right, #0D1E66, #003C9D, #001A4F)'
     }}>
-      {/* Hexagonal pattern background */}
+      {}
       <div 
         className="absolute inset-0 opacity-20"
         style={{
@@ -59,9 +59,9 @@ export default function Footer() {
 
       <div className="relative mx-auto max-w-6xl px-4 md:px-8 lg:px-10 pt-8 pb-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
-          {/* Left: Brand + contact */}
+          {}
           <div className="space-y-3 font-sans">
-            {/* Logo */}
+            {}
             <div className="relative h-10 md:h-12 w-48 md:w-56">
               {settings.logoImage ? (
                 <Image
@@ -79,16 +79,16 @@ export default function Footer() {
               )}
             </div>
 
-            {/* Contact information */}
+            {}
             <div className="space-y-1.5 text-xs md:text-sm text-white/90 leading-normal">
               <p>{settings.companyAddress}</p>
               <p>{settings.companyPhone}</p>
               <p>{settings.companyEmail}</p>
             </div>
 
-            {/* Social icons - white squares with dark blue symbols */}
+            {}
             <div className="flex items-center gap-2 pt-2">
-              {/* Facebook */}
+              {}
               {settings.companyFacebook && (
                 <a
                   href={settings.companyFacebook}
@@ -103,7 +103,7 @@ export default function Footer() {
                 </a>
               )}
 
-              {/* X (Twitter) */}
+              {}
               {settings.companyTwitter && (
                 <a
                   href={settings.companyTwitter}
@@ -118,7 +118,7 @@ export default function Footer() {
                 </a>
               )}
 
-              {/* Instagram */}
+              {}
               {settings.companyInstagram && (
                 <a
                   href={settings.companyInstagram}
@@ -135,7 +135,7 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Right: Site map */}
+          {}
           <div className="font-sans">
             <h3 className="text-lg md:text-xl font-bold mb-4 text-white">Site Map</h3>
 
@@ -176,7 +176,7 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Bottom copyright row */}
+        {}
         <div className="mt-6 pt-4 border-t border-white/10 text-center text-xs md:text-sm font-sans text-white/70">
           Copyright {settings.companyName}. All Rights Reserved
         </div>

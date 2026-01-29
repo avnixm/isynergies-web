@@ -4,25 +4,25 @@ import { db } from '@/app/db';
 import { media } from '@/app/db/schema';
 import { eq, sql } from 'drizzle-orm';
 
-/**
- * GET /api/admin/find-media-by-url
- * Finds media record by blob URL (for deduplication only)
- * 
- * Query params:
- * - url: string (Vercel Blob URL)
- * 
- * Returns:
- * - { exists: true, id, url, type, contentType, ... } if found
- * - { exists: false } if not found
- */
+
+
+
+
+
+
+
+
+
+
+
 export async function GET(request: Request) {
   try {
     const authResult = await requireAuth(request);
     if (authResult instanceof NextResponse) return authResult;
 
     const { searchParams } = new URL(request.url);
-    // Read URL from query param - searchParams.get() already decodes once
-    // Don't decode again! The URL is stored exactly as returned by Blob
+    
+    
     const url = searchParams.get('url');
 
     if (!url) {
@@ -32,11 +32,11 @@ export async function GET(request: Request) {
       );
     }
 
-    // Normalize: remove query params from the URL for comparison
+    
     const normalizedUrl = url.split('?')[0];
     
-    // Query the media table (not images table)
-    // Try exact match first
+    
+    
     let [mediaRecord] = await db
       .select()
       .from(media)
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
       .limit(1)
       .orderBy(media.id);
 
-    // If not found, try normalized URL (without query params)
+    
     if (!mediaRecord && normalizedUrl !== url) {
       [mediaRecord] = await db
         .select()
@@ -54,7 +54,7 @@ export async function GET(request: Request) {
         .orderBy(media.id);
     }
 
-    // If still not found, try with LIKE for partial matches (filename-based)
+    
     if (!mediaRecord) {
       const urlParts = normalizedUrl.split('/');
       const filename = urlParts[urlParts.length - 1];

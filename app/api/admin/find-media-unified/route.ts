@@ -4,20 +4,20 @@ import { db } from '@/app/db';
 import { media, images } from '@/app/db/schema';
 import { eq, sql } from 'drizzle-orm';
 
-/**
- * GET /api/admin/find-media-unified
- * Unified lookup that checks both media and images tables
- * 
- * This is the preferred endpoint during the migration period.
- * It checks the modern media table first, then falls back to legacy images table.
- * 
- * Query params:
- * - url: string (Vercel Blob URL or image URL)
- * 
- * Returns:
- * - { exists: true, id, url, type, contentType, source: 'media' | 'images', ... } if found
- * - { exists: false } if not found
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export async function GET(request: Request) {
   try {
     const authResult = await requireAuth(request);
@@ -33,10 +33,10 @@ export async function GET(request: Request) {
       );
     }
 
-    // Normalize: remove query params from the URL for comparison
+    
     const normalizedUrl = url.split('?')[0];
     
-    // Try media table first (modern, preferred)
+    
     let [mediaRecord] = await db
       .select()
       .from(media)
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
       .limit(1)
       .orderBy(media.id);
 
-    // If not found, try normalized URL (without query params)
+    
     if (!mediaRecord && normalizedUrl !== url) {
       [mediaRecord] = await db
         .select()
@@ -68,7 +68,7 @@ export async function GET(request: Request) {
       });
     }
 
-    // Fallback to images table (legacy)
+    
     let [imageRecord] = await db
       .select()
       .from(images)
@@ -76,7 +76,7 @@ export async function GET(request: Request) {
       .limit(1)
       .orderBy(images.id);
 
-    // If not found, try normalized URL
+    
     if (!imageRecord && normalizedUrl !== url) {
       [imageRecord] = await db
         .select()
@@ -86,7 +86,7 @@ export async function GET(request: Request) {
         .orderBy(images.id);
     }
 
-    // If still not found, try with LIKE for partial matches (filename-based)
+    
     if (!imageRecord) {
       const urlParts = normalizedUrl.split('/');
       const filename = urlParts[urlParts.length - 1];
@@ -101,7 +101,7 @@ export async function GET(request: Request) {
     }
 
     if (imageRecord) {
-      // Determine type from MIME type
+      
       const type = imageRecord.mimeType?.startsWith('video/') ? 'video' : 'image';
       
       return NextResponse.json({
@@ -112,12 +112,12 @@ export async function GET(request: Request) {
         contentType: imageRecord.mimeType || 'application/octet-stream',
         sizeBytes: imageRecord.size || 0,
         title: imageRecord.filename,
-        source: 'images', // Legacy source
+        source: 'images', 
         createdAt: imageRecord.createdAt,
       });
     }
 
-    // Not found in either table
+    
     return NextResponse.json(
       { exists: false },
       { status: 404 }

@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import mysql from 'mysql2/promise';
 
-// Force production database configuration
+
 const PROD_DB_CONFIG = {
   host: 'isyn-cieloes.l.aivencloud.com',
   port: 26771,
@@ -27,7 +27,7 @@ async function addDemoColumns() {
     ];
     
     for (const column of columnsToAdd) {
-      // Check if column exists
+      
       const [columns] = await connection.execute(`
         SELECT COLUMN_NAME 
         FROM INFORMATION_SCHEMA.COLUMNS 
@@ -41,7 +41,7 @@ async function addDemoColumns() {
         continue;
       }
       
-      // Add the column
+      
       try {
         await connection.execute(`
           ALTER TABLE contact_messages 

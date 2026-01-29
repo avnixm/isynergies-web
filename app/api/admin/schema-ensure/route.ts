@@ -2,13 +2,13 @@ import { NextResponse } from 'next/server';
 import mysql from 'mysql2/promise';
 import { requireAuth } from '@/app/lib/auth-middleware';
 
-/**
- * POST /api/admin/schema-ensure
- *
- * Ensures about_us_gallery_images and featured_app_carousel_images exist.
- * Creates them if missing. No data is deleted.
- * Requires admin auth.
- */
+
+
+
+
+
+
+
 export async function POST(request: Request) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;

@@ -2,11 +2,11 @@ import 'dotenv/config';
 import { db } from '../app/db';
 import { sql } from 'drizzle-orm';
 
-/**
- * Create upload_sessions table in production database
- * Run with: pnpm run create-upload-sessions-table:prod
- * Or: pnpm tsx scripts/create-upload-sessions-table-prod.ts
- */
+
+
+
+
+
 
 async function createUploadSessionsTable() {
   try {

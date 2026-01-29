@@ -3,7 +3,7 @@ import { db } from '@/app/db';
 import { boardSettings } from '@/app/db/schema';
 import { requireAuth } from '@/app/lib/auth-middleware';
 
-// GET /api/admin/board-settings
+
 export async function GET() {
   try {
     const [settings] = await db.select().from(boardSettings).limit(1);
@@ -24,7 +24,7 @@ export async function GET() {
   }
 }
 
-// PUT /api/admin/board-settings
+
 export async function PUT(request: Request) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;

@@ -4,7 +4,7 @@ import { whatWeDoImages } from '@/app/db/schema';
 import { requireAuth } from '@/app/lib/auth-middleware';
 import { eq } from 'drizzle-orm';
 
-// PUT update image
+
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -51,7 +51,7 @@ export async function PUT(
   }
 }
 
-// DELETE image
+
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

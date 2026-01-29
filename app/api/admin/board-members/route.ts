@@ -4,7 +4,7 @@ import { boardMembers } from '@/app/db/schema';
 import { requireAuth } from '@/app/lib/auth-middleware';
 import { asc } from 'drizzle-orm';
 
-// GET all board members
+
 export async function GET(request: Request) {
   try {
     const members = await db
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
   }
 }
 
-// POST create new board member
+
 export async function POST(request: Request) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;

@@ -3,13 +3,13 @@ import { db } from '@/app/db';
 import { media } from '@/app/db/schema';
 import { eq } from 'drizzle-orm';
 
-/**
- * Public media fetch endpoint (for Vercel Blob videos).
- *
- * - Looks up the `media` table by numeric ID
- * - Redirects to the stored Vercel Blob URL
- * - Uses 307 for video to preserve Range requests
- */
+
+
+
+
+
+
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -50,13 +50,13 @@ export async function GET(
       headers.set('Content-Type', record.contentType);
     }
 
-    // Preserve Range header if present (critical for <video> seeking/streaming)
+    
     if (range) {
       headers.set('Range', range);
     }
 
-    // For video, use 307 so the browser keeps Range semantics.
-    // For non-video, 302 is fine, but 307 also works; keep consistent.
+    
+    
     return new NextResponse(null, { status: 307, headers });
   } catch (error: any) {
     console.error('Media fetch error:', error);

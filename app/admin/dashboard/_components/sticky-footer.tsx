@@ -12,7 +12,7 @@ interface StickyFooterProps {
 export function StickyFooter({ formId, saving = false, disabled = false }: StickyFooterProps) {
   return (
     <>
-      {/* Spacer to prevent content overlap */}
+      {}
       <div className="h-24" />
       <div className="sticky bottom-0 bg-white border-t border-border shadow-sm p-4 -mx-4 md:-mx-8 px-4 md:px-8 z-50">
         <div className="flex items-center justify-between max-w-6xl mx-auto">

@@ -9,9 +9,9 @@ type HeroSection = {
   weMakeItLogo: string | null;
   isLogo: string | null;
   fullLogo: string | null;
-  backgroundImage: string | null; // For Default Background Media mode
-  backgroundVideo: string | null; // For Default Background Media mode
-  heroImagesBackgroundImage: string | null; // For Hero Images mode
+  backgroundImage: string | null; 
+  backgroundVideo: string | null; 
+  heroImagesBackgroundImage: string | null; 
   useHeroImages?: boolean;
 };
 
@@ -72,7 +72,7 @@ export default function Hero({ navLinks }: HeroProps) {
           console.error('Failed to fetch hero ticker items:', tickerRes.status, tickerRes.statusText, errorText);
         }
 
-        // Fetch site settings for logo
+        
         const settingsRes = await fetch('/api/admin/site-settings');
         if (settingsRes.ok) {
           const settingsData = await settingsRes.json();
@@ -88,28 +88,28 @@ export default function Hero({ navLinks }: HeroProps) {
     fetchHeroData();
   }, []);
 
-  // Helper function to get image URL from database
+  
   const getImageUrl = (value: string | null, fallback?: string): string | null => {
     if (!value) return fallback || null;
-    // If already a full path (including blob URLs), use it as is
+    
     if (value.startsWith('/api/images/') || value.startsWith('http')) return value;
-    // Otherwise construct the URL (assumes value is an image ID)
+    
     return `/api/images/${value}`;
   };
 
-  // Background image - different for each mode
+  
   const bgImage = heroSection?.useHeroImages 
-    ? getImageUrl(heroSection?.heroImagesBackgroundImage ?? null) // Hero Images mode
-    : getImageUrl(heroSection?.backgroundImage ?? null); // Default Background Media mode
-  // Background video - from database only (only for Default Background Media mode)
+    ? getImageUrl(heroSection?.heroImagesBackgroundImage ?? null) 
+    : getImageUrl(heroSection?.backgroundImage ?? null); 
+  
   const bgVideo = getImageUrl(heroSection?.backgroundVideo ?? null);
-  // Other images - only from database (no fallbacks)
+  
   const weMakeItImage = getImageUrl(heroSection?.weMakeItLogo ?? null);
   const isLogoImage = getImageUrl(heroSection?.isLogo ?? null);
   const fullLogoImage = getImageUrl(heroSection?.fullLogo ?? null);
   const logoSrc = getImageUrl(siteSettings?.logoImage ?? null);
 
-  // Use ticker items from database only (no hardcoded fallbacks)
+  
   const tickerItems = heroTickerItems;
 
   function parseTextWithLinks(text: string): ReactNode[] {
@@ -167,7 +167,7 @@ export default function Hero({ navLinks }: HeroProps) {
   const barClasses =
     'flex items-center justify-center gap-3 rounded-xl sm:rounded-2xl bg-gray-800/90 backdrop-blur-xl px-4 py-3 text-[11px] sm:gap-4 sm:px-6 sm:py-4 sm:text-[12px] shadow-2xl shadow-black/25 border border-gray-700/50 w-fit ticker-slow-fade';
 
-  // Header visibility: hide on scroll down, show on scroll up (dynamic, not permanently fixed)
+  
   useEffect(() => {
     const handleScroll = () => {
       const y = window.scrollY;
@@ -184,7 +184,7 @@ export default function Hero({ navLinks }: HeroProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Announcement bar: marquee only when content exceeds 80% viewport width
+  
   useEffect(() => {
     if (tickerItems.length === 0) return;
     const measure = () => {
@@ -215,12 +215,12 @@ export default function Hero({ navLinks }: HeroProps) {
     const load = async () => {
       try {
         const cache = await caches.open(cacheName);
-        // Cache-bust: when CMS video URL changes, remove old entry so we don't accumulate.
+        
         if (previousUrl && previousUrl !== bgVideo) {
           try {
             await cache.delete(new Request(previousUrl, { mode: 'cors' }));
           } catch {
-            // Ignore delete errors (e.g. entry already gone)
+            
           }
         }
         previousVideoUrlRef.current = bgVideo;
@@ -266,7 +266,7 @@ export default function Hero({ navLinks }: HeroProps) {
     };
   }, [bgVideo, videoError, heroSection?.useHeroImages]);
 
-  // Intersection Observer to play video only when hero section is visible
+  
   useEffect(() => {
     if (!videoRef.current || !heroRef.current || !bgVideo || videoError) return;
 
@@ -292,7 +292,7 @@ export default function Hero({ navLinks }: HeroProps) {
 
   return (
     <section id="home" ref={heroRef} aria-label="Hero" className="relative min-h-[100dvh] min-h-screen overflow-hidden">
-      {/* Background - Load first, before video - show different image based on mode */}
+      {}
       <div className="absolute inset-0 z-0">
         {bgImage ? (
           <Image
@@ -309,7 +309,7 @@ export default function Hero({ navLinks }: HeroProps) {
         )}
       </div>
 
-      {/* Background Video - above background image but under logos - only show in Default Background Media mode */}
+      {}
       {!heroSection?.useHeroImages && bgVideo && !videoError && (typeof caches === 'undefined' || videoCacheFailed ? true : !!videoCachedSrc) && (
         <div className="absolute inset-0 z-[5] overflow-hidden">
           <video
@@ -357,12 +357,12 @@ export default function Hero({ navLinks }: HeroProps) {
               console.warn('Background video stalled during loading');
             }}
             onSuspend={() => {
-              // Browser suspended video loading - this is normal behavior to save bandwidth
-              // The video will resume loading when needed (when user scrolls to it or it becomes visible)
-              // No action needed - this is expected browser optimization
+              
+              
+              
             }}
           />
-          {/* TOP GRADUAL BLUR - mask-based blur effect */}
+          {}
           <div
             className="pointer-events-none absolute inset-x-0 top-0 h-28 backdrop-blur-[18px] bg-slate-950/20"
             style={{
@@ -371,7 +371,7 @@ export default function Hero({ navLinks }: HeroProps) {
             }}
           />
 
-          {/* BOTTOM GRADUAL BLUR - mask-based blur effect */}
+          {}
           <div
             className="pointer-events-none absolute inset-x-0 bottom-0 h-28 backdrop-blur-[18px] bg-slate-950/20"
             style={{
@@ -382,7 +382,7 @@ export default function Hero({ navLinks }: HeroProps) {
         </div>
       )}
 
-      {/* Glassmorphic floating navbar - fixed, hide on scroll down / show on scroll up */}
+      {}
       {!loading && (
         <nav
           className={`fixed left-1/2 top-4 sm:top-6 z-30 w-[92%] max-w-4xl -translate-x-1/2 transition-transform duration-300 ease-out sm:w-[85%] ${
@@ -419,7 +419,7 @@ export default function Hero({ navLinks }: HeroProps) {
                 </a>
               ))}
             </div>
-            {/* Mobile menu toggle */}
+            {}
             <button
               type="button"
               className="inline-flex shrink-0 items-center justify-center rounded-lg p-2 text-white md:hidden hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 focus-visible:ring-blue-400 -mr-1"
@@ -430,7 +430,7 @@ export default function Hero({ navLinks }: HeroProps) {
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
-          {/* Mobile dropdown menu */}
+          {}
           {mobileMenuOpen && (
             <div className="mt-1.5 rounded-xl sm:rounded-2xl bg-gray-900/95 backdrop-blur-xl px-3 py-2.5 shadow-2xl shadow-black/40 border border-gray-700/70 md:hidden sm:mt-2 sm:px-4 sm:py-3">
               <div className="flex flex-col gap-1 text-sm font-medium sm:gap-2">
@@ -450,7 +450,7 @@ export default function Hero({ navLinks }: HeroProps) {
         </nav>
       )}
 
-      {/* We make IT possible logo - Left side - only show if exists in database AND useHeroImages is true - Load with priority */}
+      {}
       {weMakeItImage && heroSection?.useHeroImages && (
         <div className="slide-right absolute left-4 top-[100px] z-20 w-[min(200px,55vw)] sm:left-6 sm:top-[130px] sm:w-[260px] md:left-11 md:top-[200px] md:w-[480px] md:-translate-y-1/2 lg:w-[580px]">
           <Image
@@ -466,7 +466,7 @@ export default function Hero({ navLinks }: HeroProps) {
         </div>
       )}
 
-      {/* iS logo - Right side, large graphic - only show if exists in database AND useHeroImages is true - Load with priority */}
+      {}
       {isLogoImage && heroSection?.useHeroImages && (
         <div className="fade-in absolute right-2 top-[88px] z-10 w-[100px] opacity-90 sm:right-4 sm:top-[100px] sm:w-[140px] md:right-0 md:top-[100px] md:w-[500px] md:-translate-y-1/4 lg:w-[750px]">
           <Image
@@ -482,7 +482,7 @@ export default function Hero({ navLinks }: HeroProps) {
         </div>
       )}
 
-      {/* Full iSynergies logo - Right side, below iS logo - only show if exists in database AND useHeroImages is true - Load with priority */}
+      {}
       {fullLogoImage && heroSection?.useHeroImages && (
         <div className="fade-in absolute left-1/2 top-[48%] z-20 w-[min(240px,72vw)] -translate-x-1/2 -translate-y-1/2 sm:w-[300px] md:left-auto md:right-2 md:top-[45%] md:w-[600px] md:translate-x-0 md:-translate-y-1/3 lg:right-[-40px] lg:w-[700px]">
           <Image
@@ -498,10 +498,10 @@ export default function Hero({ navLinks }: HeroProps) {
         </div>
       )}
 
-      {/* Floating Text Bar - static by default, max 80% width; marquee only when content overflows */}
+      {}
       {tickerItems.length > 0 && (
         <div className="pointer-events-none absolute inset-0">
-          {/* Hidden measure bar – same structure as visible bar for width comparison vs 80vw */}
+          {}
           <div
             ref={announcementRef}
             aria-hidden

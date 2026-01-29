@@ -132,7 +132,6 @@ export default function TestAPI() {
         </div>
       )}
 
-      {/* Instructions */}
       <div className="mt-8 bg-gray-50 p-6 rounded-lg">
         <h3 className="text-lg font-semibold mb-2">Testing Instructions:</h3>
         <ol className="list-decimal list-inside space-y-2 text-sm">

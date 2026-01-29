@@ -9,7 +9,7 @@ export async function GET() {
     const dealers = await db.select().from(authorizedDealers).orderBy(asc(authorizedDealers.displayOrder));
     return NextResponse.json(dealers);
   } catch (error: any) {
-    // If table doesn't exist, return empty array instead of error
+    
     if (error?.code === 'ER_NO_SUCH_TABLE' || error?.message?.includes('doesn\'t exist')) {
       console.warn('Authorized dealers table does not exist yet. Run migration first.');
       return NextResponse.json([]);
@@ -46,19 +46,19 @@ export async function POST(request: NextRequest) {
         displayOrder: displayOrder ?? 0,
       });
 
-      // Drizzle MySQL returns insertId in result[0].insertId
+      
       const insertId = Array.isArray(result) && result.length > 0 && (result[0] as any).insertId 
         ? (result[0] as any).insertId 
         : null;
 
       return NextResponse.json({ success: true, id: insertId, name, image, displayOrder: displayOrder ?? 0 }, { status: 201 });
     } catch (dbError: any) {
-      // If table doesn't exist, provide helpful error message
+      
       if (dbError?.code === 'ER_NO_SUCH_TABLE' || dbError?.message?.includes('doesn\'t exist')) {
         console.error('Authorized dealers table does not exist. Run migration first.');
         return NextResponse.json({ error: 'Database table does not exist. Please run migration first.' }, { status: 500 });
       }
-      throw dbError; // Re-throw to be caught by outer catch
+      throw dbError; 
     }
   } catch (error: any) {
     if (error.status === 401 || error?.message?.includes('Unauthorized')) {

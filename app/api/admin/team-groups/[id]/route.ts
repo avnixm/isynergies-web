@@ -73,7 +73,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Invalid group id' }, { status: 400 });
     }
 
-    // Set all members in this group to groupId=null, groupOrder=null
+    
     await db
       .update(teamMembers)
       .set({ groupId: null, groupOrder: null })

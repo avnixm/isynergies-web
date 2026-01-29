@@ -18,13 +18,13 @@ function guessContentTypeFromPathname(pathname: string): string {
   return 'unknown';
 }
 
-/**
- * GET /api/admin/blobs
- * Lists all blob files in storage
- * 
- * Query params:
- * - limit: maximum number of blobs to return (default: 100)
- */
+
+
+
+
+
+
+
 export async function GET(request: Request) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
@@ -33,7 +33,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '100', 10);
 
-    // List all blobs from Vercel Blob storage
+    
     const allBlobs: Array<{
       url: string;
       pathname: string;
@@ -58,7 +58,7 @@ export async function GET(request: Request) {
           pathname: blob.pathname,
           uploadedAt: blob.uploadedAt,
           size: blob.size || 0,
-          // `list()` results don't include contentType; infer best-effort from filename.
+          
           contentType: guessContentTypeFromPathname(blob.pathname),
         });
         totalChecked++;
@@ -71,7 +71,7 @@ export async function GET(request: Request) {
       cursor = listResult.cursor || undefined;
     } while (cursor && totalChecked < limit);
 
-    // Sort by upload date (newest first)
+    
     const sortedBlobs = [...allBlobs].sort((a, b) => 
       b.uploadedAt.getTime() - a.uploadedAt.getTime()
     );

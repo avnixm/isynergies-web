@@ -4,10 +4,10 @@ import { db } from '@/app/db';
 import { images } from '@/app/db/schema';
 import { eq } from 'drizzle-orm';
 
-/**
- * GET /api/admin/images/[id]
- * Get image record by ID (for admin use)
- */
+
+
+
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

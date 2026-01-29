@@ -3,7 +3,7 @@ import { db } from '@/app/db';
 import { shopCategories } from '@/app/db/schema';
 import { requireAuth } from '@/app/lib/auth-middleware';
 
-// POST create new category
+
 export async function POST(request: Request) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;

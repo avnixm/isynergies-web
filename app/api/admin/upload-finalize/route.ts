@@ -4,7 +4,7 @@ import { images, imageChunks } from '@/app/db/schema';
 import { requireAuth } from '@/app/lib/auth-middleware';
 import { eq, asc } from 'drizzle-orm';
 
-// Finalize chunked upload - verify all chunks are present and clean up filename
+
 export const maxDuration = 300;
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
 
     const imageIdNum = parseInt(imageId);
 
-    // Get the image record to check chunk count
+    
     const [image] = await db
       .select()
       .from(images)
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Image not found' }, { status: 404 });
     }
 
-    // Verify all chunks are present
+    
     const chunks = await db
       .select()
       .from(imageChunks)
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Clean up filename (remove uploadId prefix)
+    
     if (image.filename.includes(':')) {
       const cleanFilename = image.filename.split(':').slice(1).join(':');
       await db.update(images)
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
         .where(eq(images.id, imageIdNum));
     }
 
-    // All chunks are present, upload is complete
+    
     return NextResponse.json({ 
       success: true, 
       id: imageId,

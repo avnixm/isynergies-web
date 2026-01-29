@@ -4,17 +4,17 @@ import { featuredAppCarouselImages } from '@/app/db/schema';
 import { requireAuth } from '@/app/lib/auth-middleware';
 import { asc } from 'drizzle-orm';
 
-// Helper function to extract and normalize video URLs from embed codes
+
 function normalizeVideoUrl(url: string): string {
   if (!url || typeof url !== 'string') return url;
 
-  // Extract URL from iframe embed code
+  
   const iframeMatch = url.match(/<iframe[^>]+src=["']([^"']+)["']/i);
   if (iframeMatch) {
     url = iframeMatch[1];
   }
 
-  // Extract Wistia media ID from embed code
+  
   const wistiaPlayerMatch = url.match(/<wistia-player[^>]+media-id=["']([^"']+)["']/i);
   if (wistiaPlayerMatch) {
     return `https://wistia.com/medias/${wistiaPlayerMatch[1]}`;
@@ -30,14 +30,14 @@ function normalizeVideoUrl(url: string): string {
     return `https://wistia.com/medias/${wistiaMediasMatch[1]}`;
   }
 
-  // Decode HTML entities
+  
   url = url.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
 
-  // Trim and return
+  
   return url.trim();
 }
 
-// GET all carousel images
+
 export async function GET() {
   try {
     const images = await db
@@ -69,7 +69,7 @@ export async function GET() {
   }
 }
 
-// POST create new carousel image
+
 export async function POST(request: Request) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
@@ -85,18 +85,18 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if image is a numeric ID (media ID from Vercel Blob upload) vs URL string
+    
     const isNumericId = typeof image === 'string' && /^\d+$/.test(image.trim());
     const isMediaId = isNumericId && mediaType === 'video';
 
-    // If it's a media ID from Vercel Blob upload, store it as-is
-    // Otherwise, normalize the URL (for backward compatibility with embed URLs)
+    
+    
     const normalizedImage = isMediaId
-      ? image.trim() // Keep numeric media ID as-is
+      ? image.trim() 
       : (typeof image === 'string' ? normalizeVideoUrl(image) : image);
 
-    // Check if normalized URL is too long (database column limit is 255)
-    // Only check length for URL strings, not numeric IDs
+    
+    
     if (!isMediaId && typeof normalizedImage === 'string' && normalizedImage.length > 255) {
       return NextResponse.json(
         { error: 'Video URL is too long. Please use a shorter URL or extract the media ID from embed codes.' },
@@ -104,9 +104,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Determine media type if not provided
-    // If it's a numeric media ID with mediaType='video', it's a blob video
-    // Otherwise check if it's a video URL (various video hosting services) or video file extension
+    
+    
+    
     const isVideoUrl = isMediaId || (typeof normalizedImage === 'string' && (
       normalizedImage.includes('youtube.com') ||
       normalizedImage.includes('youtu.be') ||
@@ -124,7 +124,7 @@ export async function POST(request: Request) {
       normalizedImage.endsWith('.mp4') ||
       normalizedImage.endsWith('.webm') ||
       normalizedImage.endsWith('.mov') ||
-      normalizedImage.endsWith('.m3u8') // HLS stream
+      normalizedImage.endsWith('.m3u8') 
     ));
     const detectedMediaType = mediaType || (isVideoUrl ? 'video' : 'image');
 
@@ -154,7 +154,7 @@ export async function POST(request: Request) {
       stack: error?.stack,
     });
     
-    // Provide more specific error messages
+    
     let errorMessage = 'Failed to create image';
     if (error?.code === 'ER_CON_COUNT_ERROR' || error?.sqlMessage?.includes('Too many connections')) {
       errorMessage = 'Database connection limit reached. Please try again in a moment.';

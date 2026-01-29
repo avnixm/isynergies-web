@@ -15,11 +15,11 @@ type HexImageProps = {
 function HexImage({ src, alt, className, emphasized }: HexImageProps) {
   const getImageUrl = (imageId: string | null): string | null => {
     if (!imageId) return null;
-    // Handle different formats
+    
     if (imageId.startsWith('/api/images/') || imageId.startsWith('http') || imageId.startsWith('/')) {
       return imageId;
     }
-    // Assume it's an image ID and construct the URL
+    
     return `/api/images/${imageId}`;
   };
 
@@ -169,13 +169,13 @@ export default function Services() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch statistics
+        
         const statsResponse = await fetch('/api/admin/statistics');
         if (statsResponse.ok) {
           const data = await statsResponse.json();
           setStatistics(data);
         } else {
-          // Fallback to default data
+          
           setStatistics([
             { id: 1, label: 'Clients', value: '30+', displayOrder: 0 },
             { id: 2, label: 'Customers', value: '5000+', displayOrder: 1 },
@@ -184,13 +184,13 @@ export default function Services() {
           ]);
         }
 
-        // Fetch ticker items
+        
         const tickerResponse = await fetch('/api/admin/ticker');
         if (tickerResponse.ok) {
           const data = await tickerResponse.json();
           setTickerItems(data);
         } else {
-          // Fallback to default ticker items
+          
           setTickerItems([
             { id: 1, text: 'SOFTWARE DEVELOPMENT', displayOrder: 0 },
             { id: 2, text: 'UI/UX DESIGN', displayOrder: 1 },
@@ -203,11 +203,11 @@ export default function Services() {
           ]);
         }
 
-        // Fetch service icons from services API
+        
         const servicesResponse = await fetch('/api/admin/services');
         if (servicesResponse.ok) {
           const servicesData = await servicesResponse.json();
-          // Sort by displayOrder and take first 4
+          
           const sortedServices = servicesData.sort((a: any, b: any) => a.displayOrder - b.displayOrder).slice(0, 4);
           setServiceIcons({
             icon1: sortedServices[0]?.icon || null,
@@ -233,11 +233,11 @@ export default function Services() {
       <div className="relative overflow-visible" style={{
         background: 'linear-gradient(180deg, #07186E 0%, #004AB9 50%, #07186E 100%)',
       }}>
-        {/* Layout wrapper (fits in one desktop viewport) */}
+        {}
         <div className="container mx-auto flex max-w-7xl flex-col px-3 pt-6 pb-6 sm:px-4 sm:pt-8 sm:pb-8 md:px-6 md:pt-10 md:pb-8 lg:px-12">
-          {/* Top area: Our Services - left copy + right hex cluster */}
+          {}
           <div className="grid w-full items-start gap-5 md:items-center md:grid-cols-2 md:gap-3">
-            {/* Text first on mobile, left column on desktop */}
+            {}
             <div className={`order-1 pl-4 pr-4 sm:pl-5 sm:pr-2 md:pl-0 md:pr-6 font-sans ml-0 sm:ml-2 md:ml-12 mt-0 md:-mt-10 slide-right-content ${
               isVisible ? 'animate' : 'opacity-0'
             }`}>
@@ -265,9 +265,9 @@ export default function Services() {
               </ul>
             </div>
 
-            {/* Icons below text on mobile, right column on desktop */}
+            {}
             <div className="order-2 flex justify-center md:justify-end overflow-hidden">
-              {/* Mobile & tablet: symmetrical 2×2 grid */}
+              {}
               <div className="md:hidden w-full max-w-[260px] sm:max-w-[300px]">
                 <div className="grid grid-cols-2 grid-rows-2 place-items-center gap-4 sm:gap-5">
                   <div className={`slide-down-slow ${isVisible ? 'animate' : 'opacity-0'}`}>
@@ -315,7 +315,7 @@ export default function Services() {
       >
         <div className="ticker-container ticker-fade w-full">
           <div className="ticker-content">
-            {/* One loop */}
+            {}
             <div className="ticker-row">
               {tickerItems.map((item) => (
                 <span key={`ticker-1-${item.id}`}>
@@ -325,7 +325,7 @@ export default function Services() {
               ))}
             </div>
 
-            {/* Duplicate loop for seamless scroll */}
+            {}
             <div className="ticker-row" aria-hidden>
               {tickerItems.map((item) => (
                 <span key={`ticker-2-${item.id}`}>
@@ -338,7 +338,7 @@ export default function Services() {
         </div>
       </div>
 
-      {/* By the Numbers (kept compact so it stays visible) */}
+      {}
       <div className="relative left-1/2 w-screen -translate-x-1/2 bg-[#D7E1E4] pt-4 pb-4 sm:pt-5 sm:pb-5 md:pt-6 md:pb-6 overflow-visible">
         <div className={`container mx-auto max-w-7xl px-3 sm:px-4 md:px-6 lg:px-12 slide-up-content relative z-10 ${
           isVisible ? 'animate' : 'opacity-0'
@@ -379,7 +379,7 @@ export default function Services() {
           </div>
         </div>
       </div>
-      {/* iSgray logo under the last item position - overflows to next section */}
+      {}
       {!loading && statistics.length > 0 && (
         <div className="absolute bottom-[-60px] sm:bottom-[-90px] md:bottom-[-200px] left-[68%] md:left-[82%] -translate-x-1/2 w-[160px] h-[160px] max-w-[45vw] sm:w-[220px] sm:h-[220px] sm:max-w-[40vw] md:w-[500px] md:h-[500px] md:max-w-none flex items-center justify-center z-0 pointer-events-none">
           <img

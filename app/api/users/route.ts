@@ -3,7 +3,7 @@ import { db } from '@/app/db';
 import { adminUsers } from '@/app/db/schema';
 import { eq } from 'drizzle-orm';
 
-// GET /api/users - Get all admin users
+
 export async function GET() {
   try {
     const allUsers = await db.select().from(adminUsers);
@@ -17,10 +17,10 @@ export async function GET() {
   }
 }
 
-// POST /api/users - Create a new user
+
 export async function POST(request: Request) {
   try {
-    // Check if request has a body
+    
     const contentType = request.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
       return NextResponse.json(
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Parse JSON with better error handling
+    
     let body;
     let text = '';
     try {

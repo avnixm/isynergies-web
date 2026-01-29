@@ -4,18 +4,18 @@ import { requireUser } from '@/app/lib/auth-middleware';
 import { del } from '@vercel/blob';
 import { ensureBlobTokenEnv, getBlobToken } from '@/app/lib/blob-token';
 
-// Handle client-side uploads to Vercel Blob for videos
-// This follows Vercel's "Client Uploads" pattern using handleUpload
-export const maxDuration = 300; // 5 minutes for large video uploads
+
+
+export const maxDuration = 300; 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-    // `handleUpload` reads BLOB_READ_WRITE_TOKEN internally
+    
     ensureBlobTokenEnv();
 
-    // Get authenticated user
+    
     const { userId } = await requireUser(request);
 
     const body = await request.json() as HandleUploadBody;
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       body,
       request,
       onBeforeGenerateToken: async (pathname, clientPayload) => {
-        // Validate file type from client payload
+        
         let payload: { contentType?: string; filename?: string; size?: number; oldBlobUrl?: string } = {};
         try {
           payload = typeof clientPayload === 'string' ? JSON.parse(clientPayload) : (clientPayload as any);
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
         
         const { contentType, oldBlobUrl } = payload;
         
-        // Only allow videos
+        
         const allowedTypes = [
           'video/mp4',
           'video/webm',
@@ -47,12 +47,12 @@ export async function POST(request: Request) {
           throw new Error(`File type ${contentType} is not allowed. Only video files are supported.`);
         }
 
-        // Generate pathname with userId
+        
         const timestamp = Date.now();
         const safePathname = pathname.replace(/[^a-zA-Z0-9.-]/g, '_');
         const videoPathname = `videos/${userId}/${timestamp}-${safePathname}`;
 
-        // Construct callback URL for onUploadCompleted
+        
         const url = new URL(request.url);
         const callbackUrl = `${url.protocol}//${url.host}/api/videos/upload`;
 
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
             contentType: contentType || 'video/mp4',
             size: payload.size || 0,
             userId,
-            oldBlobUrl: oldBlobUrl, // Pass through for deletion
+            oldBlobUrl: oldBlobUrl, 
           }),
           pathname: videoPathname,
         };
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
         console.log(`   Pathname: ${blob.pathname || 'N/A'}`);
         console.log('='.repeat(80));
 
-        // Delete old blob file if it exists
+        
         try {
           const payload = JSON.parse(tokenPayload || '{}');
           const oldBlobUrl = payload.oldBlobUrl || null;
@@ -93,17 +93,17 @@ export async function POST(request: Request) {
               console.log(`   ✅ Successfully deleted old blob`);
             } catch (deleteError: any) {
               console.warn(`   ❌ Failed to delete old blob: ${deleteError?.message}`);
-              // Don't throw - deletion failure shouldn't block upload success
+              
             }
           }
         } catch (parseError) {
-          // Ignore parsing errors
+          
         }
 
       },
     });
 
-    // Return upload response (client will create media record)
+    
     return NextResponse.json(uploadResponse);
   } catch (error: any) {
     console.error('Video upload error:', error);

@@ -4,7 +4,7 @@ import { db } from '@/app/db';
 import { videos } from '@/app/db/schema';
 import { eq } from 'drizzle-orm';
 
-// Save video metadata after upload
+
 export const maxDuration = 30;
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate blobUrl is a Vercel Blob URL
+    
     if (!blobUrl.includes('blob.vercel-storage.com')) {
       return NextResponse.json(
         { error: 'Invalid blob URL. Must be a Vercel Blob URL.' },
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Insert video metadata
+    
     const result = await db.insert(videos).values({
       userId,
       title,
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
   }
 }
 
-// Get videos for the authenticated user
+
 export async function GET(request: Request) {
   try {
     const { userId } = await requireUser(request);

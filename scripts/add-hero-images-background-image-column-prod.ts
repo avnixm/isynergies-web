@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import mysql from 'mysql2/promise';
 
-// Force production database configuration
+
 const PROD_DB_CONFIG = {
   host: 'isyn-cieloes.l.aivencloud.com',
   port: 26771,
@@ -18,7 +18,7 @@ async function addHeroImagesBackgroundImageColumn() {
   try {
     connection = await mysql.createConnection(PROD_DB_CONFIG);
     
-    // Check if column exists
+    
     const [columns] = await connection.execute(`
       SELECT COLUMN_NAME 
       FROM INFORMATION_SCHEMA.COLUMNS 
@@ -32,7 +32,7 @@ async function addHeroImagesBackgroundImageColumn() {
       return;
     }
     
-    // Add the column
+    
     await connection.execute(`
       ALTER TABLE hero_section 
       ADD COLUMN hero_images_background_image VARCHAR(255) NULL 

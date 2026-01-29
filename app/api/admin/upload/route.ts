@@ -5,16 +5,16 @@ import { requireAuth } from '@/app/lib/auth-middleware';
 import { sql } from 'drizzle-orm';
 import { eq, asc } from 'drizzle-orm';
 
-// Increase max duration for large file uploads (videos can be very large)
-// Note: Vercel hobby plan max is 300 seconds (5 minutes)
-export const maxDuration = 300; // 5 minutes (max for Vercel hobby plan)
+
+
+export const maxDuration = 300; 
 export const runtime = 'nodejs';
 
-// Disable body parsing - we need to handle FormData manually
+
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
-  // Log request details for debugging
+  
   console.log('Upload request received:', {
     method: request.method,
     url: request.url,
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    // Check if request body exists
+    
     if (!request.body) {
       console.error('No request body received');
       return NextResponse.json({ error: 'No file data received' }, { status: 400 });
@@ -63,31 +63,31 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    // Validate file type - allow both images and videos
+    
     const isImage = file.type.startsWith('image/');
     const isVideo = file.type.startsWith('video/');
     if (!isImage && !isVideo) {
       return NextResponse.json({ error: 'File must be an image or video file.' }, { status: 400 });
     }
 
-    // Read file as buffer and convert to base64
+    
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     const base64Data = buffer.toString('base64');
 
-    // Generate safe filename
+    
     const timestamp = Date.now();
     const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
     const filename = `${timestamp}-${originalName}`;
 
-    // Chunk size: ~2MB base64 data (safe for most MySQL max_allowed_packet settings)
-    // Base64 is ~33% larger, so 2MB base64 ≈ 1.5MB raw
-    const CHUNK_SIZE = 2 * 1024 * 1024; // 2MB base64 chunks
+    
+    
+    const CHUNK_SIZE = 2 * 1024 * 1024; 
     const base64Length = base64Data.length;
 
-    // If the base64 data is larger than chunk size, split it into chunks
+    
     if (base64Length > CHUNK_SIZE) {
-      // Create the main image record with chunked flag
+      
       let result: { id: number }[];
       try {
         result = await db.insert(images).values({
@@ -216,12 +216,12 @@ export async function POST(request: Request) {
       errorMessage = error.message;
     }
     
-    // Always return the error message, even in production
+    
     return NextResponse.json(
       { 
         error: errorMessage,
         code: error?.code,
-        // Include more details in development
+        
         ...(process.env.NODE_ENV === 'development' && {
           details: error.message,
           sqlMessage: error?.sqlMessage,

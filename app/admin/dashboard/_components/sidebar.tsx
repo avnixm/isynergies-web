@@ -53,7 +53,7 @@ const navItems = [
 export function Sidebar({ pathname, user, onLogout }: SidebarProps) {
   return (
     <aside className="hidden md:flex w-64 h-full bg-white text-gray-800 flex-col border-r border-border overflow-hidden flex-shrink-0">
-      {/* Logo */}
+      {}
       <div className="p-6 border-b border-border flex-shrink-0">
         <div className="relative h-12 w-full">
           <Image
@@ -66,7 +66,7 @@ export function Sidebar({ pathname, user, onLogout }: SidebarProps) {
         <p className="text-xs text-gray-800 mt-2">Admin CMS</p>
       </div>
 
-      {/* Navigation */}
+      {}
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto overflow-x-hidden min-h-0">
         {navItems.map((item) => {
           const Icon = item.icon
@@ -95,7 +95,7 @@ export function Sidebar({ pathname, user, onLogout }: SidebarProps) {
         })}
       </nav>
 
-      {/* User Section */}
+      {}
       <div className="p-4 border-t border-border space-y-3 flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">

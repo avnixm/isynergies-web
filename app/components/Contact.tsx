@@ -14,7 +14,7 @@ type SiteSettings = {
   companyLng?: number | string;
 };
 
-// Hardcoded Google Maps embed (no API key): ASKI Building, Cabanatuan City, Nueva Ecija
+
 const GOOGLE_MAP_LAT = 15.488669777135174;
 const GOOGLE_MAP_LNG = 120.97511917033088;
 const GOOGLE_MAP_ZOOM = 17;
@@ -71,8 +71,8 @@ export default function Contact() {
         const response = await fetch('/api/admin/site-settings');
         if (response.ok) {
           const data = await response.json();
-          // Merge server settings with local defaults so missing fields (like lat/lng)
-          // don't wipe out the hard-coded coordinates used for the map.
+          
+          
           setSettings(prev => ({ ...prev, ...data }));
         }
       } catch (error) {
@@ -86,7 +86,7 @@ export default function Contact() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate phone number before submission
+    
     const digitsOnly = formData.contactNo.replace(/\D/g, '');
     if (!validatePhone(formData.contactNo) || digitsOnly.length !== 11) {
       toast.error('Please enter a valid phone number (11 digits starting with 09)');
@@ -100,7 +100,7 @@ export default function Contact() {
         return;
       }
       
-      // Validate that the selected date is not in the past
+      
       const selectedDate = new Date(
         parseInt(formData.demoYear),
         parseInt(formData.demoMonth) - 1,
@@ -247,9 +247,9 @@ export default function Contact() {
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month - 1, day);
       date.setHours(0, 0, 0, 0);
-      const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+      const dayOfWeek = date.getDay(); 
       
-      // Only include Monday (1) through Friday (5) and dates that are today or in the future
+      
       if (dayOfWeek >= 1 && dayOfWeek <= 5 && date >= today) {
         days.push(day);
       }
@@ -258,21 +258,21 @@ export default function Contact() {
     return days;
   };
 
-  // Get available years (current year and future years only)
+  
   const getAvailableYears = () => {
     const currentYear = new Date().getFullYear();
     const years: number[] = [];
-    // Include current year and next 5 years
+    
     for (let i = 0; i <= 5; i++) {
       years.push(currentYear + i);
     }
     return years;
   };
 
-  // Get available time slots
+  
   const getTimeSlots = () => {
     const slots: string[] = [];
-    // 9AM to 12PM (noon)
+    
     for (let hour = 9; hour <= 12; hour++) {
       if (hour === 12) {
         slots.push('12:00 PM');
@@ -281,7 +281,7 @@ export default function Contact() {
         slots.push(`${hour}:30 AM`);
       }
     }
-    // 1PM to 5PM
+    
     for (let hour = 1; hour <= 5; hour++) {
       slots.push(`${hour}:00 PM`);
       if (hour < 5) {
@@ -293,15 +293,15 @@ export default function Contact() {
 
   return (
     <section id="contact" aria-label="Contact us" className="relative bg-[#D7E1E4] py-6 sm:py-8 md:py-10">
-      {/* Message bubble icon - scaled on mobile */}
+      {}
       <div className="absolute bottom-0 right-4 sm:right-6 md:right-12 w-28 h-28 sm:w-36 sm:h-36 md:w-64 md:h-64 flex items-center justify-center opacity-10 pointer-events-none z-0">
         <Message className="w-full h-full text-gray-900" strokeWidth={1} />
       </div>
       <div className="mx-auto max-w-6xl px-3 sm:px-4 md:px-6 lg:px-16 pb-4 md:pb-20 pt-0 md:pt-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-[0.42fr_0.58fr] gap-0 rounded-xl overflow-hidden p-2 sm:p-3 md:p-4">
-          {/* Left Panel - Contact Information */}
+          {}
           <div className="relative bg-[#A00000] text-white p-4 sm:p-5 md:p-6 lg:p-10 overflow-hidden">
-            {/* Semi-transparent S logo - scaled on mobile */}
+            {}
             <div className="absolute right-[-30px] sm:right-[-40px] md:right-[-60px] top-[-20px] sm:top-[-30px] md:top-[-40px] text-[180px] sm:text-[260px] md:text-[400px] font-black leading-none text-[#A00000]/25 select-none pointer-events-none">
               S
             </div>
@@ -314,7 +314,7 @@ export default function Contact() {
               </h2>
 
               <div className="space-y-3 sm:space-y-4 font-sans">
-                {/* Location */}
+                {}
                 <div className="flex items-start gap-3 sm:gap-4">
                   <div className="mt-0.5 sm:mt-1 flex-shrink-0">
                     <svg
@@ -343,7 +343,7 @@ export default function Contact() {
                   </p>
                 </div>
 
-                {/* Phone */}
+                {}
                 <div className="flex items-start gap-3 sm:gap-4">
                   <div className="mt-0.5 sm:mt-1 flex-shrink-0">
                     <svg
@@ -364,7 +364,7 @@ export default function Contact() {
                   <p className="text-[11px] sm:text-xs leading-relaxed">{settings.companyPhone}</p>
                 </div>
 
-                {/* Facebook */}
+                {}
                 {settings.companyFacebook && (
                   <div className="flex items-start gap-3 sm:gap-4">
                     <div className="mt-0.5 sm:mt-1 flex-shrink-0">
@@ -389,7 +389,6 @@ export default function Contact() {
                   </div>
                 )}
 
-                {/* Email */}
                 <div className="flex items-start gap-3 sm:gap-4">
                   <div className="mt-0.5 sm:mt-1 flex-shrink-0">
                     <svg
@@ -409,7 +408,6 @@ export default function Contact() {
                   </div>
                   <p className="text-[11px] sm:text-xs leading-relaxed break-all">{settings.companyEmail}</p>
                 </div>
-                {/* Map (hardcoded Google Maps embed, no API key) */}
                 {((settings.companyLat && settings.companyLng) || settings.companyAddress) && (
                   <div className="mt-3 sm:mt-4">
                     <div className="w-full h-32 sm:h-40 md:h-56 rounded-lg overflow-hidden border border-white/20">
@@ -436,7 +434,7 @@ export default function Contact() {
             </div>
           </div>
 
-          {/* Right Panel - Contact Form */}
+          {}
           <div className="bg-white px-4 py-5 sm:px-5 sm:py-6 md:px-6 md:py-7 flex items-center">
             <div className="w-full max-w-xl ml-0 lg:ml-auto">
               <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-3 sm:mb-4 font-sans">
@@ -444,7 +442,7 @@ export default function Contact() {
               </h3>
 
             <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-              {/* Email and Contact No. Row */}
+              {}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label
@@ -494,7 +492,7 @@ export default function Contact() {
                 </div>
               </div>
 
-              {/* Name Field */}
+              {}
               <div>
                 <label
                   htmlFor="name"
@@ -514,7 +512,7 @@ export default function Contact() {
                 />
               </div>
 
-              {/* Do you want a demo? */}
+              {}
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 font-sans">
                   Would you like to book a demo?
@@ -543,11 +541,11 @@ export default function Contact() {
                 </div>
               </div>
 
-              {/* Demo Date/Time Fields (shown only if wantsDemo is true) */}
+              {}
               {formData.wantsDemo && (
                 <div className="space-y-3 sm:space-y-4 p-3 sm:p-4 border border-gray-200 rounded-lg bg-gray-50">
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-                    {/* Month */}
+                    {}
                     <div>
                       <label
                         htmlFor="demoMonth"
@@ -579,7 +577,7 @@ export default function Contact() {
                       </select>
                     </div>
 
-                    {/* Day (Monday to Friday only) */}
+                    {}
                     <div>
                       <label
                         htmlFor="demoDay"
@@ -608,7 +606,7 @@ export default function Contact() {
                       )}
                     </div>
 
-                    {/* Year (present or future only) - Disabled, always current year */}
+                    {}
                     <div className="sm:col-span-2 md:col-span-1">
                       <label
                         htmlFor="demoYear"
@@ -634,7 +632,7 @@ export default function Contact() {
                     </div>
                   </div>
 
-                  {/* Time Selection */}
+                  {}
                   <div>
                     <label
                       htmlFor="demoTime"
@@ -681,7 +679,7 @@ export default function Contact() {
                 />
               </div>
 
-              {/* Submit Button */}
+              {}
               <div className="pt-1 sm:pt-2">
                 <div className="flex justify-end">
                   <button

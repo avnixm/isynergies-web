@@ -6,7 +6,7 @@ import { contactMessages, siteSettings } from '@/app/db/schema';
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 
-// POST /api/contact - Submit a contact message and forward via email
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate demo fields if wantsDemo is true
+    
     if (wantsDemo) {
       if (!demoMonth || !demoDay || !demoYear || !demoTime) {
         return NextResponse.json(
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // Validate phone number: exactly 11 digits starting with "09"
+    
     const digitsOnly = contactNo.replace(/\D/g, '');
     if (digitsOnly.length !== 11) {
       return NextResponse.json(
@@ -59,14 +59,14 @@ export async function POST(request: Request) {
       status: 'new',
     });
 
-    // Fetch forwarding email preference; fall back to company email
+    
     const [settings] = await db.select().from(siteSettings).limit(1);
     const forwardTo = settings?.contactForwardEmail || settings?.companyEmail || process.env.EMAIL_USER;
     const senderUser = process.env.EMAIL_USER || settings?.companyEmail;
     const senderPass = process.env.EMAIL_APP_PASSWORD || process.env.APP_PASSWORD;
     const senderFrom = (() => {
       const fromEnv = process.env.EMAIL_FROM;
-      // Ensure "from" always has a valid email envelope; fall back to senderUser
+      
       if (fromEnv) {
         return fromEnv.includes('@')
           ? (fromEnv.includes('<') ? fromEnv : `${fromEnv} <${senderUser}>`)

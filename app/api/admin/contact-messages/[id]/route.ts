@@ -4,7 +4,7 @@ import { contactMessages } from '@/app/db/schema';
 import { requireAuth } from '@/app/lib/auth-middleware';
 import { eq } from 'drizzle-orm';
 
-// PUT /api/admin/contact-messages/[id] - Update message status/notes
+
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -33,7 +33,7 @@ export async function PUT(
   }
 }
 
-// DELETE /api/admin/contact-messages/[id] - Delete a message
+
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

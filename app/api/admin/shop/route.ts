@@ -4,7 +4,7 @@ import { shopContent, shopCategories } from '@/app/db/schema';
 import { requireAuth } from '@/app/lib/auth-middleware';
 import { asc, eq } from 'drizzle-orm';
 
-// GET shop content and categories
+
 export async function GET() {
   try {
     const [content] = await db.select().from(shopContent).limit(1);
@@ -17,7 +17,7 @@ export async function GET() {
   }
 }
 
-// PUT update shop content and categories
+
 export async function PUT(request: Request) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
@@ -30,7 +30,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Content is required' }, { status: 400 });
     }
 
-    // Update or create shop content
+    
     const [existing] = await db.select().from(shopContent).limit(1);
     if (existing) {
       await db.update(shopContent).set({
@@ -50,7 +50,7 @@ export async function PUT(request: Request) {
       });
     }
 
-    // Update categories if provided
+    
     if (categories && Array.isArray(categories)) {
       for (const category of categories) {
         await db.update(shopCategories).set({

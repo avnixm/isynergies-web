@@ -30,7 +30,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     
     setToasts((prev) => [...prev, newToast]);
 
-    // Auto remove after 5 seconds
+    
     setTimeout(() => {
       setToasts((prev) => prev.filter((toast) => toast.id !== id));
     }, 5000);
@@ -78,7 +78,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={{ showToast, success, error, warning, info }}>
       {children}
       
-      {/* Toast Container */}
+      {}
       <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-2 pointer-events-none">
         {toasts.map((toast) => {
           const styles = getToastStyles(toast.type);

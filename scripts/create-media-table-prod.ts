@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import mysql from 'mysql2/promise';
 
-// Production database configuration
+
 const PROD_DB_CONFIG = {
   host: 'isyn-cieloes.l.aivencloud.com',
   port: 26771,
@@ -23,10 +23,10 @@ async function createMediaTable() {
       
       connection = await mysql.createConnection({
         ...PROD_DB_CONFIG,
-        connectTimeout: 10000, // 10 second timeout
+        connectTimeout: 10000, 
       });
     
-    // Check if table already exists
+    
     const [tables] = await connection.execute(`
       SELECT TABLE_NAME 
       FROM INFORMATION_SCHEMA.TABLES 
@@ -39,7 +39,7 @@ async function createMediaTable() {
       return;
     }
     
-    // Create the media table
+    
     await connection.execute(`
       CREATE TABLE media (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -58,15 +58,15 @@ async function createMediaTable() {
     `);
 
       console.log('✅ Media table created successfully!');
-      break; // Success, exit retry loop
+      break; 
     } catch (error: any) {
       if (error.code === 'ER_TABLE_EXISTS_ERROR' || error.message?.includes('already exists')) {
         console.log('✅ Media table already exists');
-        break; // Table exists, exit retry loop
+        break; 
       } else if (error.code === 'ER_CON_COUNT_ERROR' && retryCount < maxRetries - 1) {
-        // Too many connections - wait and retry
+        
         retryCount++;
-        const waitTime = (retryCount * 2) * 1000; // 2s, 4s, 6s
+        const waitTime = (retryCount * 2) * 1000; 
         console.log(`⚠️  Too many connections. Waiting ${waitTime/1000}s before retry...`);
         await new Promise(resolve => setTimeout(resolve, waitTime));
         continue;

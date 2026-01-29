@@ -130,7 +130,7 @@ export default function WhatWeDo() {
       aria-label="What We Do"
       className="relative bg-[#D7E1E4] overflow-visible"
     >
-      {/* Blue gradient bar header (moved from About Us so sections never overlap) */}
+      {}
       <div
         className={`w-full h-[60px] z-10 flex items-center justify-start px-4 md:px-8 lg:px-16 dropdown-smooth ${
           isVisible ? 'animate' : ''
@@ -144,7 +144,7 @@ export default function WhatWeDo() {
         <p className="text-2xl md:text-3xl font-semibold text-white">What We Do</p>
       </div>
 
-      {/* Gray background carousel section - edge to edge */}
+      {}
       {images.length > 0 && (
         <div 
           className="bg-[#D7E1E4] pt-2.5 pb-1.5  projects-marquee relative left-1/2 w-screen -translate-x-1/2"
@@ -185,7 +185,7 @@ export default function WhatWeDo() {
         </div>
       )}
 
-      {/* Bottom Text Section */}
+      {}
       <div className="relative left-1/2 w-screen -translate-x-1/2 py-5" style={{
         background: 'linear-gradient(180deg, #071B6E 0%, #004AB9 100%)',
       }}>

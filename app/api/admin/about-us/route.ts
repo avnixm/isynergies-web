@@ -4,13 +4,13 @@ import { aboutUs } from '@/app/db/schema';
 import { requireAuth } from '@/app/lib/auth-middleware';
 import { eq } from 'drizzle-orm';
 
-// GET about us content
+
 export async function GET() {
   try {
     const [content] = await db.select().from(aboutUs).limit(1);
     
     if (!content) {
-      // Return default values if no content exists
+      
       return NextResponse.json({
         title: 'About Us',
         paragraph1: 'Isynergies, Inc was established and officially registered with the Securities and Exchange Commission (SEC) on October 30, 2012 as Stock Corporation inline in Other Software and Consultancy and Supply industry.',
@@ -35,7 +35,7 @@ export async function GET() {
   }
 }
 
-// PUT update about us content
+
 export async function PUT(request: Request) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
@@ -43,9 +43,9 @@ export async function PUT(request: Request) {
   try {
     const body = await request.json();
 
-    // Only allow updating known editable fields.
-    // This prevents accidental writes of fields like `id`/`updatedAt` (which may be strings),
-    // which can cause runtime errors (e.g., "value.toISOString is not a function").
+    
+    
+    
     const payload = {
       title: body?.title ?? '',
       paragraph1: body?.paragraph1 ?? '',

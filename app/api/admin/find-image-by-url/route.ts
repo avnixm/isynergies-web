@@ -4,7 +4,7 @@ import { db } from '@/app/db';
 import { images } from '@/app/db/schema';
 import { eq, sql } from 'drizzle-orm';
 
-// Find image ID by blob URL
+
 export async function GET(request: Request) {
   try {
     const authResult = await requireAuth(request);
@@ -20,18 +20,18 @@ export async function GET(request: Request) {
       );
     }
 
-    // Normalize URL for comparison (remove query params, handle encoding)
-    const normalizedUrl = url.split('?')[0]; // Remove query parameters
     
-    // Find image by blob URL - try multiple matching strategies
+    const normalizedUrl = url.split('?')[0]; 
+    
+    
     let [image] = await db
       .select({ id: images.id, url: images.url })
       .from(images)
       .where(eq(images.url, url))
       .limit(1)
-      .orderBy(images.id); // Get the most recent if multiple matches
+      .orderBy(images.id); 
 
-    // If not found, try normalized URL (without query params)
+    
     if (!image && normalizedUrl !== url) {
       [image] = await db
         .select({ id: images.id, url: images.url })
@@ -41,7 +41,7 @@ export async function GET(request: Request) {
         .orderBy(images.id);
     }
 
-    // If still not found, try URL decoding (in case of encoding differences)
+    
     if (!image) {
       try {
         const decodedUrl = decodeURIComponent(normalizedUrl);
@@ -54,13 +54,13 @@ export async function GET(request: Request) {
             .orderBy(images.id);
         }
       } catch (e) {
-        // URL decode failed, continue
+        
       }
     }
 
-    // If still not found, try with LIKE for partial matches (in case of encoding differences in path)
+    
     if (!image) {
-      // Extract the filename part from the URL for partial matching
+      
       const urlParts = normalizedUrl.split('/');
       const filename = urlParts[urlParts.length - 1];
       if (filename) {

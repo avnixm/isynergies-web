@@ -4,10 +4,10 @@ import { db } from '@/app/db';
 import { media } from '@/app/db/schema';
 import { eq } from 'drizzle-orm';
 
-/**
- * GET /api/admin/media/[id]
- * Gets a single media record by ID
- */
+
+
+
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -37,7 +37,7 @@ export async function GET(
       );
     }
 
-    // Verify the media belongs to the authenticated user
+    
     if (mediaRecord.userId !== userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },

@@ -4,39 +4,39 @@ import { db } from '@/app/db';
 import { media } from '@/app/db/schema';
 import { eq, desc } from 'drizzle-orm';
 
-/**
- * POST /api/admin/media
- * Creates a media record after a file has been uploaded to Vercel Blob
- * 
- * Body:
- * {
- *   url: string (Vercel Blob URL)
- *   contentType: string (e.g., 'video/mp4', 'image/png')
- *   sizeBytes: number
- *   title?: string (optional filename/title)
- * }
- * 
- * Returns:
- * {
- *   id: number
- *   url: string
- *   type: 'image' | 'video'
- *   contentType: string
- *   sizeBytes: number
- *   title?: string
- *   createdAt: string
- * }
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export async function POST(request: Request) {
   try {
-    // Authenticate user
+    
     const { userId } = await requireUser(request);
 
-    // Parse request body
+    
     const body = await request.json();
     const { url, contentType, sizeBytes, title } = body;
 
-    // Validate required fields
+    
     if (!url || typeof url !== 'string') {
       return NextResponse.json(
         { error: 'url is required and must be a string' },
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Derive type from contentType
+    
     let mediaType: 'image' | 'video';
     if (contentType.startsWith('video/')) {
       mediaType = 'video';
@@ -71,11 +71,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // Store the blob URL exactly as returned (no encoding)
-    // Vercel Blob URLs are already properly encoded
+    
+    
     const result = await db.insert(media).values({
       userId,
-      url: url, // Store exactly as provided
+      url: url, 
       type: mediaType,
       contentType,
       sizeBytes,
@@ -88,7 +88,7 @@ export async function POST(request: Request) {
       throw new Error('Failed to insert media record - no ID returned');
     }
 
-    // Fetch the created record
+    
     const [createdMedia] = await db
       .select()
       .from(media)
@@ -115,7 +115,7 @@ export async function POST(request: Request) {
     console.error('Error creating media record:', error);
     console.error('Error stack:', error?.stack);
     
-    // Handle authentication errors
+    
     if (error.message === 'Unauthorized') {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -123,7 +123,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Return detailed error in development, generic in production
+    
     return NextResponse.json(
       {
         error: process.env.NODE_ENV === 'development' 
@@ -139,10 +139,10 @@ export async function POST(request: Request) {
   }
 }
 
-/**
- * GET /api/admin/media
- * Lists media records for the authenticated user
- */
+
+
+
+
 export async function GET(request: Request) {
   try {
     const { userId } = await requireUser(request);

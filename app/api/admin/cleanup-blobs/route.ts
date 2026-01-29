@@ -6,19 +6,19 @@ import { images, media } from '@/app/db/schema';
 
 import { getBlobToken } from '@/app/lib/blob-token';
 
-/**
- * POST /api/admin/cleanup-blobs
- * Finds and deletes blob files
- * 
- * Query params:
- * - dryRun: if true, only reports what would be deleted without actually deleting
- * - limit: maximum number of blobs to check (default: 1000)
- * - mode: 'orphaned' (default) - only delete blobs not in database
- *         'all' - delete all blobs except keep the N most recent (use keepCount)
- *         'old' - delete blobs older than X minutes (use olderThanMinutes)
- * - keepCount: when mode='all', keep this many most recent blobs (default: 1)
- * - olderThanMinutes: when mode='old', delete blobs older than this (default: 60)
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
 export async function POST(request: Request) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
@@ -27,13 +27,13 @@ export async function POST(request: Request) {
     const { searchParams } = new URL(request.url);
     const dryRun = searchParams.get('dryRun') === 'true';
     const limit = parseInt(searchParams.get('limit') || '1000', 10);
-    const mode = searchParams.get('mode') || 'orphaned'; // 'orphaned', 'all', 'old'
+    const mode = searchParams.get('mode') || 'orphaned'; 
     const keepCount = parseInt(searchParams.get('keepCount') || '1', 10);
     const olderThanMinutes = parseInt(searchParams.get('olderThanMinutes') || '60', 10);
 
     console.log(`Starting blob cleanup (dryRun: ${dryRun}, mode: ${mode}, limit: ${limit})`);
 
-    // Step 1: Get all blob URLs from database (for orphaned mode)
+    
     let referencedUrls = new Set<string>();
     
     if (mode === 'orphaned') {
@@ -42,14 +42,14 @@ export async function POST(request: Request) {
         db.select({ url: media.url }).from(media),
       ]);
 
-      // Add URLs from images table
+      
       dbImages.forEach((img) => {
         if (img.url && img.url.startsWith('https://') && img.url.includes('blob.vercel-storage.com')) {
           referencedUrls.add(img.url);
         }
       });
 
-      // Add URLs from media table
+      
       dbMedia.forEach((m) => {
         if (m.url && m.url.startsWith('https://') && m.url.includes('blob.vercel-storage.com')) {
           referencedUrls.add(m.url);
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
       console.log(`Found ${referencedUrls.size} referenced blob URLs in database`);
     }
 
-    // Step 2: List all blobs from Vercel Blob storage with metadata
+    
     interface BlobWithMetadata {
       url: string;
       uploadedAt: Date;
@@ -95,50 +95,50 @@ export async function POST(request: Request) {
 
     console.log(`Found ${allBlobs.length} blobs in storage`);
 
-    // Step 3: Determine which blobs to delete based on mode
+    
     let blobsToDelete: BlobWithMetadata[] = [];
 
     if (mode === 'orphaned') {
-      // Only delete blobs not referenced in database
+      
       blobsToDelete = allBlobs.filter((blob) => !referencedUrls.has(blob.url));
       console.log(`Found ${blobsToDelete.length} orphaned blobs`);
     } else if (mode === 'all') {
-      // Delete all blobs except keep the N most recent
+      
       const sortedBlobs = [...allBlobs].sort((a, b) => 
         b.uploadedAt.getTime() - a.uploadedAt.getTime()
       );
       blobsToDelete = sortedBlobs.slice(keepCount);
       console.log(`Keeping ${Math.min(keepCount, sortedBlobs.length)} most recent blobs, deleting ${blobsToDelete.length} older blobs`);
     } else if (mode === 'old') {
-      // Delete blobs older than X minutes
+      
       const cutoffTime = new Date(Date.now() - olderThanMinutes * 60 * 1000);
       blobsToDelete = allBlobs.filter((blob) => blob.uploadedAt < cutoffTime);
       console.log(`Found ${blobsToDelete.length} blobs older than ${olderThanMinutes} minutes`);
     }
 
-    // Step 4: Delete blobs (unless dry run)
+    
     const deletionResults: Array<{ url: string; success: boolean; error?: string }> = [];
 
     if (!dryRun && blobsToDelete.length > 0) {
       console.log(`Deleting ${blobsToDelete.length} blobs...`);
       
-      // Delete in batches using batch deletion API (more efficient)
-      const batchSize = 50; // Can delete up to 50 at once efficiently
+      
+      const batchSize = 50; 
       for (let i = 0; i < blobsToDelete.length; i += batchSize) {
         const batch = blobsToDelete.slice(i, i + batchSize);
         const urlsToDelete = batch.map(blob => blob.url);
         
         try {
-          // Delete batch of blobs in a single request
+          
           await del(urlsToDelete, { token: getBlobToken() });
           
-          // All deletions succeeded
+          
           batch.forEach((blob) => {
             deletionResults.push({ url: blob.url, success: true });
             console.log(`✅ Deleted blob: ${blob.pathname || blob.url.substring(0, 50)}...`);
           });
         } catch (error: any) {
-          // If batch deletion fails, try individual deletions as fallback
+          
           console.warn(`Batch deletion failed, trying individual deletions...`);
           await Promise.allSettled(
             batch.map(async (blob) => {
@@ -155,7 +155,7 @@ export async function POST(request: Request) {
           );
         }
 
-        // Small delay between batches to avoid rate limiting
+        
         if (i + batchSize < blobsToDelete.length) {
           await new Promise((resolve) => setTimeout(resolve, 100));
         }
@@ -197,10 +197,10 @@ export async function POST(request: Request) {
   }
 }
 
-/**
- * GET /api/admin/cleanup-blobs
- * Get statistics about blob storage without deleting anything
- */
+
+
+
+
 export async function GET(request: Request) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
@@ -209,7 +209,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '1000', 10);
 
-    // Get all blob URLs from database
+    
     const [dbImages, dbMedia] = await Promise.all([
       db.select({ url: images.url }).from(images),
       db.select({ url: media.url }).from(media),
@@ -229,7 +229,7 @@ export async function GET(request: Request) {
       }
     });
 
-    // List blobs from storage
+    
     const allBlobs: string[] = [];
     let cursor: string | undefined;
     let totalChecked = 0;
@@ -262,7 +262,7 @@ export async function GET(request: Request) {
         referencedBlobs: referencedUrls.size,
         orphanedBlobs: orphanedBlobs.length,
       },
-      orphanedBlobs: orphanedBlobs.slice(0, 100), // Return first 100 for preview
+      orphanedBlobs: orphanedBlobs.slice(0, 100), 
     });
   } catch (error: any) {
     console.error('Error getting blob statistics:', error);

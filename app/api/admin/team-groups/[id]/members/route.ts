@@ -30,7 +30,7 @@ export async function PUT(
       );
     }
 
-    // Validate: memberId numbers, groupOrder numbers, no duplicate groupOrder in this list
+    
     const orderSet = new Set<number>();
     for (const row of members) {
       if (
@@ -55,7 +55,7 @@ export async function PUT(
 
     const memberIds = members.map((m) => m.memberId);
     if (memberIds.length === 0) {
-      // Clear group membership
+      
       await db
         .update(teamMembers)
         .set({ groupId: null, groupOrder: null })
@@ -63,7 +63,7 @@ export async function PUT(
       return NextResponse.json({ success: true });
     }
 
-    // Validate: every memberId exists
+    
     const existing = await db
       .select({ id: teamMembers.id })
       .from(teamMembers)
@@ -77,7 +77,7 @@ export async function PUT(
       );
     }
 
-    // Apply: set groupId/groupOrder for each member in the list
+    
     for (const { memberId, groupOrder } of members) {
       await db
         .update(teamMembers)
@@ -85,7 +85,7 @@ export async function PUT(
         .where(eq(teamMembers.id, memberId));
     }
 
-    // Unassign any member currently in this group but not in the list
+    
     const idsInList = new Set(memberIds);
     const currentInGroup = await db
       .select({ id: teamMembers.id })

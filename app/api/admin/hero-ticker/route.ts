@@ -4,19 +4,19 @@ import { heroTickerItems } from '@/app/db/schema';
 import { requireAuth } from '@/app/lib/auth-middleware';
 import { asc } from 'drizzle-orm';
 
-// GET /api/admin/hero-ticker - Get all hero ticker items
+
 export async function GET() {
   try {
     const items = await db.select().from(heroTickerItems).orderBy(asc(heroTickerItems.displayOrder));
     return NextResponse.json(items);
   } catch (error: any) {
     console.error('Error fetching hero ticker items:', error);
-    // Return empty array instead of error so frontend can use fallback
+    
     return NextResponse.json([], { status: 200 });
   }
 }
 
-// POST /api/admin/hero-ticker - Create a new hero ticker item
+
 export async function POST(request: Request) {
   try {
     await requireAuth(request);
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
       displayOrder: displayOrder ?? 0,
     });
 
-    // Drizzle MySQL returns insertId in result[0].insertId
+    
     const insertId = Array.isArray(result) && result.length > 0 && (result[0] as any).insertId 
       ? (result[0] as any).insertId 
       : null;

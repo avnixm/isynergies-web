@@ -4,13 +4,13 @@
   --background: #ffffff;
   --foreground: #0f172a;
 
-  /* Brand blues */
-  --primary: #0b1f4f; /* dark blue for sidebar / primary actions */
+  
+  --primary: #0b1f4f; 
   --primary-foreground: #f9fafb;
-  --accent: #2563eb; /* brighter blue for accents & focus */
+  --accent: #2563eb; 
   --accent-foreground: #f9fafb;
 
-  /* Supporting colors */
+  
   --secondary: #0f172a;
   --secondary-foreground: #e5e7eb;
   --muted: #f3f4f6;
@@ -19,7 +19,7 @@
   --destructive: #ef4444;
   --destructive-foreground: #fef2f2;
 
-  /* Radius token for rounded-xl look */
+  
   --radius: 0.75rem;
 }
 
@@ -47,7 +47,7 @@
   --font-sans: var(--font-encode-sans-expanded);
   --font-mono: var(--font-encode-sans-expanded);
   
-  /* Custom animations */
+  
   --animate-fadeIn: fadeIn 0.2s ease-out;
   --animate-slideUp: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   --animate-fadeInUp: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -55,7 +55,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* Keep light background for admin dashboard even in dark mode */
+    
     --background: #fafafa;
     --foreground: #0f172a;
   }
@@ -88,12 +88,12 @@ body {
   position: relative;
 }
 
-/* Only apply overscroll-behavior to admin dashboard */
+
 body.admin-dashboard-active {
   overscroll-behavior-y: none;
 }
 
-/* Admin dashboard: prevent body scrolling, only main content scrolls */
+
 [data-admin-dashboard] {
   position: fixed;
   top: 0;
@@ -110,7 +110,7 @@ body.admin-dashboard-active {
   width: 100%;
 }
 
-/* Prevent horizontal overflow in admin dashboard */
+
 [data-admin-dashboard] #__next,
 [data-admin-dashboard] [data-nextjs-scroll-focus-boundary] {
   overflow-x: hidden;
@@ -118,7 +118,7 @@ body.admin-dashboard-active {
   width: 100%;
 }
 
-/* Allow vertical scrolling on landing page */
+
 #__next,
 [data-nextjs-scroll-focus-boundary] {
   overflow-x: hidden;
@@ -129,13 +129,13 @@ body.admin-dashboard-active {
   position: relative;
 }
 
-/* Ensure landing page content is scrollable */
+
 body:not(.admin-dashboard-active) {
   touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
 }
 
-/* Admin dashboard pages should have white background */
+
 [data-admin-dashboard],
 [data-admin-dashboard] > * {
   background: white !important;
@@ -172,17 +172,17 @@ body:not(.admin-dashboard-active) {
   background: linear-gradient(90deg, #680000 0%, #A00000 52%, #680000 100%);
 }
 
-/* Hide scrollbar for carousels */
+
 .scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;  
+  scrollbar-width: none;  
 }
 
 .scrollbar-hide::-webkit-scrollbar {
-  display: none;  /* Chrome, Safari and Opera */
+  display: none;  
 }
 
-/* Custom scrollbar for What We Do carousels */
+
 .what-we-do-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: #0D1E66 #e5e7eb;
@@ -208,7 +208,7 @@ body:not(.admin-dashboard-active) {
   background: #0a1733;
 }
 
-/* Custom scrollbar for What We Do horizontal carousel - Modern Shadcn UI style */
+
 .what-we-do-carousel-scrollbar {
   position: relative;
 }
@@ -292,7 +292,7 @@ body:not(.admin-dashboard-active) {
 }
 
 .projects-marquee-track--ahead {
-  /* make the second row start ahead */
+  
   animation-delay: var(--marquee-offset, -18s);
 }
 
@@ -301,7 +301,7 @@ body:not(.admin-dashboard-active) {
   animation-play-state: paused;
 }
 
-/* Hero announcement: marquee only when content exceeds 80% width */
+
 .hero-announcement-marquee {
   overflow: hidden;
 }
@@ -605,7 +605,7 @@ body:not(.admin-dashboard-active) {
   animation: slideRightFromLeft 1.5s ease-out forwards;
 }
 
-/* Team Row Animations */
+
 @keyframes slideLeftRow {
   0% {
     opacity: 0;
@@ -778,8 +778,8 @@ body:not(.admin-dashboard-active) {
   animation: none;
 }
 
-/* Modal animations - GPU accelerated for smooth performance */
-/* Toast Slide In Animation */
+
+
 @keyframes slideInRight {
   from {
     transform: translateX(100%);
@@ -795,7 +795,7 @@ body:not(.admin-dashboard-active) {
   animation: slideInRight 0.3s ease-out;
 }
 
-/* Confirm Dialog Animation */
+
 @keyframes fadeInScale {
   from {
     opacity: 0;
@@ -867,7 +867,7 @@ body:not(.admin-dashboard-active) {
   animation: fadeIn 1.2s ease-out both;
 }
 
-/* Our Team section - watermark is an img in Team.tsx */
+
 .team-watermark {
   position: relative;
   overflow: hidden;
@@ -884,7 +884,7 @@ body:not(.admin-dashboard-active) {
   }
 }
 
-/* Featured App: slide-left intro (starts further right) */
+
 @keyframes featured-carousel-slide-left {
   0% {
     transform: translateX(600px);
@@ -903,7 +903,7 @@ body:not(.admin-dashboard-active) {
   }
 }
 
-/* Category Strip Responsive Styles - Strips fill available width evenly */
+
 @media (min-width: 640px) {
   .category-strip-responsive {
     min-width: 80px !important;

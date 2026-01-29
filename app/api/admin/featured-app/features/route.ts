@@ -4,10 +4,10 @@ import { featuredAppFeatures, featuredApp } from '@/app/db/schema';
 import { requireAuth } from '@/app/lib/auth-middleware';
 import { eq, asc } from 'drizzle-orm';
 
-// GET all features for the featured app
+
 export async function GET() {
   try {
-    // Get the featured app ID (assuming there's only one featured app)
+    
     const [featuredAppRecord] = await db.select().from(featuredApp).limit(1);
     
     if (!featuredAppRecord) {
@@ -30,7 +30,7 @@ export async function GET() {
   }
 }
 
-// POST create new feature
+
 export async function POST(request: Request) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get the featured app ID (assuming there's only one featured app)
+    
     const [featuredAppRecord] = await db.select().from(featuredApp).limit(1);
     
     if (!featuredAppRecord) {

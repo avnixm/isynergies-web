@@ -1,25 +1,25 @@
-/**
- * Script to cleanup Vercel Blob storage
- * 
- * Usage:
- *   npm run ts-node scripts/cleanup-blobs.ts [mode] [options]
- * 
- * Modes:
- *   - orphaned (default): Delete only blobs not referenced in database
- *   - all: Delete all blobs except keep the N most recent (use --keepCount)
- *   - old: Delete blobs older than X minutes (use --olderThanMinutes)
- * 
- * Options:
- *   --dryRun: Preview what would be deleted without actually deleting
- *   --keepCount=N: When mode=all, keep this many most recent (default: 1)
- *   --olderThanMinutes=N: When mode=old, delete blobs older than this (default: 60)
- *   --limit=N: Maximum number of blobs to check (default: 1000)
- * 
- * Examples:
- *   npm run ts-node scripts/cleanup-blobs.ts orphaned --dryRun
- *   npm run ts-node scripts/cleanup-blobs.ts all --keepCount=1
- *   npm run ts-node scripts/cleanup-blobs.ts old --olderThanMinutes=30
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 import { list, del } from '@vercel/blob';
 import { db } from '../app/db';
@@ -50,7 +50,7 @@ async function cleanupBlobs(
   console.log(`   Dry run: ${dryRun}`);
   console.log(`   Limit: ${limit}`);
 
-  // Get referenced URLs if orphaned mode
+  
   let referencedUrls = new Set<string>();
   if (mode === 'orphaned') {
     console.log(`\n📊 Checking database for referenced blobs...`);
@@ -74,7 +74,7 @@ async function cleanupBlobs(
     console.log(`   Found ${referencedUrls.size} referenced blob URLs`);
   }
 
-  // List all blobs
+  
   console.log(`\n📦 Listing blobs from storage...`);
   const allBlobs: Array<{ url: string; uploadedAt: Date; pathname: string }> = [];
   let cursor: string | undefined;
@@ -105,7 +105,7 @@ async function cleanupBlobs(
 
   console.log(`   Found ${allBlobs.length} blobs in storage`);
 
-  // Determine which to delete
+  
   let blobsToDelete: typeof allBlobs = [];
 
   if (mode === 'orphaned') {
@@ -129,7 +129,7 @@ async function cleanupBlobs(
     return;
   }
 
-  // Show what will be deleted
+  
   console.log(`\n🗑️  Blobs to delete:`);
   blobsToDelete.slice(0, 10).forEach((blob, i) => {
     const age = Math.round((Date.now() - blob.uploadedAt.getTime()) / 1000 / 60);
@@ -144,7 +144,7 @@ async function cleanupBlobs(
     return;
   }
 
-  // Delete blobs
+  
   console.log(`\n🗑️  Deleting ${blobsToDelete.length} blobs...`);
   let deleted = 0;
   let failed = 0;
@@ -176,7 +176,7 @@ async function cleanupBlobs(
   console.log(`   Failed: ${failed}`);
 }
 
-// Parse command line arguments
+
 const args = process.argv.slice(2);
 const mode = (args[0] as 'orphaned' | 'all' | 'old') || 'orphaned';
 const options: any = {};

@@ -16,7 +16,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Find user
+    
     const [user] = await db
       .select()
       .from(adminUsers)
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Verify password
+    
     const isValid = await verifyPassword(password, user.password);
     if (!isValid) {
       return NextResponse.json(
@@ -39,13 +39,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create token
+    
     const token = await createToken({
       userId: user.id,
       username: user.username,
     });
 
-    // Set cookie and return token
+    
     const response = NextResponse.json({
       success: true,
       token,
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60, // 7 days
+      maxAge: 7 * 24 * 60 * 60, 
       path: '/',
     });
 
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
       stack: error?.stack,
     });
     
-    // Provide more specific error messages
+    
     let errorMessage = 'Internal server error';
     if (error?.code === 'ER_CON_COUNT_ERROR' || error?.sqlMessage?.includes('Too many connections')) {
       errorMessage = 'Database connection limit reached. Please try again in a moment.';

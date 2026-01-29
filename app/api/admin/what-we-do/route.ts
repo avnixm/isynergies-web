@@ -4,20 +4,20 @@ import { whatWeDo } from '@/app/db/schema';
 import { requireAuth } from '@/app/lib/auth-middleware';
 import { eq } from 'drizzle-orm';
 
-// GET what we do content
+
 export async function GET() {
   try {
     const [content] = await db.select().from(whatWeDo).limit(1);
     
     if (!content) {
-      // Return default values if no content exists
+      
       return NextResponse.json({
         mainText: 'The <strong>Software Development</strong> unit creates web, mobile, and computer applications that help companies digitize manual processes and improve transaction speed and efficiency. The <strong>System Technical</strong> unit ensures network and hardware security through proper licensing, configurations, server maintenance, and the installation of security systems such as digital locks, biometrics, and CCTV. The <strong>Marketing and Sales</strong> unit provides essential hardware and software products, including computers, printers, software licenses, and mobile phones to support daily business operations.',
         tagline: 'Our team helps your IT to the next level. We make your IT plans possible.',
       });
     }
 
-    // Map database column names to camelCase (Drizzle should return camelCase, but handle both cases)
+    
     const response = {
       mainText: (content as any).mainText || (content as any).main_text || '',
       tagline: (content as any).tagline || '',
@@ -33,7 +33,7 @@ export async function GET() {
   }
 }
 
-// PUT update what we do content
+
 export async function PUT(request: Request) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;

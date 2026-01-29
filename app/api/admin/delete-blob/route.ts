@@ -4,15 +4,15 @@ import { del } from '@vercel/blob';
 
 import { getBlobToken } from '@/app/lib/blob-token';
 
-/**
- * DELETE /api/admin/delete-blob
- * Deletes a file from Vercel Blob storage
- * 
- * Body:
- * {
- *   url: string (Vercel Blob URL to delete)
- * }
- */
+
+
+
+
+
+
+
+
+
 export async function DELETE(request: Request) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
@@ -28,7 +28,7 @@ export async function DELETE(request: Request) {
       );
     }
 
-    // Only allow deletion of Vercel Blob URLs
+    
     if (!url.startsWith('https://') || !url.includes('blob.vercel-storage.com')) {
       return NextResponse.json(
         { error: 'Invalid blob URL. Only Vercel Blob URLs can be deleted.' },
@@ -36,7 +36,7 @@ export async function DELETE(request: Request) {
       );
     }
 
-    // Delete the blob
+    
     const timestamp = new Date().toISOString();
     console.log(`\n🗑️  [${timestamp}] MANUAL BLOB DELETION`);
     console.log(`   URL: ${url.substring(0, 80)}...`);

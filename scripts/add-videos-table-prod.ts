@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import mysql from 'mysql2/promise';
 
-// Force production database configuration
+
 const PROD_DB_CONFIG = {
   host: 'isyn-cieloes.l.aivencloud.com',
   port: 26771,
@@ -18,7 +18,7 @@ async function addVideosTable() {
   try {
     connection = await mysql.createConnection(PROD_DB_CONFIG);
     
-    // Check if table exists
+    
     const [tables] = await connection.execute(`
       SELECT TABLE_NAME 
       FROM INFORMATION_SCHEMA.TABLES 
@@ -31,7 +31,7 @@ async function addVideosTable() {
       return;
     }
     
-    // Create the videos table
+    
     await connection.execute(`
       CREATE TABLE videos (
         id INT AUTO_INCREMENT PRIMARY KEY,

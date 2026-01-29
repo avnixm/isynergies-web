@@ -180,7 +180,7 @@ export default function Projects() {
     }
   };
   
-  // Fallback data
+  
   const fallbackProjects: Project[] = useMemo(
     () => [
       {
@@ -251,19 +251,19 @@ export default function Projects() {
 
   const marqueeItems = useMemo(() => {
     if (view !== 'all') return [];
-    // duplicate for seamless loop (like ticker)
+    
     return [...projects, ...projects];
   }, [projects, view]);
 
   const marqueeRow1 = useMemo(() => {
     if (view !== 'all') return [];
-    // Row 1: projects in display order, repeated 4× for seamless loop
+    
     return [...projects, ...projects, ...projects, ...projects];
   }, [projects, view]);
 
   const marqueeRow2 = useMemo(() => {
     if (view !== 'all') return [];
-    // Row 2: rotated order (different from row 1) to avoid mirrored copies – alternating layout
+    
     const n = projects.length;
     if (n <= 1) return [...projects, ...projects, ...projects, ...projects];
     const half = Math.floor(n / 2);
@@ -271,14 +271,14 @@ export default function Projects() {
     return [...rotated, ...rotated, ...rotated, ...rotated];
   }, [projects, view]);
 
-  // Fetch projects from API
+  
   useEffect(() => {
     const fetchProjects = async () => {
       try {
         const response = await fetch('/api/admin/projects');
         if (response.ok) {
           const data = await response.json();
-          // Sort by displayOrder (ascending)
+          
           const sortedData = data.sort((a: any, b: any) => a.displayOrder - b.displayOrder);
           setProjects(sortedData.map((p: any) => ({
             id: p.id.toString(),
@@ -397,7 +397,7 @@ export default function Projects() {
         const errorText = data?.error || 'Failed to send inquiry. Please try again.';
         setInquiryError(errorText);
       } else {
-        // Close the project modal and show a dedicated success popup
+        
         handleCloseModal();
         setShowSuccessModal(true);
       }
@@ -436,7 +436,7 @@ export default function Projects() {
             {headerTitle}
           </h2>
 
-          {/* view toggle (like the reference) */}
+          {}
           <div className={`mt-4 flex items-center justify-center gap-3 slide-down-slow ${
             isVisible ? 'animate' : 'opacity-0'
           }`}
@@ -551,7 +551,7 @@ export default function Projects() {
           </div>
         </div>
 
-        {/* Grid / Marquee */}
+        {}
         {view === 'all' ? (
           loading ? (
             <div className="mt-10">
@@ -567,14 +567,14 @@ export default function Projects() {
                 } as React.CSSProperties
               }
             >
-              {/* Row 1 */}
+              {}
               <div className={`projects-marquee-row marquee-row-1 ${
                 isVisible ? 'animate' : 'opacity-0'
               }`}
               style={{
                 animationDelay: isVisible ? '0.5s' : '0s',
               }}>
-              {/* Top row starts ahead by ~half a card */}
+              {}
               <div 
                 className="projects-marquee-track -ml-[178px] sm:-ml-[208px] md:-ml-[238px]"
                 style={{
@@ -591,7 +591,7 @@ export default function Projects() {
                     aria-haspopup="dialog"
                     aria-controls="project-modal"
                   >
-                    {/* Thumbnail image if available */}
+                    {}
                     {p.thumbnail ? (
                       <>
                         <img
@@ -630,7 +630,7 @@ export default function Projects() {
               </div>
             </div>
 
-            {/* Row 2 (ahead) */}
+            {}
             <div className={`projects-marquee-row mt-5 marquee-row-2 ${
               isVisible ? 'animate' : 'opacity-0'
             }`}
@@ -653,7 +653,7 @@ export default function Projects() {
                     aria-haspopup="dialog"
                     aria-controls="project-modal"
                   >
-                    {/* Thumbnail image if available */}
+                    {}
                     {p.thumbnail ? (
                       <>
                         <img
@@ -704,7 +704,7 @@ export default function Projects() {
                 aria-haspopup="dialog"
                 aria-controls="project-modal"
               >
-                {/* Thumbnail image if available */}
+                {}
                 {p.thumbnail ? (
                   <>
                     <img
@@ -746,7 +746,7 @@ export default function Projects() {
         )}
       </div>
 
-      {/* Modal with smooth GPU-accelerated animations */}
+      {}
       {selected ? (
         <div
           id="project-modal"
@@ -759,7 +759,7 @@ export default function Projects() {
             willChange: 'opacity'
           }}
         >
-          {/* Backdrop */}
+          {}
           <button
             type="button"
             className="absolute inset-0 bg-black/55 backdrop-blur-sm"
@@ -767,7 +767,7 @@ export default function Projects() {
             onClick={handleCloseModal}
           />
 
-          {/* Modal content */}
+          {}
           <div 
             className="relative z-10 w-full max-w-6xl overflow-hidden rounded-3xl shadow-[0_24px_60px_rgba(0,0,0,0.35)]"
             style={{
@@ -778,7 +778,7 @@ export default function Projects() {
             }}
           >
             <div className="grid grid-cols-1 md:grid-cols-2">
-              {/* Left panel */}
+              {}
               <div className="bg-white p-10 font-sans text-gray-900">
                 {!showInquiryForm ? (
                   <>
@@ -839,7 +839,7 @@ export default function Projects() {
                             required
                             value={inquiryName}
                             onChange={(e) => {
-                              // Only allow letters, spaces, hyphens, and apostrophes
+                              
                               const filtered = e.target.value.replace(/[^a-zA-Z\s'-]/g, '');
                               setInquiryName(filtered);
                             }}
@@ -1136,7 +1136,7 @@ export default function Projects() {
                       />
                     </div>
                   )}
-                  {/* Fill remaining slots with placeholders if needed */}
+                  {}
                   {Array.from({ length: Math.max(0, 4 - [selected.screenshot1, selected.screenshot2, selected.screenshot3, selected.screenshot4].filter(Boolean).length) }).map((_, i) => (
                     <div
                       key={`placeholder-${i}`}
@@ -1147,7 +1147,7 @@ export default function Projects() {
               </div>
             </div>
 
-            {/* Close button */}
+            {}
             <button
               type="button"
               className="absolute right-4 top-4 rounded-full bg-black/30 p-2 text-white backdrop-blur-md transition-colors hover:bg-black/45 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
@@ -1172,7 +1172,7 @@ export default function Projects() {
         </div>
       ) : null}
 
-      {/* Success modal popup for inquiries */}
+      {}
       {showSuccessModal && (
         <div
           className="fixed inset-0 z-[70] flex items-center justify-center px-4 py-6"
@@ -1184,7 +1184,7 @@ export default function Projects() {
             willChange: 'opacity',
           }}
         >
-          {/* Backdrop */}
+          {}
           <button
             type="button"
             className="absolute inset-0 bg-black/55 backdrop-blur-sm"
@@ -1192,7 +1192,7 @@ export default function Projects() {
             aria-label="Close success message"
           />
 
-          {/* Modal content */}
+          {}
           <div
             className="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
             style={{

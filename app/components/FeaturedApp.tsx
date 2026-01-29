@@ -7,7 +7,7 @@ import { Star, X, ChevronLeft, ChevronRight, Play, SkipBack, SkipForward } from 
 import { CustomVideoPlayer } from './ui/custom-video-player';
 
 type FeaturedAppContent = {
-  headerImage: string; // Kept for backward compatibility
+  headerImage: string; 
   itemType: 'app' | 'website';
   downloadText: string;
   appStoreImage: string;
@@ -39,7 +39,7 @@ type FeaturedAppFeature = {
   displayOrder: number;
 };
 
-// Helper to convert video URLs to embed URLs
+
 function convertToEmbedUrl(url: string): string {
   if (!url) return '';
 
@@ -69,7 +69,7 @@ function convertToEmbedUrl(url: string): string {
   return url;
 }
 
-// Check if URL is a video embed URL
+
 function isVideoEmbedUrl(url: string): boolean {
   if (!url) return false;
   return (
@@ -136,8 +136,8 @@ export default function FeaturedApp() {
 
   useEffect(() => {
     const fetchData = async () => {
-      // Use Promise.allSettled so each fetch can fail independently
-      // This way if one fails, the others can still load
+      
+      
       await Promise.allSettled([fetchContent(), fetchCarouselImages(), fetchFeatures()]);
       setLoading(false);
     };
@@ -167,13 +167,13 @@ export default function FeaturedApp() {
           bannerHeight: data.bannerHeight || data.banner_height || 'h-60',
         });
       } else {
-        // Don't throw - just log the error and continue
-        // The component will use default/empty values
+        
+        
         console.warn('Failed to fetch featured app content:', response.status, response.statusText);
       }
     } catch (error) {
-      // Don't throw - just log the error
-      // This allows other fetches to continue
+      
+      
       console.warn('Error fetching featured app content:', error);
     }
   };
@@ -188,11 +188,11 @@ export default function FeaturedApp() {
         console.log('Sorted carousel images:', sortedData);
         setCarouselImages(sortedData);
       } else {
-        // Don't throw - just log and continue
+        
         console.warn('Failed to fetch carousel images:', response.status, response.statusText);
       }
     } catch (error) {
-      // Don't throw - just log the error
+      
       console.warn('Error fetching carousel images:', error);
     }
   };
@@ -205,18 +205,18 @@ export default function FeaturedApp() {
         const sortedData = data.sort((a: FeaturedAppFeature, b: FeaturedAppFeature) => a.displayOrder - b.displayOrder);
         setFeatures(sortedData);
       } else {
-        // Don't throw - just log and continue
+        
         console.warn('Failed to fetch features:', response.status, response.statusText);
       }
     } catch (error) {
-      // Don't throw - just log the error
+      
       console.warn('Error fetching features:', error);
     }
   };
 
   const carouselRef = useRef<HTMLDivElement>(null);
   
-  // Continuous auto-scroll for the main carousel on the right side
+  
   const autoScrollAnimationFrame = useRef<number | null>(null);
 
   const videoItems = useMemo(() => {
@@ -225,14 +225,14 @@ export default function FeaturedApp() {
 
   const hasVideos = videoItems.length > 0;
 
-  // Reset video index when video list changes
+  
   useEffect(() => {
     if (videoIndex >= videoItems.length) {
       setVideoIndex(0);
     }
   }, [videoItems.length, videoIndex]);
 
-  // Determine primary video item for the left video section (fallback to first item)
+  
   const primaryVideoItem = useMemo(() => {
     if (videoItems.length > 0) {
       return videoItems[Math.min(videoIndex, videoItems.length - 1)] || videoItems[0];
@@ -247,7 +247,7 @@ export default function FeaturedApp() {
       setVideoSlideDir(direction);
       setIsVideoSliding(true);
       setIsLeftVideoPlaying(false);
-      // Autoplay the next/prev item after navigation (works for both direct video + embeds).
+      
       setEmbedAutoplay(true);
       setAutoPlayRequested(true);
 
@@ -263,9 +263,9 @@ export default function FeaturedApp() {
     [videoItems.length]
   );
 
-  // When autoplay is requested (Next/Prev click, hover), attempt to start playback.
-  // For iframe embeds, we rely on `autoplay` prop (embed URL includes autoplay=1).
-  // For direct <video>, we best-effort call play() on the element.
+  
+  
+  
   useEffect(() => {
     if (!autoPlayRequested) return;
     if (!primaryVideoItem) return;
@@ -278,10 +278,10 @@ export default function FeaturedApp() {
       if (el && el.tagName.toLowerCase() === 'video') {
         try {
           (el as HTMLVideoElement).play().catch(() => {
-            /* autoplay may be blocked; user can click play */
+            
           });
         } catch {
-          /* ignore */
+          
         }
       }
       setAutoPlayRequested(false);
@@ -290,25 +290,25 @@ export default function FeaturedApp() {
     return () => window.clearTimeout(t);
   }, [autoPlayRequested, primaryVideoItem]);
 
-  // Only show non-video items in the right-side image carousel (prevents "duplicate video")
+  
   const carouselDisplayItems = useMemo(() => {
     const base = carouselImages
       .map((item, originalIndex) => ({ item, originalIndex }))
       .filter(({ item }) => !(item.mediaType === 'video' || isVideoEmbedUrl(item.image)));
 
-    // Duplicate list for seamless looping, similar to Projects marquee.
-    // Triple to reduce visible gap on ultra-wide screens and keep the loop “infinite”.
+    
+    
     return [...base, ...base, ...base];
   }, [carouselImages]);
 
-  // Filter images only for modal (exclude videos)
+  
   const modalDisplayItems = useMemo(() => {
     return carouselImages
       .map((item, originalIndex) => ({ item, originalIndex }))
       .filter(({ item }) => !(item.mediaType === 'video' || isVideoEmbedUrl(item.image)));
   }, [carouselImages]);
 
-  // One-time "slide in from the right" intro for the carousel track
+  
   useEffect(() => {
     if (!isVisible) return;
     if (didCarouselEnter) return;
@@ -321,23 +321,23 @@ export default function FeaturedApp() {
     return () => window.clearTimeout(t);
   }, [isVisible, didCarouselEnter, carouselDisplayItems.length]);
 
-  // Function to check scroll position and update arrow visibility
+  
   const updateArrowVisibility = useCallback(() => {
     if (carouselRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
-      // Left arrow only shows when user has scrolled to the right (scrollLeft > 0)
-      const canScrollLeft = scrollLeft > 1; // Use 1px threshold to be more responsive
-      // Right arrow shows when there's more content to scroll
-      // Use a larger threshold (50px) so arrow stays visible until user is very close to the end
+      
+      const canScrollLeft = scrollLeft > 1; 
+      
+      
       const remainingScroll = scrollWidth - clientWidth - scrollLeft;
-      const canScrollRight = remainingScroll > 50; // Show arrow if more than 50px left to scroll
+      const canScrollRight = remainingScroll > 50; 
       
       setShowLeftArrow(canScrollLeft);
       setShowRightArrow(canScrollRight);
     }
   }, []);
 
-  // Function to update modal arrow visibility
+  
   const updateModalArrowVisibility = useCallback(() => {
     if (modalCarouselRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = modalCarouselRef.current;
@@ -351,48 +351,48 @@ export default function FeaturedApp() {
   }, []);
 
 
-  // Open modal at specific index (originalIndex from carouselDisplayItems) - for images only
+  
   const openModal = (originalIndex: number) => {
-    // Pause all carousel videos before opening modal
+    
     setPauseCarouselVideos(true);
-    // Find the index in modalDisplayItems that corresponds to this originalIndex
+    
     const modalItemIndex = modalDisplayItems.findIndex(({ originalIndex: idx }) => idx === originalIndex);
     if (modalItemIndex !== -1) {
       setModalIndex(modalItemIndex);
     } else {
-      // Fallback to first image if not found
+      
       setModalIndex(0);
     }
     setIsModalOpen(true);
-    setPlayingVideoIndex(null); // Reset playing video when opening modal
-    // Update modal arrow visibility after opening
+    setPlayingVideoIndex(null); 
+    
     setTimeout(() => {
       updateModalArrowVisibility();
     }, 100);
   };
 
 
-  // Navigate modal carousel (only navigate through images, skip videos)
+  
   const navigateModal = (direction: 'left' | 'right') => {
     if (direction === 'left' && modalIndex > 0) {
       setModalIndex(modalIndex - 1);
-      setPlayingVideoIndex(null); // Reset playing video when navigating
+      setPlayingVideoIndex(null); 
     } else if (direction === 'right' && modalIndex < modalDisplayItems.length - 1) {
       setModalIndex(modalIndex + 1);
-      setPlayingVideoIndex(null); // Reset playing video when navigating
+      setPlayingVideoIndex(null); 
     }
   };
 
 
-  // Handle video play - pause all other videos
+  
   const handleVideoPlay = (index: number) => {
     setPlayingVideoIndex(index);
   };
 
-  // Update arrow visibility when carousel images change
+  
   useEffect(() => {
     if (carouselImages.length > 0) {
-      // Use multiple timeouts to ensure DOM is fully rendered and measured
+      
       const timeout1 = setTimeout(() => {
         updateArrowVisibility();
       }, 100);
@@ -406,45 +406,45 @@ export default function FeaturedApp() {
         clearTimeout(timeout2);
       };
     } else {
-      // Reset arrows when no images
+      
       setShowLeftArrow(false);
       setShowRightArrow(false);
     }
   }, [carouselImages]);
 
-  // Add scroll event listener and initial check
+  
   useEffect(() => {
     const carousel = carouselRef.current;
     if (carousel && carouselImages.length > 0) {
-      // Initial check after a short delay to ensure layout is complete
+      
       const initialCheck = setTimeout(() => {
         updateArrowVisibility();
       }, 150);
       
-      // Enhanced scroll handler that works with smooth scrolling
+      
       const handleScroll = () => {
         updateArrowVisibility();
       };
       
-      // Listen to scroll events
+      
       carousel.addEventListener('scroll', handleScroll, { passive: true });
       
-      // Also listen for scrollend event if available (better for smooth scrolling)
+      
       if ('onscrollend' in carousel) {
         carousel.addEventListener('scrollend', handleScroll);
       }
       
-      // Also check on resize
+      
       window.addEventListener('resize', updateArrowVisibility);
       
-      // Use requestAnimationFrame to check during smooth scroll animations
+      
       let rafId: number | null = null;
       const checkDuringScroll = () => {
         updateArrowVisibility();
         rafId = requestAnimationFrame(checkDuringScroll);
       };
       
-      // Start checking when scrolling starts
+      
       let isScrolling = false;
       const scrollStartHandler = () => {
         if (!isScrolling) {
@@ -464,7 +464,7 @@ export default function FeaturedApp() {
       
       carousel.addEventListener('scroll', scrollStartHandler, { passive: true });
       
-      // Detect when smooth scroll ends
+      
       let scrollTimeout: NodeJS.Timeout;
       const detectScrollEnd = () => {
         clearTimeout(scrollTimeout);
@@ -490,9 +490,9 @@ export default function FeaturedApp() {
         window.removeEventListener('resize', updateArrowVisibility);
       };
     }
-  }, [carouselImages, updateArrowVisibility]); // Re-run when images change to re-check visibility
+  }, [carouselImages, updateArrowVisibility]); 
 
-  // Reset playing video when modal index changes
+  
   useEffect(() => {
     if (isModalOpen) {
       setPlayingVideoIndex(null);
@@ -500,7 +500,7 @@ export default function FeaturedApp() {
   }, [modalIndex, isModalOpen]);
 
 
-  // Update modal carousel scroll position when modalIndex changes
+  
   useEffect(() => {
     if (isModalOpen && modalCarouselRef.current) {
       const scrollToIndex = () => {
@@ -508,52 +508,52 @@ export default function FeaturedApp() {
           const container = modalCarouselRef.current;
           const activeItem = container.querySelector(`[data-index="${modalIndex}"]`) as HTMLElement;
           if (activeItem) {
-            // Get container and item dimensions
+            
             const containerWidth = container.clientWidth;
             const itemWidth = activeItem.offsetWidth;
             
-            // Get the flex container to find item position
+            
             const flexContainer = activeItem.parentElement;
             if (!flexContainer) return;
             
-            // Calculate position by summing all previous items
+            
             let itemLeft = 0;
             for (let i = 0; i < modalIndex; i++) {
               const prevItem = flexContainer.querySelector(`[data-index="${i}"]`) as HTMLElement;
               if (prevItem) {
                 const prevWidth = prevItem.offsetWidth;
-                const gap = window.innerWidth >= 768 ? 16 : 12; // gap-3 = 12px, gap-4 = 16px
+                const gap = window.innerWidth >= 768 ? 16 : 12; 
                 itemLeft += prevWidth + gap;
               }
             }
             
-            // Get padding from flex container
+            
             const flexStyle = getComputedStyle(flexContainer);
             const paddingLeft = parseFloat(flexStyle.paddingLeft) || 0;
             
-            // Total left position including padding
+            
             const totalItemLeft = paddingLeft + itemLeft;
             
-            // Calculate scroll to center: item center should align with container center
+            
             const itemCenter = totalItemLeft + (itemWidth / 2);
             const containerCenter = containerWidth / 2;
             const targetScrollLeft = itemCenter - containerCenter;
             
-            // Clamp to valid range
+            
             const maxScroll = Math.max(0, container.scrollWidth - containerWidth);
             const finalScrollLeft = Math.max(0, Math.min(targetScrollLeft, maxScroll));
             
-            // Use requestAnimationFrame for smooth scrolling without bounce
+            
             const startScroll = container.scrollLeft;
             const distance = finalScrollLeft - startScroll;
-            const duration = 400; // milliseconds
+            const duration = 400; 
             const startTime = performance.now();
             
             const animateScroll = (currentTime: number) => {
               const elapsed = currentTime - startTime;
               const progress = Math.min(elapsed / duration, 1);
               
-              // Use ease-out cubic for smooth deceleration
+              
               const easeOutCubic = 1 - Math.pow(1 - progress, 3);
               
               const currentScroll = startScroll + (distance * easeOutCubic);
@@ -568,16 +568,16 @@ export default function FeaturedApp() {
           }
         }
       };
-      // Wait for layout to update and transitions to complete
+      
       setTimeout(scrollToIndex, 350);
-      // Update arrow visibility after scroll completes
+      
       setTimeout(() => {
         updateModalArrowVisibility();
       }, 900);
     }
   }, [modalIndex, isModalOpen, modalDisplayItems.length, updateModalArrowVisibility]);
 
-  // Handle keyboard navigation in image modal
+  
   useEffect(() => {
     if (!isModalOpen) return;
 
@@ -588,9 +588,9 @@ export default function FeaturedApp() {
         navigateModal('right');
       } else if (e.key === 'Escape') {
         setIsModalOpen(false);
-        // Allow carousel videos to play again when modal closes
+        
         setPauseCarouselVideos(false);
-        setPlayingVideoIndex(null); // Reset playing video when modal closes
+        setPlayingVideoIndex(null); 
       }
     };
 
@@ -599,10 +599,10 @@ export default function FeaturedApp() {
   }, [isModalOpen, modalIndex, modalDisplayItems.length]);
 
 
-  // Continuous auto-scroll for the main carousel on the right side
-  // NOTE: The actual infinite scrolling is now handled via CSS keyframes
-  // (see .projects-marquee-track / projectsMarquee in globals.css).
-  // We keep this effect as a no-op so hook order remains stable.
+  
+  
+  
+  
   useEffect(() => {
     return;
   }, [carouselDisplayItems.length, didCarouselEnter]);
@@ -622,25 +622,25 @@ export default function FeaturedApp() {
     // If we ever get a video value that points at `/api/images/:id`, remap it to `/api/media/:id`
     // to avoid returning non-video content (ID collisions between images and media).
     if (kind === 'video') {
-      // Case 1: relative API images URL: /api/images/123
+      
       const relMatch = value.match(/^\/api\/images\/(\d+)\s*$/);
       if (relMatch) {
         return `/api/media/${relMatch[1]}`;
       }
 
-      // Case 2: absolute URL: http(s)://host/api/images/123
+      
       const absMatch = value.match(/^(https?:\/\/[^/]+)\/api\/images\/(\d+)\s*$/);
       if (absMatch) {
         return `${absMatch[1]}/api/media/${absMatch[2]}`;
       }
 
-      // Case 3: numeric ID (stored directly): "123"
+      
       if (isNumericId(value)) {
         return `/api/media/${value.trim()}`;
       }
     }
 
-    // For already-resolved URLs, return as-is.
+    
     if (
       value.startsWith('/api/images/') ||
       value.startsWith('/api/media/') ||
@@ -650,14 +650,14 @@ export default function FeaturedApp() {
       return value;
     }
 
-    // Default: treat as image ID.
+    
     return `/api/images/${value}`;
   };
 
-  // Helper to convert video URLs to embed URLs
-  // (moved to top-level helpers)
+  
+  
 
-  // Convert gradient direction from Tailwind format to CSS format
+  
   const getGradientDirection = (direction: string): string => {
     const directionMap: Record<string, string> = {
       'to-r': 'to right',
@@ -672,12 +672,12 @@ export default function FeaturedApp() {
     return directionMap[direction] || 'to right';
   };
 
-  // Check if we should use new customizable banner or fallback to old headerImage
+  
   const useCustomBanner = content && (content.appLogo || content.gradientFrom || content.gradientTo);
 
   return (
     <section id="featured-app" ref={sectionRef} aria-label="Featured App" className="relative bg-white">
-      {/* Block 1: Customizable Banner or Fallback to Header Image */}
+      {}
       {useCustomBanner ? (
         <div
           className="w-full h-36 sm:h-44 md:h-52 lg:h-60 relative overflow-hidden"
@@ -727,7 +727,7 @@ export default function FeaturedApp() {
             )}
           </div>
 
-          {/* Feature Icons - Bottom Right */}
+          {}
           {features.length > 0 && (
             <div 
               className={`absolute bottom-0 right-4 z-10 flex items-center gap-2 max-w-[85%] justify-end overflow-x-auto py-2 md:bottom-[-5px] md:right-8 md:gap-4 md:overflow-visible md:py-0 ${
@@ -755,7 +755,7 @@ export default function FeaturedApp() {
           )}
         </div>
       ) : content?.headerImage ? (
-        // Fallback to old header image for backward compatibility
+        
         <div className="w-full h-40 sm:h-52 md:h-64 overflow-hidden">
           <img
             src={getMediaUrl(content.headerImage, 'image')}
@@ -765,11 +765,11 @@ export default function FeaturedApp() {
         </div>
       ) : null}
 
-      {/* Block 2: Horizontal Carousel with Navigation */}
+      {}
       {carouselImages.length > 0 && (
         <div className="w-full py-3 sm:py-4 bg-[#D7E1E4] relative">
           <div className="relative w-full flex flex-col md:flex-row items-stretch gap-3 sm:gap-4 md:gap-6 px-3 sm:px-4 md:px-6">
-            {/* Left: Video Section (30% width on desktop) */}
+            {}
             {hasVideos && (
               <div className="w-full md:w-[30%] flex items-center justify-center">
                 {primaryVideoItem && (
@@ -777,14 +777,14 @@ export default function FeaturedApp() {
                   ref={featuredVideoContainerRef} 
                   className="relative w-full h-[150px] sm:h-[180px] md:h-[220px]"
                   onMouseEnter={() => {
-                    // Hover autoplay (best-effort; may be blocked by browser policy)
+                    
                     setEmbedAutoplay(true);
                     setAutoPlayRequested(true);
                   }}
                 >
-                  {/* Inner frame: rounded, clips video. All controls inside frame (YouTube-style). */}
+                  {}
                   <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-200 shadow-md">
-                    {/* Video content with slide transition */}
+                    {}
                     <div
                       key={`featured-video-${primaryVideoItem.id}-${videoIndex}`}
                       className={`w-full h-full ${isVideoSliding ? 'opacity-0' : 'opacity-100'}`}
@@ -800,8 +800,8 @@ export default function FeaturedApp() {
                       {primaryVideoItem.mediaType === 'video' || isVideoEmbedUrl(primaryVideoItem.image) ? (
                         <div className="w-full h-full overflow-hidden">
                           <CustomVideoPlayer
-                            // This slot is explicitly the “primary video”, so always resolve as video.
-                            // Some legacy records may be missing `mediaType`, but still represent blob videos.
+                            
+                            
                             src={getMediaUrl(primaryVideoItem.image, 'video')}
                             title={primaryVideoItem.alt || 'Featured video'}
                             className="w-full h-full"
@@ -821,7 +821,7 @@ export default function FeaturedApp() {
                       )}
                     </div>
 
-                    {/* YouTube-style controls: Prev | Play | Next – separate dark circles, inside frame */}
+                    {}
                     {(primaryVideoItem.mediaType === 'video' || isVideoEmbedUrl(primaryVideoItem.image)) && (
                       <div 
                         className="absolute inset-0 flex items-center justify-center pointer-events-none z-30"
@@ -879,7 +879,7 @@ export default function FeaturedApp() {
                                     (el as HTMLElement).focus();
                                     el.dispatchEvent(new MouseEvent('click', { bubbles: false, view: window }));
                                   } catch {
-                                    /* native video click; iframe uses autoplay URL */
+                                    
                                   }
                                 }
                               }}
@@ -920,17 +920,17 @@ export default function FeaturedApp() {
               </div>
             )}
 
-            {/* Right: Horizontal Carousel with Navigation (70% width on desktop) */}
+            {}
             <div className={`w-full ${hasVideos ? 'md:w-[70%]' : 'md:w-full'} relative`}>
               <div className="relative w-full h-full flex items-center">
-                {/* Left Arrow Button - disabled while using infinite auto-scroll */}
+                {}
                 {false && showLeftArrow && (
                   <button
                     onClick={() => {
                       if (carouselRef.current) {
                         const scrollAmount = 400;
                         carouselRef.current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-                        // Check visibility after scroll animation
+                        
                         setTimeout(() => {
                           updateArrowVisibility();
                         }, 500);
@@ -943,9 +943,9 @@ export default function FeaturedApp() {
                   </button>
                 )}
 
-                {/* Scrollable Carousel */}
+                {}
                 <div ref={carouselRef} className="overflow-hidden pl-0">
-                  {/* Wrapper handles intro + fade without overriding marquee animation */}
+                  {}
                   <div
                     className={`${isVisible ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500`}
                     style={{
@@ -994,7 +994,7 @@ export default function FeaturedApp() {
                   </div>
                 </div>
 
-                {/* Right Arrow Button - disabled while using infinite auto-scroll */}
+                {}
                 {false && showRightArrow && (
                   <button
                     onClick={() => {
@@ -1002,22 +1002,22 @@ export default function FeaturedApp() {
                         const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
                         const remainingScroll = scrollWidth - clientWidth - scrollLeft;
 
-                        // If we're close to the end, scroll to the very end (accounting for padding)
-                        // Otherwise, scroll by the normal amount
+                        
+                        
                         if (remainingScroll < 450) {
-                          // Scroll to end minus some padding to ensure space is visible
+                          
                           carouselRef.current.scrollTo({ left: scrollWidth - clientWidth, behavior: 'smooth' });
                         } else {
                           carouselRef.current.scrollBy({ left: 400, behavior: 'smooth' });
                         }
 
-                        // Immediately check (for instant scroll)
+                        
                         updateArrowVisibility();
-                        // Check visibility during and after scroll animation
+                        
                         const checkInterval = setInterval(() => {
                           updateArrowVisibility();
                         }, 50);
-                        // Clear interval after scroll animation completes
+                        
                         setTimeout(() => {
                           clearInterval(checkInterval);
                           updateArrowVisibility();
@@ -1036,24 +1036,24 @@ export default function FeaturedApp() {
         </div>
       )}
 
-      {/* Fullscreen Image Modal */}
+      {}
       {isModalOpen && (
         <div 
           className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-3 sm:p-4 md:p-8"
           onClick={() => {
             setIsModalOpen(false);
-            // Allow carousel videos to play again when modal closes
+            
             setPauseCarouselVideos(false);
-            setPlayingVideoIndex(null); // Reset playing video when modal closes
+            setPlayingVideoIndex(null); 
           }}
         >
-          {/* Close button */}
+          {}
           <button
             onClick={() => {
               setIsModalOpen(false);
-              // Allow carousel videos to play again when modal closes
+              
               setPauseCarouselVideos(false);
-              setPlayingVideoIndex(null); // Reset playing video when modal closes
+              setPlayingVideoIndex(null); 
             }}
             className="absolute top-3 right-3 z-60 w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95 touch-manipulation sm:top-4 sm:right-4"
             aria-label="Close"
@@ -1061,12 +1061,12 @@ export default function FeaturedApp() {
             <X className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-gray-800" />
           </button>
 
-          {/* Modal Carousel Container */}
+          {}
           <div 
             className="relative w-full h-full flex items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Left Arrow */}
+            {}
             {modalShowLeftArrow && (
               <button
                 onClick={() => navigateModal('left')}
@@ -1077,7 +1077,7 @@ export default function FeaturedApp() {
               </button>
             )}
 
-            {/* Carousel Content */}
+            {}
             <div
               ref={modalCarouselRef}
               className="overflow-x-auto scrollbar-hide w-full h-full"
@@ -1087,7 +1087,7 @@ export default function FeaturedApp() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                scrollBehavior: 'auto', // Disable CSS smooth scroll to use our custom animation
+                scrollBehavior: 'auto', 
               }}
               onScroll={updateModalArrowVisibility}
             >
@@ -1122,7 +1122,7 @@ export default function FeaturedApp() {
                     </div>
                   );
                 })}
-                {/* Add padding at the end to prevent cutting - equal to half container width for centering */}
+                {}
                 <div 
                   className="flex-shrink-0" 
                   style={{ 
@@ -1134,7 +1134,7 @@ export default function FeaturedApp() {
               </div>
             </div>
 
-            {/* Right Arrow */}
+            {}
             {modalShowRightArrow && modalIndex < modalDisplayItems.length - 1 && (
               <button
                 onClick={() => navigateModal('right')}
@@ -1148,16 +1148,16 @@ export default function FeaturedApp() {
         </div>
       )}
 
-      {/* Block 3: Footer / Downloads (ACash section) */}
+      {}
       {content && (
         <div 
           className="w-full py-3 sm:py-4 relative bg-[#D7E1E4]"
         >
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-6 px-3 sm:px-4 md:px-6">
-            {/* Left: Download text / badges — Right: Logo. Padding matches video block. */}
+            {}
             <div className="flex flex-wrap justify-center md:justify-start gap-2 sm:gap-3 items-center">
               {content.itemType === 'app' ? (
-                /* App Mode: Download Badges */
+                
                 <>
                   {content.downloadText && (
                     <p className="text-gray-900 text-xs sm:text-sm md:text-base font-medium whitespace-nowrap w-full text-center md:w-auto md:text-left">
@@ -1195,7 +1195,7 @@ export default function FeaturedApp() {
                   </div>
                 </>
               ) : (
-                /* Website Mode: Visit Link */
+                
                 <>
                   {content.visitText && (
                     <p className="text-gray-900 text-xs sm:text-sm md:text-base font-medium whitespace-nowrap">
@@ -1216,7 +1216,7 @@ export default function FeaturedApp() {
               )}
             </div>
 
-            {/* Right Side: Logo (iSyn / ACash) */}
+            {}
             {content.logoImage && (
               <div className="flex-shrink-0">
                 <img

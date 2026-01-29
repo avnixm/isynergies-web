@@ -2,13 +2,13 @@ import { NextResponse } from 'next/server';
 import mysql from 'mysql2/promise';
 import { requireAuth } from '@/app/lib/auth-middleware';
 
-/**
- * POST /api/admin/team-migrate
- *
- * One-time fix: ensures team_groups exists, team_members has group_id/group_order/is_featured,
- * then deletes all team data. Uses the same DB as the app (Vercel env).
- * Requires admin auth.
- */
+
+
+
+
+
+
+
 export async function POST(request: Request) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     connection = await mysql.createConnection(config);
     const db = config.database;
 
-    // 1) Create team_groups if not exists
+    
     const [tables] = (await connection.execute(
       `SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'team_groups'`,
       [db]
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
       `);
     }
 
-    // 2) Add group_id, group_order, is_featured to team_members if missing
+    
     const [cols] = (await connection.execute(
       `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'team_members'`,
       [db]
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // 3) Clear all team data
+    
     const [dm] = await connection.execute<mysql.ResultSetHeader>(`DELETE FROM team_members`);
     const membersDeleted = dm?.affectedRows ?? 0;
     const [dg] = await connection.execute<mysql.ResultSetHeader>(`DELETE FROM team_groups`);

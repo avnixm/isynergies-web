@@ -283,7 +283,7 @@ export default function TeamPage() {
     }
   };
 
-  // --- Group builder handlers ---
+  
   const handleSetFeatured = async (memberId: number | null) => {
     const token = getToken();
     try {
@@ -651,7 +651,7 @@ export default function TeamPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Add/Edit Dialog */}
+      {}
       <Dialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
@@ -729,7 +729,7 @@ export default function TeamPage() {
         </div>
       </Dialog>
 
-      {/* Add/Rename Group Dialog */}
+      {}
       <Dialog
         open={isGroupDialogOpen}
         onOpenChange={handleGroupDialogOpenChange}

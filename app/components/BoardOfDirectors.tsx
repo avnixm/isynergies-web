@@ -59,7 +59,7 @@ export default function BoardOfDirectors() {
     try {
       const response = await fetch('/api/admin/board-members');
       const data = await response.json();
-      // Sort by displayOrder (ascending)
+      
       const sortedData = data.sort((a: any, b: any) => a.displayOrder - b.displayOrder);
       setBoardMembers(sortedData);
     } catch (error) {
@@ -102,7 +102,7 @@ export default function BoardOfDirectors() {
         <p className="text-xl sm:text-2xl md:text-3xl font-semibold text-white text-center">Our Board of Directors</p>
       </div>
 
-      {/* Muted background shape - scaled on mobile */}
+      {}
       <div className="absolute right-0 top-20 sm:top-24 md:top-[120px] z-0 pointer-events-none">
         <div
           className="w-[180px] h-[360px] sm:w-[280px] sm:h-[560px] md:w-[600px] md:h-[1000px] bg-gradient-to-b from-gray-300/30 via-gray-200/20 to-transparent rounded-l-full"
@@ -112,7 +112,7 @@ export default function BoardOfDirectors() {
       <div className="container mx-auto max-w-7xl px-3 sm:px-4 md:px-8 lg:px-16 relative z-10">
         <div className="w-full relative">
 
-          {/* Red circle gradient - scaled on mobile */}
+          {}
           <div 
             className="absolute top-6 sm:top-8 md:top-10 left-[60%] sm:left-[65%] md:left-[73%] -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] sm:w-[280px] sm:h-[280px] md:w-[400px] md:h-[400px] z-0 rounded-full"
             style={{
@@ -122,7 +122,7 @@ export default function BoardOfDirectors() {
             }}
           />
 
-          {/* iSgray logo - scaled on mobile */}
+          {}
           <div className="absolute bottom-[12rem] sm:bottom-[16rem] md:bottom-[26rem] left-[70%] sm:left-[75%] md:left-[80%] -translate-x-1/2 translate-y-1/2 w-[220px] h-[220px] sm:w-[320px] sm:h-[320px] md:w-[600px] md:h-[600px] flex items-center justify-center z-0 pointer-events-none">
             <img
               src="/logos/iSgray.png"
@@ -133,7 +133,7 @@ export default function BoardOfDirectors() {
             />
           </div>
 
-          {/* Board Members Grid */}
+          {}
           <div
             className={`flex justify-center relative z-10 pt-6 sm:pt-8 md:pt-10 slide-left-bouncy ${
               isVisible ? 'animate' : 'opacity-0'
@@ -187,7 +187,7 @@ export default function BoardOfDirectors() {
                           <span className="text-4xl sm:text-5xl md:text-6xl text-gray-300">👤</span>
                         </div>
                       )}
-                      {/* Hover overlay with dark blue gradient showing name and position */}
+                      {}
                       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0D1E66] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-2 sm:p-2.5 md:p-3 rounded-[16px] sm:rounded-[20px] md:rounded-[24px] z-10 touch-manipulation">
                         <p className={`${encodeSansExpanded.className} text-white font-bold text-sm sm:text-base md:text-[18px] lg:text-[20px] mb-0.5 leading-tight`}>{member.firstName}</p>
                         <p className={`${encodeSansExpanded.className} text-white font-bold text-sm sm:text-base md:text-[18px] lg:text-[20px] mb-0.5 leading-tight`}>{member.lastName}</p>
@@ -201,7 +201,7 @@ export default function BoardOfDirectors() {
             )}
           </div>
 
-          {/* Footer text */}
+          {}
           <p
             className={`text-center text-gray-700 text-xs sm:text-sm font-sans px-3 sm:px-0 pb-4 sm:pb-5 slide-up-content ${
               isVisible ? 'animate' : 'opacity-0'

@@ -34,7 +34,7 @@ export function Dialog({
   const contentRef = useRef<HTMLDivElement>(null);
   const backdropMousedownRef = useRef(false);
 
-  // Prevent body scroll when dialog is open
+  
   useEffect(() => {
     if (preventBodyScroll && open) {
       const originalOverflow = document.body.style.overflow;
@@ -47,7 +47,7 @@ export function Dialog({
 
   const prevOpenRef = useRef(open);
 
-  // Handle ESC key and focus management
+  
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && open) {
@@ -55,7 +55,7 @@ export function Dialog({
       }
     };
 
-    // Focus trap for keyboard navigation
+    
     const handleTab = (e: KeyboardEvent) => {
       if (!open || !contentRef.current || e.key !== 'Tab') return;
 
@@ -71,13 +71,13 @@ export function Dialog({
       const lastElement = focusableElements[focusableElements.length - 1];
 
       if (e.shiftKey) {
-        // Shift + Tab
+        
         if (document.activeElement === firstElement || !contentRef.current.contains(document.activeElement)) {
           e.preventDefault();
           lastElement?.focus();
         }
       } else {
-        // Tab
+        
         if (document.activeElement === lastElement || !contentRef.current.contains(document.activeElement)) {
           e.preventDefault();
           firstElement?.focus();
@@ -88,7 +88,7 @@ export function Dialog({
     if (open) {
       document.addEventListener('keydown', handleEscape);
       document.addEventListener('keydown', handleTab);
-      // Only focus first field when dialog just opened (avoids stealing focus on every parent re-render)
+      
       const justOpened = !prevOpenRef.current;
       prevOpenRef.current = true;
       if (justOpened) {
@@ -109,8 +109,8 @@ export function Dialog({
     };
   }, [open, onOpenChange]);
 
-  // Only close when both mousedown and click were on backdrop (avoids closing when
-  // interacting with selects/file picker then releasing over overlay, or dragging from content)
+  
+  
   const handleBackdropMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     backdropMousedownRef.current = e.target === e.currentTarget;
   };
@@ -154,7 +154,7 @@ export function Dialog({
           animation: 'slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
-        {/* Header */}
+        {}
         <div className="flex items-center justify-between p-6 border-b border-border">
           <h3 id="dialog-title" className="text-lg font-semibold text-foreground">
             {title}
@@ -168,10 +168,10 @@ export function Dialog({
           </button>
         </div>
 
-        {/* Body */}
+        {}
         <div className="flex-1 overflow-y-auto p-6">{children}</div>
 
-        {/* Footer */}
+        {}
         {footer && (
           <div className="flex items-center justify-end gap-3 p-6 bg-muted/30 border-t border-border">
             {footer}

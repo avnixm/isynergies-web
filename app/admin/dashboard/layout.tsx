@@ -20,12 +20,12 @@ export default function AdminLayout({
 
   useEffect(() => {
     checkAuth();
-    // Prevent body scrolling in admin dashboard
+    
     document.body.classList.add('admin-dashboard-active');
     return () => {
       document.body.classList.remove('admin-dashboard-active');
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, []);
 
   const checkAuth = async () => {

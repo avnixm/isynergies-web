@@ -1,7 +1,7 @@
-/**
- * Resolve team member (or similar) image value to a display URL.
- * Handles numeric IDs, /api/images/ URLs, and full http(s) URLs.
- */
+
+
+
+
 export function resolveImageSrc(
   image: string | number | null | undefined
 ): string | null {

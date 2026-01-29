@@ -9,7 +9,7 @@ import * as schema from '../app/db/schema';
 
 const execAsync = promisify(exec);
 
-// Prefer environment variables; fall back to known production defaults
+
 const PROD_DB_CONFIG = {
   host: process.env.DB_HOST ?? 'isyn-cieloes.l.aivencloud.com',
   port: Number(process.env.DB_PORT ?? 26771),
@@ -25,7 +25,7 @@ const PROD_DB_CONFIG = {
 async function pushSchema() {
   console.log('📦 Pushing database schema to Aiven MySQL...');
   try {
-    // Set environment variables for drizzle-kit
+    
     process.env.DB_HOST = PROD_DB_CONFIG.host;
     process.env.DB_PORT = String(PROD_DB_CONFIG.port);
     process.env.DB_USER = PROD_DB_CONFIG.user;
@@ -42,7 +42,7 @@ async function pushSchema() {
       console.log(stdout);
     }
     if (stderr) {
-      // drizzle-kit sometimes outputs to stderr even on success
+      
       if (!stderr.includes('error') && !stderr.includes('Error')) {
         console.log(stderr);
       } else {
@@ -66,14 +66,14 @@ async function createDefaultAdmin() {
   let db;
   
   try {
-    // Create connection pool
+    
     pool = mysql.createPool(PROD_DB_CONFIG);
     db = drizzle(pool, { schema, mode: 'default' });
     
-    // Hash for password 'admin'
+    
     const hashedPassword = '$2b$10$E.IS0qmOstLphqDhsTaCH.vuQcWcDOZ5GwbETQsuQndvBbBbP8cIK';
     
-    // Check if admin already exists
+    
     const existingAdmin = await db
       .select()
       .from(adminUsers)
@@ -123,10 +123,10 @@ async function setupProductionDatabase() {
     console.log('🚀 Starting production database setup...\n');
     console.log('📍 Target: Aiven for MySQL (Production)\n');
     
-    // Step 1: Push schema
+    
     await pushSchema();
     
-    // Step 2: Create default admin
+    
     await createDefaultAdmin();
     
     console.log('\n✅ Production database setup completed successfully!');
@@ -137,6 +137,6 @@ async function setupProductionDatabase() {
   }
 }
 
-// Run the setup
+
 setupProductionDatabase();
 

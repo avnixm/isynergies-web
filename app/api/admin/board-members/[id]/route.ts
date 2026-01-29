@@ -4,7 +4,7 @@ import { boardMembers } from '@/app/db/schema';
 import { requireAuth } from '@/app/lib/auth-middleware';
 import { eq } from 'drizzle-orm';
 
-// GET single board member
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -34,7 +34,7 @@ export async function GET(
   }
 }
 
-// PUT update board member
+
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -68,7 +68,7 @@ export async function PUT(
   }
 }
 
-// DELETE board member
+
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

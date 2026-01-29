@@ -1,10 +1,10 @@
-/**
- * Create team_groups table and add group_id, group_order, is_featured to team_members
- * in the production database (Aiven MySQL).
- *
- * Usage: npm run add-team-groups-migration:prod
- * Or: npx tsx scripts/add-team-groups-migration-prod.ts
- */
+
+
+
+
+
+
+
 import 'dotenv/config';
 import mysql from 'mysql2/promise';
 
@@ -32,7 +32,7 @@ async function run() {
 
     const db = PROD_DB_CONFIG.database;
 
-    // 1) Create team_groups if not exists
+    
     const [tables] = (await connection.execute(
       `SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'team_groups'`,
       [db]
@@ -54,7 +54,7 @@ async function run() {
       console.log('✅ Table team_groups already exists');
     }
 
-    // 2) Add group_id, group_order, is_featured to team_members if missing
+    
     const [cols] = (await connection.execute(
       `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'team_members'`,
       [db]

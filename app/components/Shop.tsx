@@ -103,7 +103,7 @@ export default function Shop() {
         } else {
           const errorData = await dealersResponse.json().catch(() => ({}));
           console.error('Failed to fetch authorized dealers:', dealersResponse.status, errorData);
-          // If table doesn't exist, dealers will be empty array, which will show fallback
+          
         }
       } catch (error) {
         console.error('Error fetching shop data:', error);
@@ -143,25 +143,25 @@ export default function Shop() {
         background: 'linear-gradient(180deg, #071B6E 0%, #004AB9 100%)'
       }}
     >
-      {/* subtle watermark */}
+      {}
       <div className="pointer-events-none absolute inset-0 opacity-[0.18] z-0">
         <div className="absolute right-[-80px] top-[-60px] h-[320px] w-[320px] text-[260px] font-black leading-none text-white/15 select-none sm:right-[-120px] sm:top-[-90px] sm:h-[480px] sm:w-[480px] sm:text-[400px] md:right-[-160px] md:top-[-120px] md:h-[620px] md:w-[620px] md:text-[520px]">
           iS
         </div>
       </div>
 
-      {/* Responsive container with max-width constraints */}
+      {}
       <div className="mx-auto w-full max-w-6xl px-3 sm:px-4 md:px-8 2xl:max-w-7xl">
-        {/* Mobile: stacked; lg+: 2-column */}
+        {}
         <div 
           className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] 2xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:items-stretch gap-6 sm:gap-8 lg:gap-16 xl:gap-20 2xl:gap-24 relative z-10 min-h-0 lg:min-h-[700px] py-6 sm:py-8 md:py-10 lg:py-0 lg:h-[700px]"
         >
-          {/* Left Panel */}
+          {}
           <div className="relative flex flex-col min-h-0 lg:h-full pl-2 sm:pl-4 md:pl-0 lg:-ml-4 xl:-ml-16">
             <div className="flex flex-col flex-1 min-h-0 py-0 lg:py-10 lg:justify-between lg:h-full">
-            {/* Top Section: Title and Description */}
+            {}
             <div className="flex flex-col relative">
-              {/* Header with title and button */}
+              {}
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6 mb-3 sm:mb-4">
                 <h2 className={`font-sans text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-white slide-right-content ${
                   isVisible ? 'animate' : 'opacity-0'
@@ -181,7 +181,7 @@ export default function Shop() {
                 </a>
               </div>
 
-              {/* Paragraph description */}
+              {}
               <p className={`max-w-xl text-xs md:text-sm leading-relaxed text-white/85 font-sans slide-right-content relative z-10 mb-6 sm:mb-8 md:mb-12 ${
                 isVisible ? 'animate' : 'opacity-0'
               }`}
@@ -190,7 +190,7 @@ export default function Shop() {
               }}>
                 {content.description}
               </p>
-              {/* iSgray logo near description - hidden on small screens */}
+              {}
               <img
                 src="/logos/iSgray.png"
                 alt=""
@@ -222,7 +222,7 @@ export default function Shop() {
                   </div>
                 )}
               </div>
-              {/* iSgray under sales - desktop only */}
+              {}
               <img
                 src="/logos/iSgray.png"
                 alt=""
@@ -247,7 +247,7 @@ export default function Shop() {
                       background: 'linear-gradient(270deg, rgba(65, 65, 65, 0) 0%, #7A0000 33.17%, #930000 55.29%, #7A0000 75%, rgba(65, 65, 65, 0) 100%)',
                     }}
                   >
-                    {/* Logos Grid - all dealers, 2x2 on mobile / 4 in row on sm+ */}
+                    {}
                     <div className="grid grid-cols-4 items-center justify-items-center gap-1 sm:gap-[4px] flex-1 min-h-0 overflow-hidden">
                       {authorizedDealers.map((dealer) => {
                         const imageUrl = dealer.image.startsWith('/api/images/') || dealer.image.startsWith('http') || dealer.image.startsWith('/')
@@ -273,7 +273,7 @@ export default function Shop() {
                       })}
                     </div>
 
-                    {/* Label */}
+                    {}
                     <div className="text-center flex-shrink-0 mt-1 sm:mt-2 md:mt-3 mb-0.5 sm:mb-1">
                       <p 
                         className="text-white uppercase font-semibold text-[9px] sm:text-[10px] leading-none py-0.5 sm:py-1"
@@ -309,7 +309,7 @@ export default function Shop() {
           </div>
           </div>
 
-          {/* Right Panel - 4 category strips: 2x2 on mobile, row on lg+ */}
+          {}
           <div className="relative flex flex-col min-h-[280px] sm:min-h-[320px] lg:min-h-0 lg:h-full">
             <div className="w-full h-full grid grid-cols-2 lg:flex gap-2 sm:gap-3 md:gap-4 lg:gap-5 2xl:gap-6 lg:flex-1 min-h-[280px] sm:min-h-[320px] lg:min-h-0">
             {categories.length > 0 ? (

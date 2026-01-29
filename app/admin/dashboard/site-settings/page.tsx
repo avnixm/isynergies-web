@@ -49,7 +49,7 @@ export default function SiteSettingsPage() {
     try {
       const response = await fetch('/api/admin/site-settings');
       const data = await response.json();
-      // Normalize null values to empty strings for React inputs
+      
       setSettings({
         companyName: data.companyName || '',
         companyAddress: data.companyAddress || '',
@@ -120,7 +120,7 @@ export default function SiteSettingsPage() {
       </div>
 
       <form id="site-settings-form" onSubmit={handleSubmit} className="space-y-8">
-        {/* Company Information */}
+        {}
         <Card id="company-information" className="rounded-xl border border-border bg-white shadow-sm">
           <div className="flex items-center justify-between p-6 border-b border-border">
             <div>
@@ -132,7 +132,7 @@ export default function SiteSettingsPage() {
           </div>
           <CardContent className="p-6">
             <div className="max-w-4xl space-y-4">
-              {/* Compact HTML Tips */}
+              {}
               <div className="flex items-start gap-2 rounded-lg bg-muted/50 border border-border p-2">
                 <Info className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
                 <div className="text-xs text-muted-foreground leading-relaxed">
@@ -213,7 +213,7 @@ export default function SiteSettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Social Media */}
+        {}
         <Card id="social-media" className="rounded-xl border border-border bg-white shadow-sm">
           <div className="flex items-center justify-between p-6 border-b border-border">
             <div>
@@ -261,7 +261,7 @@ export default function SiteSettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Logo */}
+        {}
         <Card id="company-logo" className="rounded-xl border border-border bg-white shadow-sm">
           <div className="flex items-center justify-between p-6 border-b border-border">
             <div>
@@ -301,7 +301,7 @@ export default function SiteSettingsPage() {
 
       </form>
 
-      {/* Sticky Footer Save Button */}
+      {}
       <StickyFooter formId="site-settings-form" saving={saving} />
     </div>
   );

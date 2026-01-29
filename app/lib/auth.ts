@@ -39,7 +39,7 @@ export function getTokenFromRequest(request: Request): string | null {
     return authHeader.substring(7);
   }
   
-  // Also check cookies
+  
   const cookies = request.headers.get('cookie');
   if (cookies) {
     const tokenCookie = cookies

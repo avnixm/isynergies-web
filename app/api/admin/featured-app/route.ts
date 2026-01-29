@@ -4,13 +4,13 @@ import { featuredApp } from '@/app/db/schema';
 import { requireAuth } from '@/app/lib/auth-middleware';
 import { eq } from 'drizzle-orm';
 
-// GET featured app content
+
 export async function GET() {
   try {
     const [content] = await db.select().from(featuredApp).limit(1);
     
     if (!content) {
-      // Return empty object if no content exists
+      
       return NextResponse.json({
         headerImage: '',
         itemType: 'app',
@@ -30,7 +30,7 @@ export async function GET() {
       });
     }
 
-    // Map database column names to camelCase (handle both snake_case and camelCase)
+    
     const response = {
       headerImage: (content as any).headerImage || (content as any).header_image || '',
       itemType: (content as any).itemType || (content as any).item_type || 'app',
@@ -59,7 +59,7 @@ export async function GET() {
   }
 }
 
-// PUT update featured app content
+
 export async function PUT(request: Request) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
@@ -85,14 +85,14 @@ export async function PUT(request: Request) {
       bannerHeight: body?.bannerHeight ?? 'h-60',
     };
 
-    // Check if content exists
+    
     const [existing] = await db.select().from(featuredApp).limit(1);
 
     if (existing) {
-      // Update existing
+      
       await db.update(featuredApp).set(payload).where(eq(featuredApp.id, existing.id));
     } else {
-      // Create new
+      
       await db.insert(featuredApp).values(payload);
     }
 

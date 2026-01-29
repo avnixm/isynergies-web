@@ -4,7 +4,7 @@ import 'dotenv/config';
 
 async function createAdmin() {
   try {
-    // Hash for password 'admin'
+    
     const hashedPassword = '$2b$10$E.IS0qmOstLphqDhsTaCH.vuQcWcDOZ5GwbETQsuQndvBbBbP8cIK';
 
     await db.insert(adminUsers).values({

@@ -12,7 +12,7 @@ export async function GET(
     const imageId = parseInt(id);
     const range = request.headers.get('range');
     
-    // Fetch image from database (check images table first)
+    
     let [image] = await db
       .select()
       .from(images)
@@ -24,7 +24,7 @@ export async function GET(
     let contentType: string | null = null;
     let isVideoFile = false;
 
-    // If not found in images table, check media table (for video media IDs)
+    
     if (!image) {
       [mediaRecord] = await db
         .select()
@@ -38,13 +38,13 @@ export async function GET(
         isVideoFile = mediaRecord.type === 'video';
       }
     } else {
-      // Found in images table
+      
       blobUrl = image.url || null;
       contentType = image.mimeType || null;
       isVideoFile = image.mimeType?.startsWith('video/') || false;
     }
 
-    // If neither found, return 404
+    
     if (!image && !mediaRecord) {
       return NextResponse.json(
         { error: 'Image/Media not found' },
@@ -52,13 +52,13 @@ export async function GET(
       );
     }
 
-    // NEW: If we have a Vercel Blob URL, redirect to it (preferred method)
+    
     if (blobUrl && blobUrl.startsWith('https://')) {
       console.log(`Redirecting to Vercel Blob URL for ${image ? 'image' : 'media'} ${imageId}: ${blobUrl}`);
       
       if (isVideoFile) {
-        // For videos, always redirect to Vercel Blob - it handles range requests natively
-        // Use 307 (Temporary Redirect) to preserve the request method and headers (including Range header)
+        
+        
         const headers = new Headers();
         headers.set('Location', blobUrl);
         headers.set('Cache-Control', 'public, max-age=31536000, immutable');
@@ -66,12 +66,12 @@ export async function GET(
         headers.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
         headers.set('Access-Control-Expose-Headers', 'Content-Range, Accept-Ranges, Content-Length, Content-Type');
         
-        // Set content type if available
+        
         if (contentType) {
           headers.set('Content-Type', contentType);
         }
         
-        // Preserve range header if present
+        
         if (range) {
           headers.set('Range', range);
         }
@@ -85,7 +85,7 @@ export async function GET(
       return NextResponse.redirect(blobUrl, 302);
     }
 
-    // If we got here and it's from media table, but no blob URL, that's unexpected
+    
     if (mediaRecord && !blobUrl) {
       return NextResponse.json(
         { error: 'Media record found but has no URL' },
@@ -93,8 +93,8 @@ export async function GET(
       );
     }
 
-    // If we found a media record (not in images table), we've already handled it above
-    // Only continue with legacy base64/chunked storage if we found an image record
+    
+    
     if (!image) {
       return NextResponse.json(
         { error: 'Media record found but has no blob URL' },
@@ -102,18 +102,18 @@ export async function GET(
       );
     }
 
-    // LEGACY: Fall back to base64/chunked storage for backward compatibility
-    // Check if image is chunked
+    
+    
     const isChunked = (image as any).isChunked === 1 || (image as any).is_chunked === 1;
     
     let base64Data: string;
     let chunks: any[] = [];
     
     if (isChunked) {
-      // Get expected chunk count from image record
+      
       const expectedChunks = (image as any).chunkCount || (image as any).chunk_count || 0;
       
-      // Fetch all chunks and reassemble
+      
       chunks = await db
         .select()
         .from(imageChunks)
@@ -130,7 +130,7 @@ export async function GET(
 
       console.log(`Reassembling ${chunks.length} chunks for image ${imageId} (expected: ${expectedChunks})`);
       
-      // Verify we have all chunks
+      
       if (expectedChunks > 0 && chunks.length !== expectedChunks) {
         console.error(`Incomplete chunks for image ${imageId}: got ${chunks.length}, expected ${expectedChunks}`);
         return NextResponse.json(
@@ -139,7 +139,7 @@ export async function GET(
         );
       }
       
-      // Verify chunk indices are sequential (0, 1, 2, ...)
+      
       for (let i = 0; i < chunks.length; i++) {
         if (chunks[i].chunkIndex !== i) {
           console.error(`Missing chunk ${i} for image ${imageId}. Found indices: ${chunks.map(c => c.chunkIndex).join(', ')}`);
@@ -150,7 +150,7 @@ export async function GET(
         }
       }
       
-      // Reassemble chunks in order - verify each chunk has data
+      
       const chunkDataArray: string[] = [];
       for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
@@ -176,7 +176,7 @@ export async function GET(
         );
       }
       
-      // Validate base64 data is valid
+      
       try {
         const testBuffer = Buffer.from(base64Data.substring(0, Math.min(100, base64Data.length)), 'base64');
         if (testBuffer.length === 0) {
@@ -194,7 +194,7 @@ export async function GET(
         );
       }
     } else {
-      // Non-chunked image - use data directly
+      
       base64Data = image.data;
       
       if (!base64Data || base64Data.length === 0) {
@@ -206,7 +206,7 @@ export async function GET(
       }
     }
 
-    // Convert base64 back to buffer
+    
     let buffer: Buffer;
     try {
       buffer = Buffer.from(base64Data, 'base64');
@@ -226,22 +226,22 @@ export async function GET(
       );
     }
 
-    // Check if it's a video
+    
     const isVideo = image.mimeType?.startsWith('video/');
     
-    // Validate video file signature if it's a video
+    
     if (isVideo) {
       const firstBytes = buffer.slice(0, 12);
       const hexSignature = firstBytes.toString('hex');
       const lastBytes = buffer.slice(-12);
       const lastHexSignature = lastBytes.toString('hex');
       
-      // Check for common video file signatures
+      
       const isValidVideo = 
-        hexSignature.startsWith('000000') || // MP4/MOV (ftyp box)
-        hexSignature.startsWith('1a45dfa3') || // WebM (EBML)
-        hexSignature.startsWith('464c5601') || // FLV
-        hexSignature.startsWith('3026b2758e66cf11a6d900aa0062ce6c'); // WMV
+        hexSignature.startsWith('000000') || 
+        hexSignature.startsWith('1a45dfa3') || 
+        hexSignature.startsWith('464c5601') || 
+        hexSignature.startsWith('3026b2758e66cf11a6d900aa0062ce6c'); 
       
       console.log(`Serving video ${imageId}:`, {
         mimeType: image.mimeType,
@@ -258,7 +258,7 @@ export async function GET(
         first16Bytes: buffer.slice(0, 16).toString('hex'),
       });
       
-      // Additional validation: Check if buffer has reasonable size
+      
       if (buffer.length < 100) {
         console.error(`ERROR: Video ${imageId} buffer is too small (${buffer.length} bytes). Video is likely corrupted.`);
         return NextResponse.json(
@@ -271,17 +271,17 @@ export async function GET(
         );
       }
       
-      // If video signature is invalid, log warning but don't fail - let the browser decide
+      
       if (!isValidVideo && buffer.length > 0) {
         console.warn(`WARNING: Video ${imageId} has unexpected file signature. First bytes: ${hexSignature}. Attempting to serve anyway - browser will validate.`);
-        // Don't fail - some video formats might not match our signature checks
+        
       }
       
-      // Check if buffer size matches expected file size
-      const expectedSize = (image as any).size || 0;
-      const CHUNK_SIZE = 4 * 1024 * 1024; // 4 MB
       
-      // Special check: if video is exactly 4MB (chunk size) and expected size is larger, it's incomplete
+      const expectedSize = (image as any).size || 0;
+      const CHUNK_SIZE = 4 * 1024 * 1024; 
+      
+      
       if (buffer.length === CHUNK_SIZE && expectedSize > CHUNK_SIZE) {
         console.error(`ERROR: Video ${imageId} is exactly ${CHUNK_SIZE} bytes (one chunk) but expected size is ${expectedSize}. Video is incomplete - only first chunk was stored.`);
         return NextResponse.json(
@@ -296,16 +296,16 @@ export async function GET(
         );
       }
       
-      // More lenient size check - allow up to 1MB difference (for metadata variations)
+      
       if (expectedSize > 0 && Math.abs(buffer.length - expectedSize) > 1024 * 1024) {
         console.warn(`WARNING: Video ${imageId} buffer size (${buffer.length}) doesn't match expected size (${expectedSize}). Difference: ${Math.abs(buffer.length - expectedSize)} bytes. Continuing anyway.`);
-        // Don't fail - just log a warning, as some video files may have slight size variations
+        
       }
     }
     
-    // For videos, always support range requests
+    
     if (isVideo) {
-      // Check if this is a HEAD request (browser checking for range support)
+      
       if (request.method === 'HEAD') {
         return new NextResponse(null, {
           status: 200,
@@ -322,7 +322,7 @@ export async function GET(
       }
       
       if (range) {
-        // Handle range request
+        
         const parts = range.replace(/bytes=/, '').split('-');
         const start = parseInt(parts[0], 10);
         const end = parts[1] ? parseInt(parts[1], 10) : buffer.length - 1;
@@ -345,10 +345,10 @@ export async function GET(
           },
         });
       } else {
-        // No range request - return full video but indicate range support
-        // For large videos, browsers will make range requests automatically after seeing Accept-Ranges
-        // However, for very large videos, we should still return the full file on initial request
-        // The browser will then make range requests for seeking/streaming
+        
+        
+        
+        
         return new NextResponse(new Uint8Array(buffer), {
           status: 200,
           headers: {
@@ -364,7 +364,7 @@ export async function GET(
       }
     }
     
-    // Return full image with proper headers (non-video)
+    
     return new NextResponse(new Uint8Array(buffer), {
       status: 200,
       headers: {

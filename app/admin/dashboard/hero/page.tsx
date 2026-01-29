@@ -20,9 +20,9 @@ type HeroSection = {
   weMakeItLogo: string | null;
   isLogo: string | null;
   fullLogo: string | null;
-  backgroundImage: string | null; // For Default Background Media mode
-  backgroundVideo: string | null; // For Default Background Media mode
-  heroImagesBackgroundImage: string | null; // For Hero Images mode
+  backgroundImage: string | null; 
+  backgroundVideo: string | null; 
+  heroImagesBackgroundImage: string | null; 
   useHeroImages?: boolean;
 };
 
@@ -60,7 +60,7 @@ export default function HeroManagementPage() {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [resolvedImageUrls, setResolvedImageUrls] = useState<Record<number, string>>({});
 
-  // Dialog state management
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTickerItem, setEditingTickerItem] = useState<HeroTickerItem | null>(null);
   const [formText, setFormText] = useState('');
@@ -131,18 +131,18 @@ export default function HeroManagementPage() {
         const data = await response.json();
         setHeroImages(data);
         
-        // Resolve image URLs for previews
+        
         const token = localStorage.getItem('admin_token');
         const urlMap: Record<number, string> = {};
         
         await Promise.all(
           data.map(async (image: HeroImage) => {
             if (image.image) {
-              // If it's already a full URL, use it
+              
               if (image.image.startsWith('http') || image.image.startsWith('/')) {
                 urlMap[image.id] = image.image;
               } else if (image.image.match(/^\d+$/)) {
-                // It's a numeric ID - try to resolve from media table
+                
                 try {
                   if (token) {
                     const mediaResponse = await fetch(`/api/admin/media/${image.image}`, {
@@ -156,7 +156,7 @@ export default function HeroManagementPage() {
                       }
                     }
                   }
-                  // Fallback to images API
+                  
                   urlMap[image.id] = `/api/images/${image.image}`;
                 } catch (e) {
                   urlMap[image.id] = `/api/images/${image.image}`;
@@ -189,7 +189,7 @@ export default function HeroManagementPage() {
 
       if (response.ok) {
         const updated = await response.json();
-        // Normalize the saved data to match our state structure
+        
         const normalized = {
           id: updated.id || heroSection.id,
           weMakeItLogo: updated.weMakeItLogo || null,
@@ -201,7 +201,7 @@ export default function HeroManagementPage() {
           useHeroImages: updated.useHeroImages ?? false,
         };
         setInitialHeroSection(normalized);
-        // Also update heroSection to ensure they match
+        
         setHeroSection(normalized);
         setLastSaved(new Date());
         toast.success('Hero section updated successfully!');
@@ -216,7 +216,7 @@ export default function HeroManagementPage() {
     }
   };
 
-  // Check if there are unsaved changes - compare only relevant fields
+  
   const hasUnsavedChanges = !initialHeroSection || (() => {
     const current = {
       weMakeItLogo: heroSection.weMakeItLogo || null,
@@ -275,7 +275,7 @@ export default function HeroManagementPage() {
     const token = localStorage.getItem('admin_token');
     try {
       if (editingTickerItem) {
-        // Update existing
+        
         const response = await fetch(`/api/admin/hero-ticker/${editingTickerItem.id}`, {
           method: 'PUT',
           headers: { 
@@ -296,7 +296,7 @@ export default function HeroManagementPage() {
           toast.error('Failed to update announcement text');
         }
       } else {
-        // Create new
+        
         const response = await fetch('/api/admin/hero-ticker', {
           method: 'POST',
           headers: { 
@@ -352,7 +352,7 @@ export default function HeroManagementPage() {
     }
   };
 
-  // Hero Images handlers
+  
   const handleOpenAddHeroImageDialog = () => {
     const newOrder = heroImages.length > 0 
       ? Math.max(...heroImages.map(img => img.displayOrder)) + 1 
@@ -391,7 +391,7 @@ export default function HeroManagementPage() {
     const token = localStorage.getItem('admin_token');
     try {
       if (editingHeroImage) {
-        // Update existing
+        
         const response = await fetch(`/api/admin/hero-images/${editingHeroImage.id}`, {
           method: 'PUT',
           headers: { 
@@ -408,12 +408,12 @@ export default function HeroManagementPage() {
         if (response.ok) {
           toast.success('Hero image updated successfully!');
           handleCloseHeroImageDialog();
-          await fetchHeroImages(); // Refresh images with resolved URLs
+          await fetchHeroImages(); 
         } else {
           toast.error('Failed to update hero image');
         }
       } else {
-        // Create new
+        
         const response = await fetch('/api/admin/hero-images', {
           method: 'POST',
           headers: { 
@@ -430,7 +430,7 @@ export default function HeroManagementPage() {
         if (response.ok) {
           toast.success('Hero image added successfully!');
           handleCloseHeroImageDialog();
-          await fetchHeroImages(); // Refresh images with resolved URLs
+          await fetchHeroImages(); 
         } else {
           toast.error('Failed to add hero image');
         }
@@ -460,13 +460,13 @@ export default function HeroManagementPage() {
 
       if (response.ok) {
         toast.success('Hero image deleted successfully!');
-        // Remove from resolved URLs
+        
         setResolvedImageUrls(prev => {
           const updated = { ...prev };
           delete updated[id];
           return updated;
         });
-        await fetchHeroImages(); // Refresh images
+        await fetchHeroImages(); 
       } else {
         toast.error('Failed to delete hero image');
       }
@@ -518,7 +518,7 @@ export default function HeroManagementPage() {
 
       if (response.ok) {
         toast.success('Blob deleted successfully!');
-        await fetchBlobs(); // Refresh list
+        await fetchBlobs(); 
       } else {
         const errorData = await response.json().catch(() => ({}));
         toast.error(errorData.error || 'Failed to delete blob');
@@ -577,9 +577,9 @@ export default function HeroManagementPage() {
       </div>
 
       <form id="hero-form" onSubmit={(e) => { e.preventDefault(); handleSaveHeroSection(); }} className="space-y-8">
-      {/* Hero Visuals Section */}
+      {}
       <Card className="rounded-xl border border-border bg-white shadow-sm">
-        {/* Header */}
+        {}
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
             <h2 className="text-lg font-medium text-foreground">Hero Visuals</h2>
@@ -604,7 +604,7 @@ export default function HeroManagementPage() {
         </div>
 
         <div className="p-6">
-          {/* Mode Selector */}
+          {}
           <div className="mb-8 grid gap-4 md:grid-cols-2">
             <button
               type="button"
@@ -670,7 +670,7 @@ export default function HeroManagementPage() {
             </button>
           </div>
 
-          {/* Mode A: Default Background Media */}
+          {}
           {!heroSection.useHeroImages && (
             <div className="space-y-6">
               <div>
@@ -868,7 +868,7 @@ export default function HeroManagementPage() {
                 This text will appear in the hero section announcement bar
               </p>
               <p className="text-xs text-muted-foreground">
-                <strong>Add links:</strong> Use markdown syntax <code className="px-1 py-0.5 bg-muted rounded text-xs">[link text](https://url.com)</code>
+                <strong>Add links:</strong> Use markdown syntax <code className="px-1 py-0.5 bg-muted rounded text-xs">[link text](https://example.com)</code>
               </p>
               <p className="text-xs text-muted-foreground italic">
                 Example: Cash is now available [try now](https://example.com)
@@ -905,7 +905,7 @@ export default function HeroManagementPage() {
         </DialogFooter>
       </Dialog>
 
-      {/* Add/Edit Hero Image Dialog */}
+      {}
       <Dialog
         open={isHeroImageDialogOpen}
         onOpenChange={setIsHeroImageDialogOpen}
@@ -969,7 +969,7 @@ export default function HeroManagementPage() {
         </DialogFooter>
       </Dialog>
 
-      {/* Blob Storage Management Section */}
+      {}
       <Card className="rounded-xl border border-border bg-white shadow-sm">
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
@@ -1074,7 +1074,7 @@ export default function HeroManagementPage() {
         </div>
       </Card>
 
-      {/* Sticky Footer Save Button - At the bottom of all content */}
+      {}
       <StickyFooter formId="hero-form" saving={saving} disabled={!hasUnsavedChanges} />
     </div>
   );

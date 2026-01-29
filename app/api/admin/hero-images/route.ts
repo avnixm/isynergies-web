@@ -4,7 +4,7 @@ import { heroImages } from '@/app/db/schema';
 import { requireAuth } from '@/app/lib/auth-middleware';
 import { eq, desc } from 'drizzle-orm';
 
-// GET /api/admin/hero-images - Get all hero images
+
 export async function GET() {
   try {
     const images = await db
@@ -22,7 +22,7 @@ export async function GET() {
   }
 }
 
-// POST /api/admin/hero-images - Create new hero image
+
 export async function POST(request: Request) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;

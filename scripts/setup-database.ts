@@ -19,7 +19,7 @@ async function pushSchema() {
       console.log(stdout);
     }
     if (stderr) {
-      // drizzle-kit sometimes outputs to stderr even on success
+      
       if (!stderr.includes('error') && !stderr.includes('Error')) {
         console.log(stderr);
       } else {
@@ -40,10 +40,10 @@ async function createDefaultAdmin() {
   console.log('👤 Creating default admin user...');
   
   try {
-    // Hash for password 'admin'
+    
     const hashedPassword = '$2b$10$E.IS0qmOstLphqDhsTaCH.vuQcWcDOZ5GwbETQsuQndvBbBbP8cIK';
     
-    // Check if admin already exists
+    
     const existingAdmin = await db
       .select()
       .from(adminUsers)
@@ -87,10 +87,10 @@ async function setupDatabase() {
   try {
     console.log('🚀 Starting database setup...\n');
     
-    // Step 1: Push schema
+    
     await pushSchema();
     
-    // Step 2: Create default admin
+    
     await createDefaultAdmin();
     
     console.log('\n✅ Database setup completed successfully!');
@@ -101,6 +101,6 @@ async function setupDatabase() {
   }
 }
 
-// Run the setup
+
 setupDatabase();
 

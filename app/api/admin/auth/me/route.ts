@@ -23,7 +23,7 @@ export async function GET(request: Request) {
       );
     }
 
-    // Get user from database
+    
     const [user] = await db
       .select({
         id: adminUsers.id,
@@ -53,7 +53,7 @@ export async function GET(request: Request) {
       stack: error?.stack,
     });
     
-    // Provide more specific error messages
+    
     let errorMessage = 'Internal server error';
     if (error?.code === 'ER_CON_COUNT_ERROR' || error?.sqlMessage?.includes('Too many connections')) {
       errorMessage = 'Database connection limit reached. Please try again in a moment.';

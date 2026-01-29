@@ -35,8 +35,8 @@ export async function POST(request: Request) {
       .insert(aboutUsGalleryImages)
       .values({ image, alt, displayOrder });
 
-    // drizzle/mysql returns insertId in different shapes depending on driver;
-    // we can just return success and let client refetch.
+    
+    
     return NextResponse.json({ success: true, result });
   } catch (error) {
     console.error('Error creating about us gallery image:', error);

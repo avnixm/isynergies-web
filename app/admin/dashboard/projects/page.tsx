@@ -232,7 +232,7 @@ export default function ProjectsPage() {
         </p>
       </div>
 
-      {/* Projects Section */}
+      {}
       <Card className="rounded-xl border border-border bg-white shadow-sm">
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
@@ -247,7 +247,7 @@ export default function ProjectsPage() {
           </Button>
         </div>
         <div className="p-6">
-          {/* Tabs */}
+          {}
           <div className="border-b border-border mb-6">
             <nav className="flex gap-1" aria-label="Project categories">
               {(['all', 'desktop', 'mobile', 'hardware'] as const).map((tab) => {
@@ -292,7 +292,7 @@ export default function ProjectsPage() {
             </nav>
           </div>
 
-          {/* Filtered Projects List */}
+          {}
           {(() => {
             const filteredProjects = activeTab === 'all'
               ? projects
@@ -341,7 +341,7 @@ export default function ProjectsPage() {
                       key={project.id}
                       className="flex items-center gap-4 rounded-lg border border-border bg-white p-4 transition-colors hover:bg-muted/30"
                     >
-                      {/* Thumbnail */}
+                      {}
                       <div className="relative w-24 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-muted/30">
                         {thumbnailUrl ? (
                           <Image
@@ -358,7 +358,7 @@ export default function ProjectsPage() {
                         )}
                       </div>
 
-                      {/* Project Info */}
+                      {}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <p className="text-sm font-medium text-foreground">
@@ -382,7 +382,7 @@ export default function ProjectsPage() {
                         </div>
                       </div>
 
-                      {/* Actions */}
+                      {}
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <Button
                           variant="outline"
@@ -414,7 +414,7 @@ export default function ProjectsPage() {
         </div>
       </Card>
 
-      {/* Add/Edit Dialog */}
+      {}
       <Dialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
@@ -422,7 +422,7 @@ export default function ProjectsPage() {
         maxWidth="2xl"
       >
         <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 mb-6">
-          {/* Compact HTML Tips */}
+          {}
           <div className="flex items-start gap-2 rounded-lg bg-muted/50 border border-border p-2">
             <Info className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
             <div className="text-xs text-muted-foreground leading-relaxed">

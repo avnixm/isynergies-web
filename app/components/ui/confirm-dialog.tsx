@@ -46,7 +46,7 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
     <ConfirmDialogContext.Provider value={{ confirm }}>
       {children}
       
-      {/* Confirmation Dialog */}
+      {}
       {isOpen && (
         <div 
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm"
@@ -59,7 +59,7 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
               animation: 'fadeInScale 0.2s ease-out',
             }}
           >
-            {/* Header */}
+            {}
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div className="flex items-center gap-3">
                 <div className="flex-shrink-0 w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
@@ -76,12 +76,12 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
               </button>
             </div>
 
-            {/* Body */}
+            {}
             <div className="p-6">
               <p className="text-gray-700">{message}</p>
             </div>
 
-            {/* Footer */}
+            {}
             <div className="flex items-center justify-end gap-3 p-6 bg-gray-50 border-t border-gray-200">
               <Button
                 variant="outline"

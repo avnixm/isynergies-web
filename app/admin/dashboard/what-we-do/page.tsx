@@ -230,7 +230,7 @@ export default function WhatWeDoPage() {
       </div>
 
       <form id="what-we-do-form" onSubmit={(e) => { e.preventDefault(); handleSaveContent(); }} className="space-y-8">
-        {/* Main Content */}
+        {}
         <Card id="text-content" className="rounded-xl border border-border bg-white shadow-sm">
           <div className="flex items-center justify-between p-6 border-b border-border">
             <div>
@@ -242,7 +242,7 @@ export default function WhatWeDoPage() {
           </div>
         <div className="p-6">
           <div className="max-w-4xl space-y-6">
-            {/* Compact HTML Tips */}
+            {}
             <div className="flex items-start gap-2 rounded-lg bg-muted/50 border border-border p-2">
               <Info className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
               <div className="text-xs text-muted-foreground leading-relaxed">
@@ -290,7 +290,7 @@ export default function WhatWeDoPage() {
       </Card>
       </form>
 
-      {/* Images */}
+      {}
       <Card id="images" className="rounded-xl border border-border bg-white shadow-sm">
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
@@ -318,7 +318,7 @@ export default function WhatWeDoPage() {
                     key={img.id}
                     className="flex items-center gap-4 rounded-lg border border-border bg-white p-4 transition-colors hover:bg-muted/30"
                   >
-                    {/* Thumbnail */}
+                    {}
                     <div className="relative w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted/30">
                       {imageUrl ? (
                         <Image
@@ -335,7 +335,7 @@ export default function WhatWeDoPage() {
                       )}
                     </div>
 
-                    {/* Alt Text and Order */}
+                    {}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-foreground line-clamp-1">
                         {img.alt}
@@ -347,7 +347,7 @@ export default function WhatWeDoPage() {
                       </div>
                     </div>
 
-                    {/* Actions */}
+                    {}
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <Button
                         variant="outline"
@@ -378,10 +378,10 @@ export default function WhatWeDoPage() {
         </div>
       </Card>
 
-      {/* Sticky Footer Save Button */}
+      {}
       <StickyFooter formId="what-we-do-form" saving={saving} />
 
-      {/* Image Dialog */}
+      {}
       <Dialog
         open={isImageDialogOpen}
         onOpenChange={setIsImageDialogOpen}

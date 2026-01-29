@@ -43,7 +43,7 @@ export default function AboutUs() {
         });
       },
       {
-        threshold: 0.2, // rigger when 20% of the section is visible
+        threshold: 0.2, 
       }
     );
 
@@ -70,7 +70,7 @@ export default function AboutUs() {
       setContent(data);
     } catch (error) {
       console.error('Error fetching about us content:', error);
-      // Set default content if fetch fails
+      
       setContent({
         title: 'About Us',
         paragraph1: 'Isynergies, Inc was established and officially registered with the Securities and Exchange Commission (SEC) on October 30, 2012 as Stock Corporation inline in Other Software and Consultancy and Supply industry.',
@@ -153,7 +153,7 @@ export default function AboutUs() {
         className="relative"
         style={{ backgroundColor: '#D7E1E4' }}
       >
-        {/* Red circle gradient - scaled on mobile */}
+        {}
         <div 
           className="absolute top-32 left-0 w-[220px] h-[220px] sm:w-[280px] sm:h-[280px] md:top-60 md:w-[400px] md:h-[400px] -translate-x-1/2 -translate-y-1/2 z-0 rounded-full"
           style={{
@@ -162,10 +162,10 @@ export default function AboutUs() {
             WebkitFilter: 'blur(40px)',
           }}
         />
-        {/* Main content: stacked on mobile, 2-col on md+ (desktop = original design) */}
+        {}
         <div className="container mx-auto max-w-7xl px-3 sm:px-4 md:px-8 lg:px-16 relative z-10 py-6 sm:py-8 md:py-0">
           <div className="flex flex-col md:flex-row gap-0.5 md:gap-6 items-stretch min-h-0 md:min-h-[600px]">
-            {/* Left - Text Content */}
+            {}
             <div className="md:w-1/2 md:pr-8 md:order-1 relative z-10 font-sans flex flex-col justify-center order-1 pl-4 pr-4 sm:pl-5 sm:pr-5 md:pl-0 pt-8 pb-3 md:py-0">
               <div className="space-y-3 md:space-y-4">
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-5 sm:mb-6 md:mb-8">{content.title}</h2>
@@ -178,7 +178,7 @@ export default function AboutUs() {
                   {content.paragraph5 && <p dangerouslySetInnerHTML={{ __html: content.paragraph5 }} />}
                 </div>
 
-                {/* Mission and Vision Boxes */}
+                {}
                 <div className={`slide-up-content grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mt-4 md:mt-6 ${isVisible ? 'animate' : ''}`}>
                   <div className="bg-gray-50 rounded-xl p-4 md:p-5 border border-gray-200">
                     <h3 className="text-sm md:text-base font-bold text-gray-900 mb-1.5 md:mb-2">{content.missionTitle}</h3>
@@ -192,7 +192,7 @@ export default function AboutUs() {
               </div>
             </div>
 
-            {/* Right - Auto-scrolling Image Gallery (mobile: below text; desktop: right column) */}
+            {}
             {baseGallery.length > 0 && (
             <div className="md:w-1/2 md:order-2 order-2 w-full pl-4 pr-4 sm:pl-5 sm:pr-5 md:pl-0 md:pr-0 -mt-0">
               <div className={`slide-up-container relative h-[260px] sm:h-[320px] md:h-[600px] w-full overflow-hidden rounded-xl md:rounded-none md:shadow-lg ${isVisible ? 'animate' : ''}`}>

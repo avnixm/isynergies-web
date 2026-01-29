@@ -9,7 +9,7 @@ export async function GET() {
     const [settings] = await db.select().from(siteSettings).limit(1);
     
     if (!settings) {
-      // Return default settings if none exist
+      
       return NextResponse.json({
         companyName: 'iSynergies Inc.',
         companyAddress: 'ASKI Building 105 Maharlika Highway, Cabanatuan City, Nueva Ecija',
@@ -26,7 +26,6 @@ export async function GET() {
     return NextResponse.json(settings);
   } catch (error) {
     console.error('Error fetching site settings:', error);
-    // Fail soft: return defaults so UI still renders if DB is unreachable
     return NextResponse.json({
       companyName: 'iSynergies Inc.',
       companyAddress: 'ASKI Building 105 Maharlika Highway, Cabanatuan City, Nueva Ecija',

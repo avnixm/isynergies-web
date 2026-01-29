@@ -18,7 +18,7 @@ export function Header({ user }: HeaderProps) {
       try {
         const token = localStorage.getItem('admin_token')
         if (!token) {
-          // Not authenticated, don't try to fetch
+          
           return
         }
         
@@ -33,28 +33,28 @@ export function Header({ user }: HeaderProps) {
             setUnreadCount(newMessages.length)
           }
         } else if (response.status === 401) {
-          // Unauthorized - user needs to log in again
+          
           console.warn('Unauthorized to fetch messages')
         } else if (response.status === 500) {
-          // Server error - likely database connection issue
-          // Don't spam the console, just silently fail
-          // The count will update on next successful fetch
+          
+          
+          
         } else {
           console.error('Failed to fetch messages:', response.status)
         }
       } catch (error) {
-        // Network errors - silently fail, will retry on next interval
-        // Don't spam console with connection errors
+        
+        
       }
     }
 
-    // Fetch immediately
+    
     fetchUnreadCount()
     
-    // Refresh count every 30 seconds (reduced from 5 seconds to reduce database load)
+    
     const interval = setInterval(fetchUnreadCount, 30000)
     
-    // Also listen for focus events to refresh when user returns to tab
+    
     const handleFocus = () => {
       fetchUnreadCount()
     }

@@ -20,7 +20,7 @@ export default function CategoryStrip({ name, text, image, className = '' }: Cat
         height: '100%',
       }}
     >
-      {/* Background Image or Placeholder */}
+      {}
       {(() => {
         const imageUrl = image && image.toString().trim() !== ''
           ? (typeof image === 'string' && (image.startsWith('/api/images/') || image.startsWith('http') || image.startsWith('/'))
@@ -47,7 +47,7 @@ export default function CategoryStrip({ name, text, image, className = '' }: Cat
         );
       })()}
       
-      {/* Text Overlay - Rotated Vertically; position higher on mobile so full word isn't clipped */}
+      {}
       <div 
         className="absolute pointer-events-none z-10 right-0.5 bottom-8 sm:bottom-10 md:bottom-12 lg:bottom-14 w-px h-px"
       >

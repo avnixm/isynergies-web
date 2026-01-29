@@ -22,8 +22,8 @@ export default function AdminDashboard() {
     const token = localStorage.getItem('admin_token');
     const headers = { 'Authorization': `Bearer ${token}` };
 
-    // Fetch all stats in parallel, but handle each one independently
-    // This way if one fails, the others can still load
+    
+    
     const [boardResult, projectsResult, teamResult, servicesResult] = await Promise.allSettled([
       fetch('/api/admin/board-members', { headers }).then(res => res.ok ? res.json() : []),
       fetch('/api/admin/projects', { headers }).then(res => res.ok ? res.json() : []),
@@ -31,7 +31,7 @@ export default function AdminDashboard() {
       fetch('/api/admin/services', { headers }).then(res => res.ok ? res.json() : []),
     ]);
 
-    // Extract results, defaulting to empty array on failure
+    
     const board = boardResult.status === 'fulfilled' ? boardResult.value : [];
     const projects = projectsResult.status === 'fulfilled' ? projectsResult.value : [];
     const team = teamResult.status === 'fulfilled' ? teamResult.value : [];
@@ -95,7 +95,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
+      {}
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           Overview
@@ -105,7 +105,7 @@ export default function AdminDashboard() {
         </p>
       </div>
 
-      {/* Stats Grid */}
+      {}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat) => {
           const Icon = stat.icon;
@@ -133,7 +133,7 @@ export default function AdminDashboard() {
         })}
       </div>
 
-      {/* Quick Actions */}
+      {}
       <Card>
         <CardHeader>
           <CardTitle>Quick actions</CardTitle>
@@ -167,7 +167,7 @@ export default function AdminDashboard() {
         </CardContent>
       </Card>
 
-      {/* Info Card */}
+      {}
       <Card className="border border-accent/20 bg-gradient-to-r from-blue-50/80 via-white to-indigo-50/80">
         <CardContent className="p-6">
           <div className="flex items-start gap-4">

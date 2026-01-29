@@ -4,7 +4,7 @@ import { heroTickerItems } from '@/app/db/schema';
 import { requireAuth } from '@/app/lib/auth-middleware';
 import { eq } from 'drizzle-orm';
 
-// PUT /api/admin/hero-ticker/[id] - Update a hero ticker item
+
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -43,7 +43,7 @@ export async function PUT(
   }
 }
 
-// DELETE /api/admin/hero-ticker/[id] - Delete a hero ticker item
+
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

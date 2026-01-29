@@ -17,7 +17,7 @@ type Member = {
   position: string;
   image: string | number | null;
   displayOrder: number;
-  // allow any additional backend fields without typing them all
+  
   [key: string]: unknown;
 };
 
@@ -55,12 +55,12 @@ type TeamGroupsApiResponse = {
   featuredMemberId?: number;
 };
 
-/**
- * iSgrayNew logo on team cards — edit these to change size, position, and opacity.
- * scale: size (e.g. 1 = base, 1.5 = 50% bigger)
- * top, left: position in % (50 = center)
- * opacity: 0–1 (1 = fully opaque, 0.5 = 50% transparent)
- */
+
+
+
+
+
+
 const TEAM_CARD_LOGO = {
   scale: 2,
   top: 55,
@@ -196,7 +196,7 @@ function buildTeamLayout({
       }
     }
 
-    // mutate the group's members so subsequent calls continue after the taken ones
+    
     if (group) {
       group.members = group.members.slice(count);
     }
@@ -204,17 +204,17 @@ function buildTeamLayout({
     return slots;
   };
 
-  // Row 1: [boss][A x3][B x1]
+  
   const row1: Slot[] = [];
   if (featuredMember) {
     row1.push({ type: 'member', member: featuredMember, variant: 'boss' });
   } else {
     row1.push({ type: 'empty' });
   }
-  row1.push(...takeFromGroup(0, 3)); // Group A
-  row1.push(...takeFromGroup(1, 1)); // Group B
+  row1.push(...takeFromGroup(0, 3)); 
+  row1.push(...takeFromGroup(1, 1)); 
 
-  // Ensure exactly 5 slots
+  
   while (row1.length < 5) {
     row1.push({ type: 'empty' });
   }
@@ -222,10 +222,10 @@ function buildTeamLayout({
     row1.length = 5;
   }
 
-  // Row 2: [C x2][D x4]
+  
   const row2: Slot[] = [];
-  row2.push(...takeFromGroup(2, 2)); // Group C
-  row2.push(...takeFromGroup(3, 4)); // Group D
+  row2.push(...takeFromGroup(2, 2)); 
+  row2.push(...takeFromGroup(3, 4)); 
 
   while (row2.length < 6) {
     row2.push({ type: 'empty' });
@@ -234,9 +234,9 @@ function buildTeamLayout({
     row2.length = 6;
   }
 
-  // Row 3: [E x5]
+  
   const row3: Slot[] = [];
-  row3.push(...takeFromGroup(4, 5)); // Group E
+  row3.push(...takeFromGroup(4, 5)); 
   while (row3.length < 5) {
     row3.push({ type: 'empty' });
   }
@@ -286,7 +286,7 @@ function TeamMemberCard({
           background: 'linear-gradient(202.54deg, #FFFFFF 6.1%, #A9C9E0 28.37%, #5393C1 50.65%, #062092 95.19%)',
         }}
       >
-        {/* iSgrayNew logo: size/position via TEAM_CARD_LOGO */}
+        {}
         <div className="absolute inset-0 z-0 rounded-[24px] pointer-events-none overflow-hidden">
           <img
             src="/isgraynew.png"
@@ -324,7 +324,7 @@ function TeamMemberCard({
           <div className="absolute inset-0 z-[1] flex h-full items-center justify-center" />
         )}
 
-        {/* per-card overlay: only when tray overlay hidden; hover or tap */}
+        {}
         <div
           className={`absolute inset-0 rounded-[24px] bg-gradient-to-b from-transparent via-transparent to-[#0D1E66] flex flex-col justify-end p-3 z-10 transition-opacity duration-300 pointer-events-none ${
             !overlayHidden ? 'opacity-0 pointer-events-none' : showOverlay ? 'opacity-100' : 'opacity-0 group-hover/card:opacity-100'
@@ -358,7 +358,7 @@ function BossMemberCard({
   const src = resolveImageSrc(member.image);
   const showOverlay = overlayHidden && (active || false);
 
-  // Same gradient as Board of Directors cards: deep red → warm brown → beige → white
+  
   const boardCardGradient =
     'linear-gradient(to top right, #920608 0%, #C16553 35%, #E0C5A9 70%, #FFFFFF 100%)';
 
@@ -384,7 +384,7 @@ function BossMemberCard({
         className="relative h-[240px] w-[165px] rounded-[24px] overflow-visible shadow-[0_18px_45px_rgba(0,0,0,0.35)]"
         style={{ background: boardCardGradient }}
       >
-        {/* iSgrayNew logo: size/position via TEAM_CARD_LOGO */}
+        {}
         <div className="absolute inset-0 z-0 rounded-[24px] pointer-events-none overflow-hidden">
           <img
             src="/isgraynew.png"
@@ -495,10 +495,10 @@ function GroupTraySegment({
 
   return (
     <>
-      {/* Mobile: swipeable stacked-card carousel (title card first) */}
+      {}
       <div className="md:hidden">
         <div className="relative w-full space-y-2">
-          {/* Mobile header banner for this group */}
+          {}
           <div className="px-6">
             <div
               className="relative mx-auto flex h-[52px] w-full max-w-sm items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-r from-[#2E5C97] via-[#3B6FAB] to-[#2E5C97] shadow-[0_6px_14px_rgba(0,0,0,0.20)]"
@@ -511,19 +511,19 @@ function GroupTraySegment({
             </div>
           </div>
 
-          {/* Swipe area – only the member cards move when swiping.
-              Extra top margin so cards don’t overlap the header banner. */}
+          {
+}
           <div
             className="relative mt-6 h-[240px] w-full touch-pan-x"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
             {memberSlots.map((slot, index) => {
-              const offset = index - activeIndex; // 0 = center, -1 left, 1 right
-              if (Math.abs(offset) > 2) return null; // hide far cards
+              const offset = index - activeIndex; 
+              if (Math.abs(offset) > 2) return null; 
 
               const isActive = offset === 0;
-              const baseTranslate = 90; // distance between cards
+              const baseTranslate = 90; 
               const translateX = offset * baseTranslate;
               const scale = isActive ? 1 : 0.85;
               const opacity = isActive ? 1 : 0.45;
@@ -560,7 +560,7 @@ function GroupTraySegment({
         </div>
       </div>
 
-      {/* Desktop/tablet: existing tray behavior */}
+      {}
       <div
         className="group/tray relative hidden flex-shrink-0 items-stretch overflow-visible md:flex"
         onClick={handleTrayClick}
@@ -568,13 +568,13 @@ function GroupTraySegment({
         onMouseLeave={() => setTrayHovered(false)}
       >
         <div className="relative flex w-fit flex-shrink-0 flex-wrap gap-4 self-start rounded-[32px] bg-[#3B6FAB]/50 px-4 py-5 shadow-[0_12px_30px_rgba(0,0,0,0.15)] backdrop-blur-sm overflow-visible">
-          {/* translucent overlay: 35% opacity, gradient #408DE6 → #303F58 */}
+          {}
           <div
             className={`absolute inset-0 z-20 rounded-[32px] bg-gradient-to-b from-[#408DE6] to-[#303F58] transition-opacity duration-300 ${
               overlayHidden ? 'opacity-0 pointer-events-none' : 'opacity-[0.35] group-hover/tray:opacity-0 group-hover/tray:pointer-events-none'
             }`}
           />
-          {/* group name label: always visible above overlay, clamped inside card */}
+          {}
           <div
             className={`absolute inset-0 z-30 flex items-center justify-center overflow-hidden rounded-[32px] px-5 py-4 pointer-events-none transition-opacity duration-300 ${
               overlayHidden ? 'opacity-0' : 'opacity-100 group-hover/tray:opacity-0'
@@ -712,7 +712,7 @@ export default function Team() {
   useEffect(() => {
     const fetchTeamData = async () => {
       try {
-        // Try the optional team-groups endpoint first
+        
         try {
           const groupsResponse = await fetch('/api/admin/team-groups');
           if (groupsResponse.ok) {
@@ -723,7 +723,7 @@ export default function Team() {
               ...(data.ungrouped ?? []),
             ];
 
-            // Phase 5A: filter out members without name; image optional (placeholder if missing)
+            
             const hasValidName = (m: Member) =>
               typeof m.name === 'string' && m.name.trim() !== '';
             const filteredMembers = allMembers
@@ -759,7 +759,7 @@ export default function Team() {
             return;
           }
         } catch (error) {
-          // If /team-groups fails for any reason, fall back to /team below.
+          
           console.warn('Optional /api/admin/team-groups failed, falling back.', error);
         }
 
@@ -820,7 +820,7 @@ export default function Team() {
       aria-label="Our Team"
       className="team-watermark relative min-h-screen bg-[#D7E1E4] py-16"
     >
-      {/* iSgray logo - same treatment as Board of Directors */}
+      {}
       <div className="absolute bottom-[30rem] md:bottom-[34rem] left-[75%] md:left-[80%] -translate-x-1/2 translate-y-1/2 w-[500px] h-[500px] md:w-[600px] md:h-[600px] flex items-center justify-center z-0 pointer-events-none">
         <img
           src="/logos/iSgray.png"
@@ -831,7 +831,7 @@ export default function Team() {
         />
       </div>
       <div className="container relative z-10 mx-auto max-w-7xl px-4 md:px-8 lg:px-16">
-        {/* header strip: 60px, gradient transparent → #0D1E66 → transparent, rounded */}
+        {}
         <div className="mx-auto mb-10 w-full max-w-5xl overflow-hidden rounded-2xl">
           <div className="flex h-[60px] items-center justify-center bg-gradient-to-r from-transparent via-[#0D1E66] to-transparent">
             <h2 className="text-center font-sans text-4xl font-semibold text-white md:text-5xl">

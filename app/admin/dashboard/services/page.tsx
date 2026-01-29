@@ -101,7 +101,7 @@ export default function ServicesPage() {
       const response = await fetch('/api/admin/statistics');
       if (response.ok) {
         const data = await response.json();
-        // Ensure data is an array
+        
         setStatistics(Array.isArray(data) ? data : []);
       } else {
         console.error('Error fetching statistics:', response.status, response.statusText);
@@ -120,7 +120,7 @@ export default function ServicesPage() {
       const response = await fetch('/api/admin/ticker');
       if (response.ok) {
         const data = await response.json();
-        // Ensure data is an array
+        
         setTickerItems(Array.isArray(data) ? data : []);
       } else {
         console.error('Error fetching ticker items:', response.status, response.statusText);
@@ -137,7 +137,7 @@ export default function ServicesPage() {
       const response = await fetch('/api/admin/services');
       if (response.ok) {
         const data = await response.json();
-        // Ensure data is an array
+        
         setServices(Array.isArray(data) ? data : []);
       } else {
         console.error('Error fetching services:', response.status, response.statusText);
@@ -408,7 +408,7 @@ export default function ServicesPage() {
       const url = editingService ? `/api/admin/services/${editingService.id}` : '/api/admin/services';
       const method = editingService ? 'PUT' : 'POST';
 
-      // Backend schema requires title & description; auto-fill them based on display order
+      
       const payload = {
         title: editingService?.title || `Service Icon ${serviceFormData.displayOrder + 1}`,
         description: editingService?.description || '',
@@ -491,7 +491,7 @@ export default function ServicesPage() {
         </div>
       </div>
 
-      {/* Service Icons Section */}
+      {}
       <Card id="service-icons" className="rounded-xl border border-border bg-white shadow-sm">
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
@@ -525,7 +525,7 @@ export default function ServicesPage() {
                     key={service.id}
                     className="flex items-center gap-4 rounded-lg border border-border bg-white p-4 transition-colors hover:bg-muted/30"
                   >
-                    {/* Icon Thumbnail */}
+                    {}
                     <div className="relative h-20 w-20 flex-shrink-0 rounded-lg overflow-hidden border border-gray-200 bg-gradient-to-b from-blue-900 to-blue-950">
                       {service.icon ? (
                         <Image
@@ -541,7 +541,7 @@ export default function ServicesPage() {
                       )}
                     </div>
 
-                    {/* Service Info */}
+                    {}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground">
                         {service.title}
@@ -556,7 +556,7 @@ export default function ServicesPage() {
                       </div>
                     </div>
 
-                    {/* Actions */}
+                    {}
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <Button
                         variant="outline"
@@ -587,7 +587,7 @@ export default function ServicesPage() {
         </div>
       </Card>
 
-      {/* Statistics Section */}
+      {}
       <Card id="statistics" className="rounded-xl border border-border bg-white shadow-sm">
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
@@ -617,20 +617,20 @@ export default function ServicesPage() {
                   key={stat.id}
                   className="flex items-center gap-4 rounded-lg border border-border bg-white p-4 transition-colors hover:bg-muted/30"
                 >
-                  {/* Value Display */}
+                  {}
                   <div className="flex-shrink-0 text-center min-w-[120px]">
                     <div className="text-3xl font-bold text-primary">{stat.value}</div>
                     <div className="text-sm font-medium text-foreground mt-1">{stat.label}</div>
                   </div>
 
-                  {/* Order Badge */}
+                  {}
                   <div className="flex-1 min-w-0">
                     <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                       Order: {stat.displayOrder}
                     </span>
                   </div>
 
-                  {/* Actions */}
+                  {}
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <Button
                       variant="outline"
@@ -660,7 +660,7 @@ export default function ServicesPage() {
         </div>
       </Card>
 
-      {/* Ticker Items Section */}
+      {}
       <Card id="ticker-items" className="rounded-xl border border-border bg-white shadow-sm">
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
@@ -690,7 +690,7 @@ export default function ServicesPage() {
                   key={item.id}
                   className="flex items-center gap-4 rounded-lg border border-border bg-white p-4 transition-colors hover:bg-muted/30"
                 >
-                  {/* Text Preview */}
+                  {}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground line-clamp-1">
                       {item.text}
@@ -702,7 +702,7 @@ export default function ServicesPage() {
                     </div>
                   </div>
 
-                  {/* Actions */}
+                  {}
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <Button
                       variant="outline"
@@ -732,7 +732,7 @@ export default function ServicesPage() {
         </div>
       </Card>
 
-      {/* Statistics Dialog */}
+      {}
       <Dialog
         open={isStatDialogOpen}
         onOpenChange={setIsStatDialogOpen}
@@ -798,7 +798,7 @@ export default function ServicesPage() {
         </DialogFooter>
       </Dialog>
 
-      {/* Ticker Dialog */}
+      {}
       <Dialog
         open={isTickerDialogOpen}
         onOpenChange={setIsTickerDialogOpen}
@@ -854,14 +854,14 @@ export default function ServicesPage() {
         </DialogFooter>
       </Dialog>
 
-      {/* Service Dialog */}
+      {}
       <Dialog
         open={isServiceDialogOpen}
         onOpenChange={setIsServiceDialogOpen}
         title={editingService ? 'Edit Service Icon' : 'Add Service Icon'}
       >
         <div className="space-y-4 mb-6">
-          {/* Compact HTML Tips */}
+          {}
           <div className="flex items-start gap-2 rounded-lg bg-muted/50 border border-border p-2">
             <Info className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
             <div className="text-xs text-muted-foreground leading-relaxed">

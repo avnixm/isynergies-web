@@ -68,7 +68,7 @@ export default function MessagesPage() {
         const data = await response.json();
         setMessages(data);
         
-        // If there's a selected message, update it if it still exists
+        
         const currentSelected = selectedMessageRef.current;
         if (currentSelected) {
           const updatedMessage = data.find((m: ContactMessage) => m.id === currentSelected.id);
@@ -136,19 +136,19 @@ export default function MessagesPage() {
       });
 
       if (response.ok) {
-        // Show toast if explicitly requested (e.g., when saving notes or changing to replied/archived)
+        
         if (showToast) {
           if (status === 'read') {
-            // Don't show toast for read status (automatic when opening message)
-            // But if showToast is true, it means user explicitly saved notes
+            
+            
             toast.success('Notes saved successfully!');
           } else {
             toast.success('Message updated successfully!');
           }
         }
-        // Refresh messages to get latest data
+        
         await fetchMessages();
-        // Update selected message if it's the one being updated
+        
         if (selectedMessage?.id === id) {
           setSelectedMessage({ ...selectedMessage, status: status as any, adminNotes: notes });
         }
@@ -167,7 +167,7 @@ export default function MessagesPage() {
 
   const handleStatusChange = (status: 'new' | 'read' | 'replied' | 'archived') => {
     if (selectedMessage) {
-      // Only show toast for status changes other than "read"
+      
       const showToast = status !== 'read';
       updateMessageStatus(selectedMessage.id, status, adminNotes, showToast);
     }
@@ -176,10 +176,10 @@ export default function MessagesPage() {
   const handleSaveNotes = async () => {
     if (selectedMessage) {
       setSavingNotes(true);
-      // Show toast when saving notes (this is an explicit user action)
+      
       await updateMessageStatus(selectedMessage.id, selectedMessage.status, adminNotes, true);
       setSavingNotes(false);
-      // Close the dialog after saving
+      
       handleCloseDialog();
     }
   };
@@ -248,7 +248,7 @@ export default function MessagesPage() {
         </p>
       </div>
 
-      {/* Filter Tabs */}
+      {}
       <div className="border-b border-border">
         <nav className="flex gap-1" aria-label="Message filters">
           {(['all', 'new', 'read', 'replied', 'archived'] as const).map((status) => {
@@ -293,7 +293,7 @@ export default function MessagesPage() {
         </nav>
       </div>
 
-      {/* Messages List */}
+      {}
       <div className="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto pr-2">
           {filteredMessages.length === 0 ? (
             <Card className="rounded-xl border border-border bg-white">
@@ -320,7 +320,7 @@ export default function MessagesPage() {
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
-                      {/* Avatar */}
+                      {}
                       <div className={`
                         flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center text-sm font-semibold
                         ${message.status === 'new' 
@@ -331,7 +331,7 @@ export default function MessagesPage() {
                         {initials}
                       </div>
                       
-                      {/* Content */}
+                      {}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2 mb-1">
                           <div className="flex-1 min-w-0">
@@ -385,7 +385,7 @@ export default function MessagesPage() {
           )}
       </div>
 
-      {/* Message Detail Dialog */}
+      {}
       <Dialog
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
@@ -394,7 +394,7 @@ export default function MessagesPage() {
       >
         {selectedMessage && (
           <div className="space-y-6">
-            {/* Header */}
+            {}
             <div className="flex items-start gap-4 pb-4 border-b border-border">
               <div className={`
                 flex-shrink-0 h-14 w-14 rounded-full flex items-center justify-center text-lg font-bold
@@ -430,7 +430,7 @@ export default function MessagesPage() {
               </div>
             </div>
 
-            {/* Status Section */}
+            {}
             <div>
               <Label className="text-sm font-medium text-foreground mb-3 block">Status</Label>
               <div className="flex flex-wrap gap-2">
@@ -442,7 +442,7 @@ export default function MessagesPage() {
                       key={status}
                       onClick={() => {
                         handleStatusChange(status);
-                        // Update local state immediately for better UX
+                        
                         if (selectedMessage) {
                           setSelectedMessage({ ...selectedMessage, status });
                         }
@@ -464,7 +464,7 @@ export default function MessagesPage() {
               </div>
             </div>
 
-            {/* Message Content */}
+            {}
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <MessageSquare className="h-4 w-4 text-muted-foreground" />
@@ -477,7 +477,7 @@ export default function MessagesPage() {
               </div>
             </div>
 
-            {/* Admin Notes */}
+            {}
             <div>
               <Label htmlFor="dialog-adminNotes" className="text-sm font-medium text-foreground mb-3 block">
                 Admin Notes
@@ -491,7 +491,7 @@ export default function MessagesPage() {
               />
             </div>
 
-            {/* Metadata */}
+            {}
             <div className="pt-4 border-t border-border">
               <div className="flex flex-col gap-2 text-xs text-muted-foreground">
                 <div className="flex items-center gap-2">

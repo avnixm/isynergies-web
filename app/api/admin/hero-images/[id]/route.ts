@@ -4,7 +4,7 @@ import { heroImages } from '@/app/db/schema';
 import { requireAuth } from '@/app/lib/auth-middleware';
 import { eq } from 'drizzle-orm';
 
-// GET /api/admin/hero-images/[id] - Get single hero image
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -37,7 +37,7 @@ export async function GET(
   }
 }
 
-// PUT /api/admin/hero-images/[id] - Update hero image
+
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -80,7 +80,7 @@ export async function PUT(
   }
 }
 
-// DELETE /api/admin/hero-images/[id] - Delete hero image
+
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

@@ -31,12 +31,12 @@ type LayoutPreviewTabProps = {
 
 type Slot = { type: 'member'; member: PreviewMember; variant?: 'boss' } | { type: 'empty' };
 
-/**
- * Build 5/6/5 layout matching public Team.tsx:
- * Row 1: [1 boss] + [3 Group A] + [1 Group B]
- * Row 2: [2 Group C] + [4 Group D]
- * Row 3: [5 Group E]
- */
+
+
+
+
+
+
 function buildLayout(
   groups: GroupWithMembers[],
   featuredMember: PreviewMember | null

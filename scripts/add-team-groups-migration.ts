@@ -1,10 +1,10 @@
-/**
- * Phase 1: Apply team_groups schema changes.
- * Run against the DB configured in .env (DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, DB_SSL).
- *
- * Usage: npm run add-team-groups
- * Or: npx tsx scripts/add-team-groups-migration.ts
- */
+
+
+
+
+
+
+
 import 'dotenv/config';
 import mysql from 'mysql2/promise';
 
@@ -24,7 +24,7 @@ async function run() {
   try {
     connection = await mysql.createConnection(config);
 
-    // 1) Create team_groups if not exists
+    
     const [tables] = await connection.execute(
       `SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'team_groups'`,
       [config.database]
@@ -46,7 +46,7 @@ async function run() {
       console.log('✅ Table team_groups already exists');
     }
 
-    // 2) Add group_id, group_order, is_featured to team_members if missing
+    
     const [cols] = await connection.execute(
       `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'team_members'`,
       [config.database]

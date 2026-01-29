@@ -12,12 +12,12 @@ const nextConfig: NextConfig = {
         hostname: '**',
       },
     ],
-    unoptimized: false, // Keep optimization for external images
-    // Disable optimization for our API route images
+    unoptimized: false, 
+    
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
-  // Increase body size limit for file uploads (4.5MB default, increase to 10MB)
+  
   experimental: {
     serverActions: {
       bodySizeLimit: '10mb',

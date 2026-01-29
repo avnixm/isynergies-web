@@ -11,8 +11,8 @@ interface ImageUploadProps {
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
-  acceptVideo?: boolean; // Allow video files
-  mediaType?: 'image' | 'video'; // Current media type for preview
+  acceptVideo?: boolean; 
+  mediaType?: 'image' | 'video'; 
 }
 
 export function ImageUpload({ value, onChange, disabled, acceptVideo = false, mediaType }: ImageUploadProps) {
@@ -20,9 +20,9 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
   const [uploadProgress, setUploadProgress] = useState<string>('');
   const [detectedMediaType, setDetectedMediaType] = useState<'image' | 'video' | null>(null);
 
-  // Helper function to delete old blob file if it exists
+  
   const deleteOldBlob = useCallback(async (oldUrl: string, token: string) => {
-    // Check if it's a Vercel Blob URL
+    
     if (oldUrl && oldUrl.startsWith('https://') && oldUrl.includes('blob.vercel-storage.com')) {
       try {
         console.log(`[Blob Cleanup] Deleting old blob: ${oldUrl.substring(0, 60)}...`);
@@ -67,19 +67,19 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
       return;
     }
 
-    // Store the old value to delete after successful upload
+    
     const oldValue = value;
     let oldBlobUrl: string | null = null;
 
-    // Check if old value is a blob URL or needs to be resolved
+    
     if (oldValue) {
       if (oldValue.startsWith('https://') && oldValue.includes('blob.vercel-storage.com')) {
-        // Direct blob URL
+        
         oldBlobUrl = oldValue;
       } else if (oldValue.match(/^\d+$/)) {
-        // Numeric ID - try to resolve to blob URL from media table first, then images table
+        
         try {
-          // Try media table first
+          
           const mediaResponse = await fetch(`/api/admin/media/${oldValue}`, {
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -91,7 +91,7 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
               oldBlobUrl = mediaData.url;
             }
           } else {
-            // Try images table as fallback - fetch the image record by ID
+            
             try {
               const imageRecordResponse = await fetch(`/api/admin/images/${oldValue}`, {
                 headers: {
@@ -107,11 +107,11 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
               }
             } catch (e) {
               console.warn(`Failed to resolve image ID ${oldValue} to blob URL:`, e);
-              // Ignore errors - will try to delete after upload if we can resolve it later
+              
             }
           }
         } catch (e) {
-          // Ignore errors - will try to delete after upload
+          
         }
       }
     }
@@ -119,17 +119,17 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
     try {
       console.log(`Uploading file: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
 
-      // For videos, use Vercel Blob direct upload via handleUpload pattern
+      
       const isVideo = file.type.startsWith('video/');
       
       if (isVideo && acceptVideo) {
-        // Use Vercel Blob client upload pattern
+        
         setUploadProgress('Uploading to Vercel Blob...');
         
-        // Import the upload function dynamically to avoid SSR issues
+        
         const { upload } = await import('@vercel/blob/client');
         
-        // Upload directly to Vercel Blob using the client upload endpoint
+        
         const blob = await upload(file.name, file, {
           access: 'public',
           handleUploadUrl: '/api/videos/upload',
@@ -137,7 +137,7 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
             filename: file.name,
             contentType: file.type,
             size: file.size,
-            oldBlobUrl: oldBlobUrl, // Pass old blob URL for deletion
+            oldBlobUrl: oldBlobUrl, 
           }),
           onUploadProgress: (progress) => {
             const percentage = progress.percentage || 0;
@@ -149,12 +149,12 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
           throw new Error('Upload failed: No blob URL returned');
         }
 
-        // Phase 1: For videos, DO NOT call find-image-by-url
-        // Instead, create a media record via POST /api/admin/media
+        
+        
         setUploadProgress('Creating media record...');
         
         try {
-          // Create media record in the new media table
+          
           const createMediaResponse = await fetch('/api/admin/media', {
             method: 'POST',
             headers: {
@@ -162,7 +162,7 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
               'Authorization': `Bearer ${token}`,
             },
             body: JSON.stringify({
-              url: blob.url, // Store exactly as returned (no encoding)
+              url: blob.url, 
               contentType: file.type,
               sizeBytes: file.size,
               title: file.name,
@@ -177,11 +177,11 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
           const mediaData = await createMediaResponse.json();
           
           if (mediaData.id) {
-            // Store the media ID
+            
             console.log(`Created media record: ID ${mediaData.id}, type ${mediaData.type}`);
             onChange(String(mediaData.id));
             
-            // Delete old blob after successful upload
+            
             if (oldBlobUrl) {
               await deleteOldBlob(oldBlobUrl, token);
             }
@@ -190,11 +190,11 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
           }
         } catch (mediaError: any) {
           console.error('Error creating media record:', mediaError);
-          // Fallback: store blob URL directly (Hero component handles http URLs)
+          
           console.warn('Falling back to storing blob URL directly:', blob.url);
           onChange(blob.url);
           
-          // Delete old blob after successful upload (even in fallback)
+          
           if (oldBlobUrl) {
             await deleteOldBlob(oldBlobUrl, token);
           }
@@ -260,7 +260,7 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
           throw new Error('Upload succeeded but no image ID was returned');
         }
 
-        // Finalize the upload to clean up filename and verify all chunks
+        
         const finalizeResponse = await fetch('/api/admin/upload-finalize', {
           method: 'POST',
           headers: {
@@ -312,7 +312,7 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
 
         onChange(String(uploadData.id));
         
-        // Delete old blob after successful upload
+        
         if (oldBlobUrl) {
           await deleteOldBlob(oldBlobUrl, token);
         }
@@ -369,21 +369,21 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
     disabled: disabled || uploading,
   });
 
-  // State to store resolved media URL and type
+  
   const [resolvedMediaUrl, setResolvedMediaUrl] = useState<string>('');
   const [resolvedMediaType, setResolvedMediaType] = useState<'image' | 'video' | null>(null);
   const [isFetchingMedia, setIsFetchingMedia] = useState(false);
 
-  // Fetch media record if value is a numeric ID (media table)
+  
   useEffect(() => {
     if (value && value.match(/^\d+$/)) {
-      // Value is a numeric ID - fetch from media table
+      
       setIsFetchingMedia(true);
       const fetchMediaRecord = async () => {
         try {
           const token = localStorage.getItem('admin_token');
           if (!token) {
-            // No token - fall back to /api/images/ route
+            
             console.log('No auth token, falling back to /api/images/ route');
             setIsFetchingMedia(false);
             return;
@@ -400,7 +400,7 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
             const mediaRecord = await response.json();
             
             if (mediaRecord && mediaRecord.url) {
-              // Found media record - use the blob URL directly
+              
               console.log(`Resolved media ID ${value} to URL: ${mediaRecord.url.substring(0, 50)}...`);
               setResolvedMediaUrl(mediaRecord.url);
               setResolvedMediaType(mediaRecord.type);
@@ -408,22 +408,22 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
               console.warn(`Media record ${value} found but has no URL`);
             }
           } else if (response.status === 404) {
-            // Media record not found - might be an old images table ID, fall back to /api/images/
+            
             console.log(`Media ID ${value} not found in media table, falling back to images table`);
-            // Don't set resolvedMediaUrl, so it falls back to /api/images/${value}
+            
           } else {
             console.error(`Failed to fetch media record: ${response.status} ${response.statusText}`);
           }
         } catch (e) {
           console.error('Error fetching media record:', e);
-          // Fall back to legacy /api/images/ route
+          
         } finally {
           setIsFetchingMedia(false);
         }
       };
       fetchMediaRecord();
     } else if (!value) {
-      // Reset resolved values when value is cleared
+      
       setResolvedMediaUrl('');
       setResolvedMediaType(null);
       setIsFetchingMedia(false);
@@ -435,9 +435,9 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
   // BUT: Don't use /api/images/ fallback until we've confirmed media record doesn't exist
   const displayUrl = value
     ? (resolvedMediaUrl 
-        ? resolvedMediaUrl // Use resolved blob URL from media table
+        ? resolvedMediaUrl 
         : typeof value === 'string' && (value.startsWith('/api/images/') || value.startsWith('http'))
-        ? value // Already a full URL
+        ? value 
         : isFetchingMedia 
         ? '' // Wait for fetch to complete before falling back
         : `/api/images/${value}`) // Fallback to images table only after fetch completes
@@ -452,7 +452,7 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
     (displayUrl.includes('blob.vercel-storage.com') && (displayUrl.includes('.mp4') || displayUrl.includes('.webm') || displayUrl.includes('.mov')))
   ));
 
-  // Determine media type for preview
+  
   const previewType: 'image' | 'video' = resolvedMediaType || (isVideo ? 'video' : 'image');
 
   return (

@@ -6,7 +6,7 @@ import { eq } from 'drizzle-orm';
 
 const useProd = process.argv.includes('--prod');
 
-// Local/dev config from env
+
 const DEV_DB_CONFIG = {
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '3306'),
@@ -16,7 +16,7 @@ const DEV_DB_CONFIG = {
   ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
 };
 
-// Production defaults (matches scripts/setup-database-prod.ts)
+
 const PROD_DB_CONFIG = {
   host: process.env.DB_HOST ?? 'isyn-cieloes.l.aivencloud.com',
   port: Number(process.env.DB_PORT ?? 26771),
@@ -38,7 +38,7 @@ async function updateBannerHeight() {
     connection = await mysql.createConnection(DB_CONFIG);
     const db = drizzle(connection, { schema: { featuredApp }, mode: 'default' });
 
-    // Check if any records exist
+    
     const [existing] = await db.select().from(featuredApp).limit(1);
 
     if (existing) {
