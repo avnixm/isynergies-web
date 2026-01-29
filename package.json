@@ -10,18 +10,11 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
+    "db:push:do": "node scripts/push-schema-do.js",
     "db:studio": "drizzle-kit studio",
     "db:setup": "tsx scripts/setup-database.ts",
-    "db:setup:prod": "tsx scripts/setup-database-prod.ts",
-    "add-team-groups-migration:prod": "tsx scripts/add-team-groups-migration-prod.ts",
-    "clear-team-data:prod": "tsx scripts/clear-team-data-prod.ts",
-    "add-background-video-column:prod": "tsx scripts/add-background-video-column-prod.ts",
-    "add-demo-columns:prod": "tsx scripts/add-demo-columns-prod.ts",
-    "add-videos-table:prod": "tsx scripts/add-videos-table-prod.ts",
-    "create-media-table:prod": "tsx scripts/create-media-table-prod.ts",
-    "create-upload-sessions-table:prod": "tsx scripts/create-upload-sessions-table-prod.ts",
-    "add-services-tables:prod": "tsx scripts/add-services-tables-prod.ts",
-    "migrate-images-to-media": "tsx scripts/migrate-images-to-media.ts"
+    "db:setup:prod": "tsx scripts/setup-database-prod.ts"
+    
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
