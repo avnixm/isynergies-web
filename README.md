@@ -17,7 +17,7 @@ Next.js app for **iSynergies Inc.** — marketing site (Hero, Services, Projects
 ### 1. Clone and install
 
 ```bash
-git clone <repository-url>
+git clone <https://github.com/avnixm/isynergies-web.git>
 cd isynergies-web
 npm install
 ```
