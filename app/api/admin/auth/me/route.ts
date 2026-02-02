@@ -52,28 +52,31 @@ export async function GET(request: Request) {
       sqlMessage: error?.sqlMessage,
       stack: error?.stack,
     });
-    
-    
+
     let errorMessage = 'Internal server error';
     if (error?.code === 'ER_CON_COUNT_ERROR' || error?.sqlMessage?.includes('Too many connections')) {
       errorMessage = 'Database connection limit reached. Please try again in a moment.';
-    } else if (error?.code === 'ECONNREFUSED' || error?.code === 'ENOTFOUND') {
-      errorMessage = 'Database connection failed. Please check your database configuration.';
+    } else if (error?.code === 'ECONNREFUSED' || error?.code === 'ENOTFOUND' || error?.code === 'ETIMEDOUT') {
+      errorMessage = 'Database connection failed (refused or timeout). Check DB_HOST, DB_PORT, .env, and that the database is running.';
     } else if (error?.code === 'ER_ACCESS_DENIED_ERROR') {
       errorMessage = 'Database access denied. Please check your credentials.';
     } else if (error?.code === 'ER_BAD_DB_ERROR') {
       errorMessage = 'Database does not exist. Please check your database name.';
+    } else if (error?.code === 'ER_NO_SUCH_TABLE' || error?.sqlMessage?.includes("doesn't exist")) {
+      errorMessage = 'Database table missing. Run migrations (e.g. npx drizzle-kit push or migrate).';
     } else if (error?.sqlMessage) {
       errorMessage = `Database error: ${error.sqlMessage}`;
+    } else if (error?.message) {
+      errorMessage = error.message;
     }
-    
+
     return NextResponse.json(
-      { 
+      {
         error: errorMessage,
         ...(process.env.NODE_ENV === 'development' && {
           details: error?.message,
           code: error?.code,
-        })
+        }),
       },
       { status: 500 }
     );

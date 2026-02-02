@@ -20,7 +20,6 @@ import { FeaturedTabPanel } from './_components/FeaturedTabPanel';
 import { LayoutPreviewTab } from './_components/LayoutPreviewTab';
 import { useDraftPersistence } from '@/app/lib/use-draft-persistence';
 import { DraftRestorePrompt } from '@/app/components/ui/draft-restore-prompt';
-import { UnsavedChangesModal } from '@/app/components/ui/unsaved-changes-modal';
 
 type TeamMember = {
   id: number;
@@ -71,8 +70,6 @@ export default function TeamPage() {
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
   const [orderError, setOrderError] = useState<string>('');
   const [saving, setSaving] = useState(false);
-  const [showDraftPrompt, setShowDraftPrompt] = useState(false);
-  const [showUnsavedChangesModal, setShowUnsavedChangesModal] = useState(false);
   const [formData, setFormData] = useState<MemberFormData>({
     name: '',
     position: '',
@@ -98,8 +95,7 @@ export default function TeamPage() {
     debounceMs: 500,
   });
 
-  // No browser beforeunload - we only use our custom Unsaved Changes modal.
-  // On refresh/close tab the page just reloads; draft is auto-saved and restorable.
+  // Draft auto-saves; no modal on close—draft shows on page when present.
 
   // Auto-save form data as draft when it changes
   const handleFormChange = useCallback((updates: Partial<MemberFormData>) => {
@@ -113,20 +109,20 @@ export default function TeamPage() {
     });
   }, [isDialogOpen, saveDraft]);
 
-  // Restore draft handler
+  // Restore draft from page: open dialog and fill with draft
   const handleRestoreDraft = useCallback(() => {
     const restored = restoreDraft();
     if (restored) {
       setFormData(restored);
-      setShowDraftPrompt(false);
+      setEditingMember(null);
+      setDirty(true);
+      setIsDialogOpen(true);
       toast.success('Draft restored');
     }
   }, [restoreDraft, toast]);
 
-  // Dismiss draft handler
   const handleDismissDraft = useCallback(() => {
     dismissDraft();
-    setShowDraftPrompt(false);
   }, [dismissDraft]);
   // Group builder state
   const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
@@ -254,10 +250,6 @@ export default function TeamPage() {
     setFormData(freshFormData);
     setOrderError('');
     setDirty(false);
-    
-    // Show draft prompt if there's a draft available
-    setShowDraftPrompt(hasDraft);
-    
     setIsDialogOpen(true);
   };
 
@@ -271,27 +263,10 @@ export default function TeamPage() {
     });
     setOrderError('');
     setDirty(false);
-    
-    // Show draft prompt if there's a draft for this specific member
-    setShowDraftPrompt(hasDraft);
-    
     setIsDialogOpen(true);
   };
 
   const handleCloseDialog = () => {
-    // Check if there are unsaved changes
-    if (isDirty && (formData.name.trim() || formData.position.trim())) {
-      // Show confirmation modal instead of closing immediately
-      setShowUnsavedChangesModal(true);
-      return;
-    }
-    
-    // No unsaved changes, close normally
-    closeDialogFinal();
-  };
-
-  const closeDialogFinal = () => {
-    // Actually close the dialog
     setIsDialogOpen(false);
     setEditingMember(null);
     setFormData({
@@ -301,22 +276,7 @@ export default function TeamPage() {
       displayOrder: getNextAvailableOrder(),
     });
     setOrderError('');
-    setShowDraftPrompt(false);
-    setShowUnsavedChangesModal(false);
-    // Don't clear dirty state here - let the draft persist for potential restore
-  };
-
-  const handleDiscardChanges = () => {
-    // User confirmed they want to discard changes
-    // Clear the draft since they explicitly chose to discard
-    clearDraft();
-    setDirty(false);
-    closeDialogFinal();
-  };
-
-  const handleKeepEditing = () => {
-    // User wants to continue editing
-    setShowUnsavedChangesModal(false);
+    // Draft stays saved; will show on page when present
   };
 
   const handleSave = async () => {
@@ -353,7 +313,7 @@ export default function TeamPage() {
         clearDraft();
         setDirty(false);
         toast.success(editingMember ? 'Team member updated successfully!' : 'Team member added successfully!');
-        closeDialogFinal(); // Use closeDialogFinal to skip unsaved changes check
+        handleCloseDialog();
         refetchAll();
       } else {
         toast.error('Failed to save team member');
@@ -761,24 +721,21 @@ export default function TeamPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Unsaved Changes Warning Modal */}
-      <UnsavedChangesModal
-        isOpen={showUnsavedChangesModal}
-        onDiscard={handleDiscardChanges}
-        onKeepEditing={handleKeepEditing}
-        title="Unsaved Changes"
-        message="You have unsaved changes. Your work has been auto-saved as a draft, but are you sure you want to close?"
-      />
+      {/* Draft banner on page when there's a draft (dialog closed) */}
+      {!isDialogOpen && hasDraft && draftMeta && (
+        <DraftRestorePrompt
+          savedAt={draftMeta.savedAt}
+          onRestore={handleRestoreDraft}
+          onDismiss={handleDismissDraft}
+        />
+      )}
 
       {}
       <Dialog
         open={isDialogOpen}
         onOpenChange={(open) => {
-          if (!open) {
-            handleCloseDialog();
-          } else {
-            setIsDialogOpen(true);
-          }
+          if (!open) handleCloseDialog();
+          else setIsDialogOpen(true);
         }}
         title={editingMember ? 'Edit Team Member' : 'Add Team Member'}
         footer={
@@ -803,14 +760,6 @@ export default function TeamPage() {
               <code className="rounded bg-background px-1 py-0.5 text-xs">&lt;p&gt;</code>, etc.
             </div>
           </div>
-          {/* Draft restore prompt - only show if we explicitly want to show it */}
-          {showDraftPrompt && hasDraft && draftMeta && (
-            <DraftRestorePrompt
-              savedAt={draftMeta.savedAt}
-              onRestore={handleRestoreDraft}
-              onDismiss={handleDismissDraft}
-            />
-          )}
 
           <div className="grid gap-6 md:grid-cols-[1fr,1.5fr]">
             <div className="space-y-2">
