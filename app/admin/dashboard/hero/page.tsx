@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 import { Card } from '@/app/components/ui/card';
 import Loading from '@/app/components/ui/loading';
 import { Button } from '@/app/components/ui/button';
@@ -14,6 +15,8 @@ import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
 import { HtmlTips } from '@/app/components/ui/html-tips';
 import { MediaPreview } from '@/app/components/ui/media-preview';
+import { useDraftPersistence } from '@/app/lib/use-draft-persistence';
+import { DraftRestorePrompt } from '@/app/components/ui/draft-restore-prompt';
 
 type HeroSection = {
   id: number;
@@ -39,6 +42,9 @@ type HeroImage = {
   displayOrder: number;
 };
 
+type TickerFormData = { text: string; displayOrder: number };
+type HeroImageFormData = { image: string; alt: string; displayOrder: number };
+
 export default function HeroManagementPage() {
   const toast = useToast();
   const { confirm } = useConfirm();
@@ -63,17 +69,70 @@ export default function HeroManagementPage() {
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTickerItem, setEditingTickerItem] = useState<HeroTickerItem | null>(null);
-  const [formText, setFormText] = useState('');
-  const [formDisplayOrder, setFormDisplayOrder] = useState(0);
+  const [tickerFormData, setTickerFormData] = useState<TickerFormData>({ text: '', displayOrder: 0 });
   const [savingTickerItem, setSavingTickerItem] = useState(false);
 
   // Hero Images dialog state
   const [isHeroImageDialogOpen, setIsHeroImageDialogOpen] = useState(false);
   const [editingHeroImage, setEditingHeroImage] = useState<HeroImage | null>(null);
-  const [heroImageFormImage, setHeroImageFormImage] = useState('');
-  const [heroImageFormAlt, setHeroImageFormAlt] = useState('');
-  const [heroImageFormDisplayOrder, setHeroImageFormDisplayOrder] = useState(0);
+  const [heroImageFormData, setHeroImageFormData] = useState<HeroImageFormData>({
+    image: '',
+    alt: '',
+    displayOrder: 0,
+  });
   const [savingHeroImage, setSavingHeroImage] = useState(false);
+
+  const pathname = usePathname();
+  const tickerDraftId = editingTickerItem?.id ?? 'new';
+  const { showRestorePrompt: showTickerRestorePrompt, draftMeta: tickerDraftMeta, saveDraft: saveTickerDraft, clearDraft: clearTickerDraft, restoreDraft: restoreTickerDraft, dismissDraft: dismissTickerDraft } = useDraftPersistence<TickerFormData>({
+    entity: 'hero-ticker',
+    id: tickerDraftId,
+    route: pathname,
+    debounceMs: 500,
+  });
+  const heroImageDraftId = editingHeroImage?.id ?? 'new';
+  const { showRestorePrompt: showHeroImageRestorePrompt, draftMeta: heroImageDraftMeta, saveDraft: saveHeroImageDraft, clearDraft: clearHeroImageDraft, restoreDraft: restoreHeroImageDraft, dismissDraft: dismissHeroImageDraft } = useDraftPersistence<HeroImageFormData>({
+    entity: 'hero-image',
+    id: heroImageDraftId,
+    route: pathname,
+    debounceMs: 500,
+  });
+
+  const handleTickerFormChange = useCallback((updates: Partial<TickerFormData>) => {
+    setTickerFormData(prev => {
+      const newData = { ...prev, ...updates };
+      if (isDialogOpen && newData.text?.trim()) saveTickerDraft(newData);
+      return newData;
+    });
+  }, [isDialogOpen, saveTickerDraft]);
+  const handleRestoreTickerDraft = useCallback(() => {
+    const restored = restoreTickerDraft();
+    if (restored) {
+      setTickerFormData(restored);
+      setEditingTickerItem(null);
+      if (!isDialogOpen) setIsDialogOpen(true);
+      toast.success('Draft restored');
+    }
+  }, [restoreTickerDraft, toast, isDialogOpen]);
+  const handleDismissTickerDraft = useCallback(() => dismissTickerDraft(), [dismissTickerDraft]);
+
+  const handleHeroImageFormChange = useCallback((updates: Partial<HeroImageFormData>) => {
+    setHeroImageFormData(prev => {
+      const newData = { ...prev, ...updates };
+      if (isHeroImageDialogOpen && (newData.image?.trim() || newData.alt?.trim())) saveHeroImageDraft(newData);
+      return newData;
+    });
+  }, [isHeroImageDialogOpen, saveHeroImageDraft]);
+  const handleRestoreHeroImageDraft = useCallback(() => {
+    const restored = restoreHeroImageDraft();
+    if (restored) {
+      setHeroImageFormData(restored);
+      setEditingHeroImage(null);
+      if (!isHeroImageDialogOpen) setIsHeroImageDialogOpen(true);
+      toast.success('Draft restored');
+    }
+  }, [restoreHeroImageDraft, toast, isHeroImageDialogOpen]);
+  const handleDismissHeroImageDraft = useCallback(() => dismissHeroImageDraft(), [dismissHeroImageDraft]);
 
   // Blob management state
   const [blobs, setBlobs] = useState<Array<{
@@ -245,28 +304,25 @@ export default function HeroManagementPage() {
       : 0;
     
     setEditingTickerItem(null);
-    setFormText('');
-    setFormDisplayOrder(newOrder);
+    setTickerFormData({ text: '', displayOrder: newOrder });
     setIsDialogOpen(true);
   };
 
   const handleOpenEditDialog = (item: HeroTickerItem) => {
     setEditingTickerItem(item);
-    setFormText(item.text);
-    setFormDisplayOrder(item.displayOrder);
+    setTickerFormData({ text: item.text, displayOrder: item.displayOrder });
     setIsDialogOpen(true);
   };
 
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setEditingTickerItem(null);
-    setFormText('');
-    setFormDisplayOrder(0);
+    setTickerFormData({ text: '', displayOrder: 0 });
   };
 
   const handleSaveTickerItem = async () => {
     // Validation
-    if (!formText.trim()) {
+    if (!tickerFormData.text.trim()) {
       toast.error('Please enter announcement text');
       return;
     }
@@ -283,12 +339,13 @@ export default function HeroManagementPage() {
             'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({
-            text: formText,
-            displayOrder: formDisplayOrder,
+            text: tickerFormData.text,
+            displayOrder: tickerFormData.displayOrder,
           }),
         });
 
         if (response.ok) {
+          clearTickerDraft();
           toast.success('Announcement text updated successfully!');
           handleCloseDialog();
           fetchHeroTickerItems();
@@ -304,12 +361,13 @@ export default function HeroManagementPage() {
             'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({
-            text: formText,
-            displayOrder: formDisplayOrder,
+            text: tickerFormData.text,
+            displayOrder: tickerFormData.displayOrder,
           }),
         });
 
         if (response.ok) {
+          clearTickerDraft();
           toast.success('Announcement text added successfully!');
           handleCloseDialog();
           fetchHeroTickerItems();
@@ -359,30 +417,24 @@ export default function HeroManagementPage() {
       : 0;
     
     setEditingHeroImage(null);
-    setHeroImageFormImage('');
-    setHeroImageFormAlt('');
-    setHeroImageFormDisplayOrder(newOrder);
+    setHeroImageFormData({ image: '', alt: '', displayOrder: newOrder });
     setIsHeroImageDialogOpen(true);
   };
 
   const handleOpenEditHeroImageDialog = (image: HeroImage) => {
     setEditingHeroImage(image);
-    setHeroImageFormImage(image.image);
-    setHeroImageFormAlt(image.alt);
-    setHeroImageFormDisplayOrder(image.displayOrder);
+    setHeroImageFormData({ image: image.image, alt: image.alt, displayOrder: image.displayOrder });
     setIsHeroImageDialogOpen(true);
   };
 
   const handleCloseHeroImageDialog = () => {
     setIsHeroImageDialogOpen(false);
     setEditingHeroImage(null);
-    setHeroImageFormImage('');
-    setHeroImageFormAlt('');
-    setHeroImageFormDisplayOrder(0);
+    setHeroImageFormData({ image: '', alt: '', displayOrder: 0 });
   };
 
   const handleSaveHeroImage = async () => {
-    if (!heroImageFormImage.trim()) {
+    if (!heroImageFormData.image.trim()) {
       toast.error('Please select an image');
       return;
     }
@@ -399,13 +451,14 @@ export default function HeroManagementPage() {
             'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({
-            image: heroImageFormImage,
-            alt: heroImageFormAlt || 'Hero image',
-            displayOrder: heroImageFormDisplayOrder,
+            image: heroImageFormData.image,
+            alt: heroImageFormData.alt || 'Hero image',
+            displayOrder: heroImageFormData.displayOrder,
           }),
         });
 
         if (response.ok) {
+          clearHeroImageDraft();
           toast.success('Hero image updated successfully!');
           handleCloseHeroImageDialog();
           await fetchHeroImages(); 
@@ -421,13 +474,14 @@ export default function HeroManagementPage() {
             'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({
-            image: heroImageFormImage,
-            alt: heroImageFormAlt || 'Hero image',
-            displayOrder: heroImageFormDisplayOrder,
+            image: heroImageFormData.image,
+            alt: heroImageFormData.alt || 'Hero image',
+            displayOrder: heroImageFormData.displayOrder,
           }),
         });
 
         if (response.ok) {
+          clearHeroImageDraft();
           toast.success('Hero image added successfully!');
           handleCloseHeroImageDialog();
           await fetchHeroImages(); 
@@ -708,6 +762,13 @@ export default function HeroManagementPage() {
           {/* Mode B: Hero Images */}
           {heroSection.useHeroImages && (
             <div className="space-y-8">
+              {!isHeroImageDialogOpen && showHeroImageRestorePrompt && heroImageDraftMeta && (
+                <DraftRestorePrompt
+                  savedAt={heroImageDraftMeta.savedAt}
+                  onRestore={handleRestoreHeroImageDraft}
+                  onDismiss={handleDismissHeroImageDraft}
+                />
+              )}
               {/* Background Image for Hero Images mode */}
               <div>
                 <h3 className="text-base font-medium text-foreground mb-2">Background Image</h3>
@@ -786,6 +847,13 @@ export default function HeroManagementPage() {
           </Button>
         </div>
         <div className="p-6">
+          {!isDialogOpen && showTickerRestorePrompt && tickerDraftMeta && (
+            <DraftRestorePrompt
+              savedAt={tickerDraftMeta.savedAt}
+              onRestore={handleRestoreTickerDraft}
+              onDismiss={handleDismissTickerDraft}
+            />
+          )}
           {heroTickerItems.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-sm text-muted-foreground">No announcement texts yet. Click "Add Text" to create one.</p>
@@ -852,14 +920,21 @@ export default function HeroManagementPage() {
         title={editingTickerItem ? 'Edit Text' : 'Add Text'}
       >
         <div className="space-y-4 mb-6">
+          {isDialogOpen && showTickerRestorePrompt && tickerDraftMeta && (
+            <DraftRestorePrompt
+              savedAt={tickerDraftMeta.savedAt}
+              onRestore={handleRestoreTickerDraft}
+              onDismiss={handleDismissTickerDraft}
+            />
+          )}
           <HtmlTips />
           <div className="space-y-2">
             <Label htmlFor="dialog-text">Announcement Text</Label>
             <Input
               id="dialog-text"
               type="text"
-              value={formText}
-              onChange={(e) => setFormText(e.target.value)}
+              value={tickerFormData.text}
+              onChange={(e) => handleTickerFormChange({ text: e.target.value })}
               placeholder="e.g., Cash is now available [try now](https://example.com)"
               required
             />
@@ -881,8 +956,8 @@ export default function HeroManagementPage() {
             <Input
               id="dialog-order"
               type="number"
-              value={formDisplayOrder}
-              onChange={(e) => setFormDisplayOrder(parseInt(e.target.value) || 0)}
+              value={tickerFormData.displayOrder}
+              onChange={(e) => handleTickerFormChange({ displayOrder: parseInt(e.target.value) || 0 })}
               placeholder="0"
             />
           </div>
@@ -912,11 +987,18 @@ export default function HeroManagementPage() {
         title={editingHeroImage ? 'Edit Hero Image' : 'Add Hero Image'}
       >
         <div className="space-y-4 mb-6">
+          {isHeroImageDialogOpen && showHeroImageRestorePrompt && heroImageDraftMeta && (
+            <DraftRestorePrompt
+              savedAt={heroImageDraftMeta.savedAt}
+              onRestore={handleRestoreHeroImageDraft}
+              onDismiss={handleDismissHeroImageDraft}
+            />
+          )}
           <div className="space-y-2">
             <Label htmlFor="hero-image-upload">Image</Label>
             <ImageUpload
-              value={heroImageFormImage}
-              onChange={(imageId) => setHeroImageFormImage(imageId)}
+              value={heroImageFormData.image}
+              onChange={(imageId) => handleHeroImageFormChange({ image: imageId })}
             />
             <p className="text-xs text-muted-foreground">
               Upload an image that will be displayed in the hero section
@@ -928,8 +1010,8 @@ export default function HeroManagementPage() {
             <Input
               id="hero-image-alt"
               type="text"
-              value={heroImageFormAlt}
-              onChange={(e) => setHeroImageFormAlt(e.target.value)}
+              value={heroImageFormData.alt}
+              onChange={(e) => handleHeroImageFormChange({ alt: e.target.value })}
               placeholder="Hero image description"
             />
             <p className="text-xs text-muted-foreground">
@@ -942,8 +1024,8 @@ export default function HeroManagementPage() {
             <Input
               id="hero-image-order"
               type="number"
-              value={heroImageFormDisplayOrder}
-              onChange={(e) => setHeroImageFormDisplayOrder(parseInt(e.target.value) || 0)}
+              value={heroImageFormData.displayOrder}
+              onChange={(e) => handleHeroImageFormChange({ displayOrder: parseInt(e.target.value) || 0 })}
               placeholder="0"
             />
             <p className="text-xs text-muted-foreground">

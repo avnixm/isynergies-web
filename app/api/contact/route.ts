@@ -3,13 +3,25 @@ import nodemailer from 'nodemailer';
 import { db } from '@/app/db';
 import { contactMessages, siteSettings } from '@/app/db/schema';
 import { getLogoImageSrc } from '@/app/lib/resolve-image-src';
+import { checkRateLimit, getRateLimitKey } from '@/app/lib/rate-limit';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 
+const CONTACT_LIMIT = 5;
+const CONTACT_WINDOW_MS = 60 * 1000;
 
 export async function POST(request: Request) {
   try {
+    const key = getRateLimitKey(request, 'contact');
+    const rate = checkRateLimit(key, CONTACT_LIMIT, CONTACT_WINDOW_MS);
+    if (!rate.ok) {
+      return NextResponse.json(
+        { error: 'Too many submissions. Please try again in a minute.' },
+        { status: 429, headers: { 'Retry-After': '60' } }
+      );
+    }
+
     const body = await request.json();
     const { name, email, contactNo, message, projectId, projectTitle, wantsDemo, demoMonth, demoDay, demoYear, demoTime } = body;
 

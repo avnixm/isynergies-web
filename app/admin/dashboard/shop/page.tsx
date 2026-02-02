@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 import { Plus, Trash2, X, Pencil, Info } from 'lucide-react';
 import { StickyFooter } from '../_components/sticky-footer';
 import Loading from '@/app/components/ui/loading';
@@ -15,6 +16,8 @@ import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
 import { HtmlTips } from '@/app/components/ui/html-tips';
 import Image from 'next/image';
+import { useDraftPersistence } from '@/app/lib/use-draft-persistence';
+import { DraftRestorePrompt } from '@/app/components/ui/draft-restore-prompt';
 
 type ShopContent = {
   id?: number;
@@ -71,6 +74,56 @@ export default function ShopPage() {
     image: '',
     displayOrder: 0,
   });
+
+  const pathname = usePathname();
+  const categoryDraftId = editingCategory?.id ?? 'new';
+  const dealerDraftId = editingDealer?.id ?? 'new';
+  const categoryDraft = useDraftPersistence<Omit<ShopCategory, 'id'>>({
+    entity: 'shop-category',
+    id: categoryDraftId,
+    route: pathname,
+    debounceMs: 500,
+  });
+  const dealerDraft = useDraftPersistence<Omit<AuthorizedDealer, 'id'>>({
+    entity: 'shop-dealer',
+    id: dealerDraftId,
+    route: pathname,
+    debounceMs: 500,
+  });
+
+  const handleCategoryFormChange = useCallback((updates: Partial<Omit<ShopCategory, 'id'>>) => {
+    setCategoryFormData(prev => {
+      const newData = { ...prev, ...updates };
+      if (isDialogOpen && (newData.name?.trim() || newData.text?.trim())) categoryDraft.saveDraft(newData);
+      return newData;
+    });
+  }, [isDialogOpen, categoryDraft]);
+  const handleDealerFormChange = useCallback((updates: Partial<Omit<AuthorizedDealer, 'id'>>) => {
+    setDealerFormData(prev => {
+      const newData = { ...prev, ...updates };
+      if (isDealerDialogOpen && newData.name?.trim()) dealerDraft.saveDraft(newData);
+      return newData;
+    });
+  }, [isDealerDialogOpen, dealerDraft]);
+
+  const handleRestoreCategoryDraft = useCallback(() => {
+    const restored = categoryDraft.restoreDraft();
+    if (restored) {
+      setCategoryFormData(restored);
+      setEditingCategory(null);
+      if (!isDialogOpen) setIsDialogOpen(true);
+      toast.success('Draft restored');
+    }
+  }, [categoryDraft, toast, isDialogOpen]);
+  const handleRestoreDealerDraft = useCallback(() => {
+    const restored = dealerDraft.restoreDraft();
+    if (restored) {
+      setDealerFormData(restored);
+      setEditingDealer(null);
+      if (!isDealerDialogOpen) setIsDealerDialogOpen(true);
+      toast.success('Draft restored');
+    }
+  }, [dealerDraft, toast, isDealerDialogOpen]);
 
   useEffect(() => {
     fetchShopData();
@@ -195,6 +248,7 @@ export default function ShopPage() {
       });
 
       if (response.ok) {
+        categoryDraft.clearDraft();
         toast.success(editingCategory ? 'Category updated successfully!' : 'Category added successfully!');
         handleCloseCategoryDialog();
         await fetchShopData();
@@ -298,6 +352,7 @@ export default function ShopPage() {
       });
 
       if (response.ok) {
+        dealerDraft.clearDraft();
         toast.success(editingDealer ? 'Dealer updated successfully!' : 'Dealer added successfully!');
         handleCloseDealerDialog();
         await fetchShopData();
@@ -668,19 +723,29 @@ export default function ShopPage() {
       {}
       <StickyFooter formId="shop-form" saving={saving} />
 
+      {!isDealerDialogOpen && dealerDraft.showRestorePrompt && dealerDraft.draftMeta && (
+        <DraftRestorePrompt savedAt={dealerDraft.draftMeta.savedAt} onRestore={handleRestoreDealerDraft} onDismiss={() => dealerDraft.dismissDraft()} />
+      )}
+      {!isDialogOpen && categoryDraft.showRestorePrompt && categoryDraft.draftMeta && (
+        <DraftRestorePrompt savedAt={categoryDraft.draftMeta.savedAt} onRestore={handleRestoreCategoryDraft} onDismiss={() => categoryDraft.dismissDraft()} />
+      )}
+
       {}
       <Dialog
         open={isDealerDialogOpen}
-        onOpenChange={setIsDealerDialogOpen}
+        onOpenChange={(open) => { if (!open) handleCloseDealerDialog(); else setIsDealerDialogOpen(true); }}
         title={editingDealer ? 'Edit Authorized Dealer' : 'Add Authorized Dealer'}
       >
         <div className="space-y-4 mb-6">
+          {dealerDraft.showRestorePrompt && dealerDraft.draftMeta && (
+            <DraftRestorePrompt savedAt={dealerDraft.draftMeta.savedAt} onRestore={handleRestoreDealerDraft} onDismiss={() => dealerDraft.dismissDraft()} />
+          )}
           <div className="space-y-2">
             <Label htmlFor="dialog-dealer-name">Brand Name</Label>
             <Input
               id="dialog-dealer-name"
               value={dealerFormData.name}
-              onChange={(e) => setDealerFormData({ ...dealerFormData, name: e.target.value })}
+              onChange={(e) => handleDealerFormChange({ name: e.target.value })}
               placeholder="e.g., EPSON, ASUS, Samsung"
               required
             />
@@ -690,7 +755,7 @@ export default function ShopPage() {
             <Label htmlFor="dialog-dealer-image">Logo Image</Label>
             <ImageUpload
               value={dealerFormData.image}
-              onChange={(url) => setDealerFormData({ ...dealerFormData, image: url })}
+              onChange={(url) => handleDealerFormChange({ image: url })}
             />
             {dealerFormData.image && (
               <div className="relative h-32 w-full rounded-md overflow-hidden border border-gray-200 bg-white flex items-center justify-center p-4">
@@ -714,7 +779,7 @@ export default function ShopPage() {
               id="dialog-dealer-order"
               type="number"
               value={dealerFormData.displayOrder}
-              onChange={(e) => setDealerFormData({ ...dealerFormData, displayOrder: parseInt(e.target.value) || 0 })}
+              onChange={(e) => handleDealerFormChange({ displayOrder: parseInt(e.target.value) || 0 })}
               placeholder="0"
             />
           </div>
@@ -740,10 +805,13 @@ export default function ShopPage() {
       {}
       <Dialog
         open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
+        onOpenChange={(open) => { if (!open) handleCloseCategoryDialog(); else setIsDialogOpen(true); }}
         title={editingCategory ? 'Edit Category' : 'Add Category'}
       >
         <div className="space-y-4 mb-6">
+          {categoryDraft.showRestorePrompt && categoryDraft.draftMeta && (
+            <DraftRestorePrompt savedAt={categoryDraft.draftMeta.savedAt} onRestore={handleRestoreCategoryDraft} onDismiss={() => categoryDraft.dismissDraft()} />
+          )}
           {}
           <div className="flex items-start gap-2 rounded-lg bg-muted/50 border border-border p-2">
             <Info className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
@@ -764,7 +832,7 @@ export default function ShopPage() {
             <Input
               id="dialog-category-name"
               value={categoryFormData.name}
-              onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
+              onChange={(e) => handleCategoryFormChange({ name: e.target.value })}
               placeholder="e.g., Laptops"
               required
             />
@@ -775,7 +843,7 @@ export default function ShopPage() {
             <Input
               id="dialog-category-text"
               value={categoryFormData.text}
-              onChange={(e) => setCategoryFormData({ ...categoryFormData, text: e.target.value.toUpperCase() })}
+              onChange={(e) => handleCategoryFormChange({ text: e.target.value.toUpperCase() })}
               placeholder="e.g., LAPTOPS"
               required
             />
@@ -786,7 +854,7 @@ export default function ShopPage() {
             <Label htmlFor="dialog-category-image">Background Image</Label>
             <ImageUpload
               value={categoryFormData.image}
-              onChange={(url) => setCategoryFormData({ ...categoryFormData, image: url })}
+              onChange={(url) => handleCategoryFormChange({ image: url })}
             />
           </div>
 
@@ -796,7 +864,7 @@ export default function ShopPage() {
               id="dialog-category-order"
               type="number"
               value={categoryFormData.displayOrder}
-              onChange={(e) => setCategoryFormData({ ...categoryFormData, displayOrder: parseInt(e.target.value) || 0 })}
+              onChange={(e) => handleCategoryFormChange({ displayOrder: parseInt(e.target.value) || 0 })}
               placeholder="0"
             />
           </div>

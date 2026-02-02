@@ -1,6 +1,7 @@
                                                                                                                                                                                                                                                                                                                                                               'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
 import Loading from '@/app/components/ui/loading';
 import { Button } from '@/app/components/ui/button';
@@ -14,6 +15,8 @@ import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
 import { HtmlTips } from '@/app/components/ui/html-tips';
 import Image from 'next/image';
+import { useDraftPersistence } from '@/app/lib/use-draft-persistence';
+import { DraftRestorePrompt } from '@/app/components/ui/draft-restore-prompt';
 
 
 interface MediaPreviewFrameProps {
@@ -100,9 +103,13 @@ type FeaturedAppFeature = {
   displayOrder: number;
 };
 
+type CarouselFormData = { image: string; alt: string; mediaType: string; displayOrder: number };
+type FeatureFormData = { iconImage: string; label: string; displayOrder: number };
+
 export default function FeaturedAppPage() {
   const toast = useToast();
   const { confirm } = useConfirm();
+  const pathname = usePathname();
   const [content, setContent] = useState<FeaturedAppContent>({
     headerImage: '',
     itemType: 'app',
@@ -128,7 +135,7 @@ export default function FeaturedAppPage() {
   
   const [isCarouselDialogOpen, setIsCarouselDialogOpen] = useState(false);
   const [editingCarouselImage, setEditingCarouselImage] = useState<FeaturedAppCarouselImage | null>(null);
-  const [formCarouselImage, setFormCarouselImage] = useState({
+  const [formCarouselImage, setFormCarouselImage] = useState<CarouselFormData>({
     image: '',
     alt: '',
     mediaType: 'image',
@@ -140,13 +147,64 @@ export default function FeaturedAppPage() {
   // Feature Dialog states
   const [isFeatureDialogOpen, setIsFeatureDialogOpen] = useState(false);
   const [editingFeature, setEditingFeature] = useState<FeaturedAppFeature | null>(null);
-  const [formFeature, setFormFeature] = useState({
+  const [formFeature, setFormFeature] = useState<FeatureFormData>({
     iconImage: '',
     label: '',
     displayOrder: 0,
   });
   const [savingFeature, setSavingFeature] = useState(false);
   const [featureOrderError, setFeatureOrderError] = useState<string>('');
+
+  const carouselDraftId = editingCarouselImage?.id ?? 'new';
+  const { showRestorePrompt: showCarouselRestorePrompt, draftMeta: carouselDraftMeta, saveDraft: saveCarouselDraft, clearDraft: clearCarouselDraft, restoreDraft: restoreCarouselDraft, dismissDraft: dismissCarouselDraft } = useDraftPersistence<CarouselFormData>({
+    entity: 'featured-app-carousel',
+    id: carouselDraftId,
+    route: pathname,
+    debounceMs: 500,
+  });
+  const featureDraftId = editingFeature?.id ?? 'new';
+  const { showRestorePrompt: showFeatureRestorePrompt, draftMeta: featureDraftMeta, saveDraft: saveFeatureDraft, clearDraft: clearFeatureDraft, restoreDraft: restoreFeatureDraft, dismissDraft: dismissFeatureDraft } = useDraftPersistence<FeatureFormData>({
+    entity: 'featured-app-feature',
+    id: featureDraftId,
+    route: pathname,
+    debounceMs: 500,
+  });
+
+  const handleCarouselFormChange = useCallback((updates: Partial<CarouselFormData>) => {
+    setFormCarouselImage(prev => {
+      const newData = { ...prev, ...updates };
+      if (isCarouselDialogOpen && (newData.image?.trim() || newData.alt?.trim())) saveCarouselDraft(newData);
+      return newData;
+    });
+  }, [isCarouselDialogOpen, saveCarouselDraft]);
+  const handleRestoreCarouselDraft = useCallback(() => {
+    const restored = restoreCarouselDraft();
+    if (restored) {
+      setFormCarouselImage(restored);
+      setEditingCarouselImage(null);
+      if (!isCarouselDialogOpen) setIsCarouselDialogOpen(true);
+      toast.success('Draft restored');
+    }
+  }, [restoreCarouselDraft, toast, isCarouselDialogOpen]);
+  const handleDismissCarouselDraft = useCallback(() => dismissCarouselDraft(), [dismissCarouselDraft]);
+
+  const handleFeatureFormChange = useCallback((updates: Partial<FeatureFormData>) => {
+    setFormFeature(prev => {
+      const newData = { ...prev, ...updates };
+      if (isFeatureDialogOpen && (newData.iconImage?.trim() || newData.label?.trim())) saveFeatureDraft(newData);
+      return newData;
+    });
+  }, [isFeatureDialogOpen, saveFeatureDraft]);
+  const handleRestoreFeatureDraft = useCallback(() => {
+    const restored = restoreFeatureDraft();
+    if (restored) {
+      setFormFeature(restored);
+      setEditingFeature(null);
+      if (!isFeatureDialogOpen) setIsFeatureDialogOpen(true);
+      toast.success('Draft restored');
+    }
+  }, [restoreFeatureDraft, toast, isFeatureDialogOpen]);
+  const handleDismissFeatureDraft = useCallback(() => dismissFeatureDraft(), [dismissFeatureDraft]);
 
   useEffect(() => {
     fetchContent();
@@ -340,6 +398,7 @@ export default function FeaturedAppPage() {
       });
 
       if (response.ok) {
+        clearCarouselDraft();
         const result = await response.json();
         console.log('Save response:', result);
         toast.success(editingCarouselImage ? 'Carousel item updated successfully!' : 'Carousel item added successfully!');
@@ -468,6 +527,7 @@ export default function FeaturedAppPage() {
       });
 
       if (response.ok) {
+        clearFeatureDraft();
         toast.success(editingFeature ? 'Feature updated successfully!' : 'Feature added successfully!');
         handleCloseFeatureDialog();
         fetchFeatures();
@@ -838,6 +898,13 @@ export default function FeaturedAppPage() {
           </Button>
         </div>
         <div className="p-6 pb-8">
+          {!isCarouselDialogOpen && showCarouselRestorePrompt && carouselDraftMeta && (
+            <DraftRestorePrompt
+              savedAt={carouselDraftMeta.savedAt}
+              onRestore={handleRestoreCarouselDraft}
+              onDismiss={handleDismissCarouselDraft}
+            />
+          )}
           {carouselImages.length === 0 ? (
             <div className="text-center py-12">
               <div className="mx-auto mb-4 h-12 w-12 text-muted-foreground">
@@ -947,6 +1014,13 @@ export default function FeaturedAppPage() {
           </Button>
         </div>
         <div className="p-6 pb-8">
+          {!isFeatureDialogOpen && showFeatureRestorePrompt && featureDraftMeta && (
+            <DraftRestorePrompt
+              savedAt={featureDraftMeta.savedAt}
+              onRestore={handleRestoreFeatureDraft}
+              onDismiss={handleDismissFeatureDraft}
+            />
+          )}
           {features.length === 0 ? (
             <div className="text-center py-12">
               <div className="mx-auto mb-4 h-12 w-12 text-muted-foreground">
@@ -1034,11 +1108,18 @@ export default function FeaturedAppPage() {
         title={editingFeature ? 'Edit Feature' : 'Add Feature'}
       >
         <div className="space-y-4 mb-6">
+          {isFeatureDialogOpen && showFeatureRestorePrompt && featureDraftMeta && (
+            <DraftRestorePrompt
+              savedAt={featureDraftMeta.savedAt}
+              onRestore={handleRestoreFeatureDraft}
+              onDismiss={handleDismissFeatureDraft}
+            />
+          )}
           <div className="space-y-2">
             <Label htmlFor="feature-icon-upload">Icon Image</Label>
             <ImageUpload
               value={formFeature.iconImage}
-              onChange={(imageId) => setFormFeature({ ...formFeature, iconImage: imageId })}
+              onChange={(imageId) => handleFeatureFormChange({ iconImage: imageId })}
             />
           </div>
           <div className="space-y-2">
@@ -1046,7 +1127,7 @@ export default function FeaturedAppPage() {
             <Input
               id="feature-label"
               value={formFeature.label}
-              onChange={(e) => setFormFeature({ ...formFeature, label: e.target.value })}
+              onChange={(e) => handleFeatureFormChange({ label: e.target.value })}
               placeholder="Pay Bills"
             />
           </div>
@@ -1056,7 +1137,7 @@ export default function FeaturedAppPage() {
               id="feature-order"
               type="number"
               value={formFeature.displayOrder}
-              onChange={(e) => setFormFeature({ ...formFeature, displayOrder: parseInt(e.target.value) || 0 })}
+              onChange={(e) => handleFeatureFormChange({ displayOrder: parseInt(e.target.value) || 0 })}
               placeholder="0"
             />
             {featureOrderError && (
@@ -1089,7 +1170,13 @@ export default function FeaturedAppPage() {
         title={editingCarouselImage ? 'Edit Carousel Media' : 'Add Carousel Media'}
       >
         <div className="space-y-4 mb-6">
-          {}
+          {isCarouselDialogOpen && showCarouselRestorePrompt && carouselDraftMeta && (
+            <DraftRestorePrompt
+              savedAt={carouselDraftMeta.savedAt}
+              onRestore={handleRestoreCarouselDraft}
+              onDismiss={handleDismissCarouselDraft}
+            />
+          )}
           <div className="flex items-start gap-2 rounded-lg bg-muted/50 border border-border p-2">
             <Info className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
             <div className="text-xs text-muted-foreground leading-relaxed">
@@ -1109,7 +1196,7 @@ export default function FeaturedAppPage() {
             <select
               id="carousel-media-type"
               value={formCarouselImage.mediaType}
-              onChange={(e) => setFormCarouselImage({ ...formCarouselImage, mediaType: e.target.value })}
+              onChange={(e) => handleCarouselFormChange({ mediaType: e.target.value })}
               className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               <option value="image">Image</option>
@@ -1120,10 +1207,7 @@ export default function FeaturedAppPage() {
             <Label htmlFor="carousel-image-upload">{formCarouselImage.mediaType === 'video' ? 'Video' : 'Image'}</Label>
             <ImageUpload
               value={formCarouselImage.image}
-              onChange={(imageId) => {
-                console.log(`${formCarouselImage.mediaType === 'video' ? 'Video' : 'Image'} ID changed:`, imageId);
-                setFormCarouselImage({ ...formCarouselImage, image: imageId });
-              }}
+              onChange={(imageId) => handleCarouselFormChange({ image: imageId })}
               acceptVideo={formCarouselImage.mediaType === 'video'}
               mediaType={formCarouselImage.mediaType === 'video' ? 'video' : 'image'}
             />
@@ -1134,7 +1218,7 @@ export default function FeaturedAppPage() {
               id="carousel-image-alt"
               type="text"
               value={formCarouselImage.alt}
-              onChange={(e) => setFormCarouselImage({ ...formCarouselImage, alt: e.target.value })}
+              onChange={(e) => handleCarouselFormChange({ alt: e.target.value })}
               placeholder={formCarouselImage.mediaType === 'video' ? 'Featured app carousel video' : 'Featured app carousel image'}
             />
           </div>
@@ -1144,7 +1228,7 @@ export default function FeaturedAppPage() {
               id="carousel-image-order"
               type="number"
               value={formCarouselImage.displayOrder}
-              onChange={(e) => setFormCarouselImage({ ...formCarouselImage, displayOrder: parseInt(e.target.value) || 0 })}
+              onChange={(e) => handleCarouselFormChange({ displayOrder: parseInt(e.target.value) || 0 })}
               placeholder="0"
             />
             {carouselOrderError && (

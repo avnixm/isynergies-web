@@ -36,8 +36,10 @@ export type UseDraftPersistenceOptions<T> = {
 };
 
 export type UseDraftPersistenceReturn<T> = {
-  /** Whether a restorable draft exists */
+  /** Whether a restorable draft exists (data in memory or storage) */
   hasDraft: boolean;
+  /** True only when a draft was loaded from storage (e.g. after closing and reopening). Use this to show the restore prompt so it doesn't appear while typing. */
+  showRestorePrompt: boolean;
   /** The draft data if available */
   draftData: T | null;
   /** Draft metadata */
@@ -81,6 +83,8 @@ export function useDraftPersistence<T extends Record<string, unknown>>(
   } = options;
 
   const [hasDraft, setHasDraft] = useState(false);
+  /** Only true when we loaded a draft from storage (not when user is typing). Used to show restore prompt only after reopen. */
+  const [showRestorePrompt, setShowRestorePrompt] = useState(false);
   const [draftData, setDraftData] = useState<T | null>(null);
   const [draftMeta, setDraftMeta] = useState<DraftMeta | null>(null);
   const [isDirty, setDirty] = useState(false);
@@ -124,6 +128,7 @@ export function useDraftPersistence<T extends Record<string, unknown>>(
         });
         
         setHasDraft(true);
+        setShowRestorePrompt(true); // Only show banner when we loaded from storage (after reopen)
         setDraftData(parsed.data);
         setDraftMeta(parsed.meta);
       }
@@ -156,7 +161,7 @@ export function useDraftPersistence<T extends Record<string, unknown>>(
         localStorage.setItem(storageKey, JSON.stringify(draft));
         draftLog('Draft saved', { entity, id });
         
-        // Update local state
+        // Update local state (do NOT set showRestorePrompt - only show banner when loaded from storage on reopen)
         setHasDraft(true);
         setDraftData(data);
         setDraftMeta(draft.meta);
@@ -184,6 +189,7 @@ export function useDraftPersistence<T extends Record<string, unknown>>(
     }
 
     setHasDraft(false);
+    setShowRestorePrompt(false);
     setDraftData(null);
     setDraftMeta(null);
     setDirty(false);
@@ -192,7 +198,7 @@ export function useDraftPersistence<T extends Record<string, unknown>>(
   // Restore draft
   const restoreDraft = useCallback((): T | null => {
     draftLog('Draft restored', { entity, id });
-    setHasDraft(false); // Hide the restore prompt
+    setShowRestorePrompt(false); // Hide the restore prompt
     setDirty(true);
     return draftData;
   }, [draftData, entity, id]);
@@ -214,6 +220,7 @@ export function useDraftPersistence<T extends Record<string, unknown>>(
 
   return {
     hasDraft,
+    showRestorePrompt,
     draftData,
     draftMeta,
     saveDraft,

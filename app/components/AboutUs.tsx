@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import Loading from './ui/loading';
+import { sanitizeHtml } from '@/app/lib/sanitize';
 
 type AboutUsContent = {
   title: string;
@@ -164,22 +165,22 @@ export default function AboutUs() {
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-5 sm:mb-6 md:mb-8">{content.title}</h2>
                 
                 <div className={`slide-right-content space-y-2 md:space-y-3 text-gray-900 text-[11px] sm:text-xs leading-relaxed font-normal ${isVisible ? 'animate' : ''}`}>
-                  {content.paragraph1 && <p dangerouslySetInnerHTML={{ __html: content.paragraph1 }} />}
-                  {content.paragraph2 && <p dangerouslySetInnerHTML={{ __html: content.paragraph2 }} />}
-                  {content.paragraph3 && <p dangerouslySetInnerHTML={{ __html: content.paragraph3 }} />}
-                  {content.paragraph4 && <p dangerouslySetInnerHTML={{ __html: content.paragraph4 }} />}
-                  {content.paragraph5 && <p dangerouslySetInnerHTML={{ __html: content.paragraph5 }} />}
+                  {content.paragraph1 && <p dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.paragraph1) }} />}
+                  {content.paragraph2 && <p dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.paragraph2) }} />}
+                  {content.paragraph3 && <p dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.paragraph3) }} />}
+                  {content.paragraph4 && <p dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.paragraph4) }} />}
+                  {content.paragraph5 && <p dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.paragraph5) }} />}
                 </div>
 
                 {}
                 <div className={`slide-up-content grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mt-4 md:mt-6 ${isVisible ? 'animate' : ''}`}>
                   <div className="bg-gray-50 rounded-xl p-4 md:p-5 border border-gray-200">
                     <h3 className="text-sm md:text-base font-bold text-gray-900 mb-1.5 md:mb-2">{content.missionTitle}</h3>
-                    <p className="text-gray-900 text-[10px] leading-relaxed font-normal" dangerouslySetInnerHTML={{ __html: content.missionText }} />
+                    <p className="text-gray-900 text-[10px] leading-relaxed font-normal" dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.missionText) }} />
                   </div>
                   <div className="bg-gray-50 rounded-xl p-4 md:p-5 border border-gray-200">
                     <h3 className="text-sm md:text-base font-bold text-gray-900 mb-1.5 md:mb-2">{content.visionTitle}</h3>
-                    <p className="text-gray-900 text-[10px] leading-relaxed font-normal" dangerouslySetInnerHTML={{ __html: content.visionText }} />
+                    <p className="text-gray-900 text-[10px] leading-relaxed font-normal" dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.visionText) }} />
                   </div>
                 </div>
               </div>

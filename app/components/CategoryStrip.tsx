@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { sanitizeHtml } from '@/app/lib/sanitize';
 
 type CategoryStripProps = {
   name: string;
@@ -64,7 +65,7 @@ export default function CategoryStrip({ name, text, image, className = '' }: Cat
               fontStretch: 'condensed',
               textShadow: image ? '4px 4px 12px rgba(0,0,0,0.9)' : '1px 1px 3px rgba(0,0,0,0.1)',
             }}
-            dangerouslySetInnerHTML={{ __html: text }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(text) }}
           />
         </div>
       </div>

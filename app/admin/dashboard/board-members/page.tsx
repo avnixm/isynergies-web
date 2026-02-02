@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 import { Pencil, Trash2, Plus, Info } from 'lucide-react';
 import { StickyFooter } from '../_components/sticky-footer';
 import Loading from '@/app/components/ui/loading';
@@ -15,6 +16,8 @@ import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
 import { HtmlTips } from '@/app/components/ui/html-tips';
 import { User } from 'lucide-react';
+import { useDraftPersistence } from '@/app/lib/use-draft-persistence';
+import { DraftRestorePrompt } from '@/app/components/ui/draft-restore-prompt';
 
 type BoardMember = {
   id: number;
@@ -25,9 +28,18 @@ type BoardMember = {
   displayOrder: number;
 };
 
+type BoardMemberFormData = {
+  firstName: string;
+  lastName: string;
+  position: string;
+  image: string;
+  displayOrder: number;
+};
+
 export default function BoardMembersPage() {
   const toast = useToast();
   const { confirm } = useConfirm();
+  const pathname = usePathname();
   const [members, setMembers] = useState<BoardMember[]>([]);
   const [footerText, setFooterText] = useState('');
   const [loading, setLoading] = useState(true);
@@ -36,13 +48,43 @@ export default function BoardMembersPage() {
   const [orderError, setOrderError] = useState<string>('');
   const [savingFooter, setSavingFooter] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<BoardMemberFormData>({
     firstName: '',
     lastName: '',
     position: '',
     image: '',
     displayOrder: 0,
   });
+
+  const draftEntityId = editingMember?.id ?? 'new';
+  const { showRestorePrompt, draftMeta, saveDraft, clearDraft, restoreDraft, dismissDraft } = useDraftPersistence<BoardMemberFormData>({
+    entity: 'board-member',
+    id: draftEntityId,
+    route: pathname,
+    debounceMs: 500,
+  });
+
+  const handleFormChange = useCallback((updates: Partial<BoardMemberFormData>) => {
+    setFormData(prev => {
+      const newData = { ...prev, ...updates };
+      if (isDialogOpen && (newData.firstName.trim() || newData.lastName.trim() || newData.position.trim())) {
+        saveDraft(newData);
+      }
+      return newData;
+    });
+  }, [isDialogOpen, saveDraft]);
+
+  const handleRestoreDraft = useCallback(() => {
+    const restored = restoreDraft();
+    if (restored) {
+      setFormData(restored);
+      setEditingMember(null);
+      if (!isDialogOpen) setIsDialogOpen(true);
+      toast.success('Draft restored');
+    }
+  }, [restoreDraft, toast, isDialogOpen]);
+
+  const handleDismissDraft = useCallback(() => dismissDraft(), [dismissDraft]);
 
   const usedOrders = members.filter(m => m.id !== editingMember?.id).map(m => m.displayOrder);
   const getNextAvailableOrder = () => {
@@ -177,6 +219,7 @@ export default function BoardMembersPage() {
       });
 
       if (response.ok) {
+        clearDraft();
         toast.success(editingMember ? 'Board member updated successfully!' : 'Board member added successfully!');
         handleCloseDialog();
         fetchMembers();
@@ -361,18 +404,26 @@ export default function BoardMembersPage() {
       {}
       <StickyFooter formId="board-members-form" saving={savingFooter} />
 
+      {!isDialogOpen && showRestorePrompt && draftMeta && (
+        <DraftRestorePrompt savedAt={draftMeta.savedAt} onRestore={handleRestoreDraft} onDismiss={handleDismissDraft} />
+      )}
+
       {}
       <Dialog
         open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
+        onOpenChange={(open) => { if (!open) handleCloseDialog(); else setIsDialogOpen(true); }}
         title={editingMember ? 'Edit Board Member' : 'Add Board Member'}
       >
         <div className="space-y-4 mb-6">
+          {showRestorePrompt && draftMeta && (
+            <DraftRestorePrompt savedAt={draftMeta.savedAt} onRestore={handleRestoreDraft} onDismiss={handleDismissDraft} />
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="dialog-image">Photo</Label>
             <ImageUpload
               value={formData.image}
-              onChange={(url) => setFormData({ ...formData, image: url })}
+              onChange={(url) => handleFormChange({ image: url })}
             />
           </div>
 
@@ -381,7 +432,7 @@ export default function BoardMembersPage() {
             <Input
               id="dialog-firstName"
               value={formData.firstName}
-              onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+              onChange={(e) => handleFormChange({ firstName: e.target.value })}
               placeholder="Enter first name"
               required
             />
@@ -392,7 +443,7 @@ export default function BoardMembersPage() {
             <Input
               id="dialog-lastName"
               value={formData.lastName}
-              onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+              onChange={(e) => handleFormChange({ lastName: e.target.value })}
               placeholder="Enter last name"
               required
             />
@@ -403,7 +454,7 @@ export default function BoardMembersPage() {
             <Input
               id="dialog-position"
               value={formData.position}
-              onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+              onChange={(e) => handleFormChange({ position: e.target.value })}
               placeholder="e.g., President"
               required
             />
@@ -416,7 +467,7 @@ export default function BoardMembersPage() {
               type="number"
               value={formData.displayOrder}
               onChange={(e) => {
-                setFormData({ ...formData, displayOrder: parseInt(e.target.value) || 0 });
+                handleFormChange({ displayOrder: parseInt(e.target.value) || 0 });
                 setOrderError('');
               }}
               placeholder="0"

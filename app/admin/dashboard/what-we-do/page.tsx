@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 import { Card } from '@/app/components/ui/card';
 import Loading from '@/app/components/ui/loading';
 import { Button } from '@/app/components/ui/button';
@@ -15,6 +16,8 @@ import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
 import { HtmlTips } from '@/app/components/ui/html-tips';
 import Image from 'next/image';
+import { useDraftPersistence } from '@/app/lib/use-draft-persistence';
+import { DraftRestorePrompt } from '@/app/components/ui/draft-restore-prompt';
 
 type WhatWeDoContent = {
   mainText: string;
@@ -28,9 +31,16 @@ type WhatWeDoImage = {
   displayOrder: number;
 };
 
+type ImageFormData = {
+  image: string;
+  alt: string;
+  displayOrder: number;
+};
+
 export default function WhatWeDoPage() {
   const toast = useToast();
   const { confirm } = useConfirm();
+  const pathname = usePathname();
   const [content, setContent] = useState<WhatWeDoContent>({
     mainText: '',
     tagline: '',
@@ -42,12 +52,42 @@ export default function WhatWeDoPage() {
   // Dialog states
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
   const [editingImage, setEditingImage] = useState<WhatWeDoImage | null>(null);
-  const [formImage, setFormImage] = useState({
+  const [formImage, setFormImage] = useState<ImageFormData>({
     image: '',
     alt: '',
     displayOrder: 0,
   });
   const [savingImage, setSavingImage] = useState(false);
+
+  const draftEntityId = editingImage?.id ?? 'new';
+  const { showRestorePrompt, draftMeta, saveDraft, clearDraft, restoreDraft, dismissDraft } = useDraftPersistence<ImageFormData>({
+    entity: 'what-we-do-image',
+    id: draftEntityId,
+    route: pathname,
+    debounceMs: 500,
+  });
+
+  const handleImageFormChange = useCallback((updates: Partial<ImageFormData>) => {
+    setFormImage(prev => {
+      const newData = { ...prev, ...updates };
+      if (isImageDialogOpen && (newData.image?.trim() || newData.alt?.trim())) {
+        saveDraft(newData);
+      }
+      return newData;
+    });
+  }, [isImageDialogOpen, saveDraft]);
+
+  const handleRestoreImageDraft = useCallback(() => {
+    const restored = restoreDraft();
+    if (restored) {
+      setFormImage(restored);
+      setEditingImage(null);
+      if (!isImageDialogOpen) setIsImageDialogOpen(true);
+      toast.success('Draft restored');
+    }
+  }, [restoreDraft, toast, isImageDialogOpen]);
+
+  const handleDismissImageDraft = useCallback(() => dismissDraft(), [dismissDraft]);
 
   useEffect(() => {
     fetchContent();
@@ -160,6 +200,7 @@ export default function WhatWeDoPage() {
       });
 
       if (response.ok) {
+        clearDraft();
         toast.success(editingImage ? 'Image updated successfully!' : 'Image added successfully!');
         handleCloseImageDialog();
         fetchImages();
@@ -305,6 +346,13 @@ export default function WhatWeDoPage() {
           </Button>
         </div>
         <div className="p-6">
+          {!isImageDialogOpen && showRestorePrompt && draftMeta && (
+            <DraftRestorePrompt
+              savedAt={draftMeta.savedAt}
+              onRestore={handleRestoreImageDraft}
+              onDismiss={handleDismissImageDraft}
+            />
+          )}
           {images.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-sm text-muted-foreground">No images yet. Click "Add Image" to create one.</p>
@@ -388,11 +436,18 @@ export default function WhatWeDoPage() {
         title={editingImage ? 'Edit Image' : 'Add Image'}
       >
         <div className="space-y-4 mb-6">
+          {isImageDialogOpen && showRestorePrompt && draftMeta && (
+            <DraftRestorePrompt
+              savedAt={draftMeta.savedAt}
+              onRestore={handleRestoreImageDraft}
+              onDismiss={handleDismissImageDraft}
+            />
+          )}
           <div className="space-y-2">
             <Label htmlFor="image-upload">Image</Label>
             <ImageUpload
               value={formImage.image}
-              onChange={(imageId) => setFormImage({ ...formImage, image: imageId })}
+              onChange={(imageId) => handleImageFormChange({ image: imageId })}
             />
           </div>
           <div className="space-y-2">
@@ -400,7 +455,7 @@ export default function WhatWeDoPage() {
             <Input
               id="image-alt"
               value={formImage.alt}
-              onChange={(e) => setFormImage({ ...formImage, alt: e.target.value })}
+              onChange={(e) => handleImageFormChange({ alt: e.target.value })}
               placeholder="What we do image"
             />
           </div>
@@ -410,7 +465,7 @@ export default function WhatWeDoPage() {
               id="image-order"
               type="number"
               value={formImage.displayOrder}
-              onChange={(e) => setFormImage({ ...formImage, displayOrder: parseInt(e.target.value) || 0 })}
+              onChange={(e) => handleImageFormChange({ displayOrder: parseInt(e.target.value) || 0 })}
               placeholder="0"
             />
           </div>

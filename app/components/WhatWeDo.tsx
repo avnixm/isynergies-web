@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import { Encode_Sans_Expanded } from 'next/font/google';
 import Loading from './ui/loading';
+import { sanitizeHtml } from '@/app/lib/sanitize';
 
 const encodeSansExpanded = Encode_Sans_Expanded({
   subsets: ['latin'],
@@ -202,11 +203,11 @@ export default function WhatWeDo() {
             >
               <div
                 className="text-[#2A2A2A] max-w-6xl mx-auto text-xs md:text-sm leading-relaxed font-sans text-center"
-                dangerouslySetInnerHTML={{ __html: content.mainText }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.mainText) }}
               />
               <p
                 className="text-[#2A2A2A] mt-4 max-w-6xl mx-auto text-xs md:text-sm leading-relaxed font-sans text-center"
-                dangerouslySetInnerHTML={{ __html: content.tagline }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.tagline) }}
               />
             </div>
           )}

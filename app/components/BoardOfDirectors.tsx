@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { Encode_Sans_Expanded } from 'next/font/google';
 import Loading from './ui/loading';
+import { sanitizeHtml } from '@/app/lib/sanitize';
 
 const encodeSansExpanded = Encode_Sans_Expanded({
   subsets: ['latin'],
@@ -178,9 +179,9 @@ export default function BoardOfDirectors() {
                       )}
                       {}
                       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0D1E66] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-2 sm:p-2.5 md:p-3 rounded-[16px] sm:rounded-[20px] md:rounded-[24px] z-10 touch-manipulation">
-                        <p className={`${encodeSansExpanded.className} text-white font-bold text-sm sm:text-base md:text-[18px] lg:text-[20px] mb-0.5 leading-tight`} dangerouslySetInnerHTML={{ __html: member.firstName }} />
-                        <p className={`${encodeSansExpanded.className} text-white font-bold text-sm sm:text-base md:text-[18px] lg:text-[20px] mb-0.5 leading-tight`} dangerouslySetInnerHTML={{ __html: member.lastName }} />
-                        <p className="text-white text-[9px] sm:text-[10px] font-normal uppercase" dangerouslySetInnerHTML={{ __html: member.position }} />
+                        <p className={`${encodeSansExpanded.className} text-white font-bold text-sm sm:text-base md:text-[18px] lg:text-[20px] mb-0.5 leading-tight`} dangerouslySetInnerHTML={{ __html: sanitizeHtml(member.firstName) }} />
+                        <p className={`${encodeSansExpanded.className} text-white font-bold text-sm sm:text-base md:text-[18px] lg:text-[20px] mb-0.5 leading-tight`} dangerouslySetInnerHTML={{ __html: sanitizeHtml(member.lastName) }} />
+                        <p className="text-white text-[9px] sm:text-[10px] font-normal uppercase" dangerouslySetInnerHTML={{ __html: sanitizeHtml(member.position) }} />
                       </div>
                     </div>
                   </div>
@@ -198,7 +199,7 @@ export default function BoardOfDirectors() {
             style={{
               animationDelay: isVisible ? '0.2s' : '0s',
             }}
-            dangerouslySetInnerHTML={{ __html: footerText || '' }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(footerText || '') }}
           />
         </div>
       </div>

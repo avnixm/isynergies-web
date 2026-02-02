@@ -1,9 +1,22 @@
 import bcrypt from 'bcryptjs';
 import { SignJWT, jwtVerify } from 'jose';
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-secret-key-change-this-in-production'
-);
+const DEFAULT_PLACEHOLDER = 'your-secret-key-change-this-in-production';
+
+function getJwtSecret(): Uint8Array {
+  const raw = process.env.JWT_SECRET;
+  if (process.env.NODE_ENV === 'production') {
+    if (!raw || raw.trim() === '' || raw === DEFAULT_PLACEHOLDER) {
+      throw new Error(
+        'JWT_SECRET must be set to a strong random value in production. ' +
+        'Do not use the default placeholder.'
+      );
+    }
+  }
+  return new TextEncoder().encode(raw || DEFAULT_PLACEHOLDER);
+}
+
+const JWT_SECRET = getJwtSecret();
 
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 10);

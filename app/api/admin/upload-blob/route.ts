@@ -40,7 +40,7 @@ export async function POST(request: Request) {
         
         
         const allowedTypes = [
-          'image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/svg+xml',
+          'image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp',
           'video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo'
         ];
         

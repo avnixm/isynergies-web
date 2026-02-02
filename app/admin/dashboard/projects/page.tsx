@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { Pencil, Trash2, Plus, Info } from 'lucide-react';
 import Loading from '@/app/components/ui/loading';
@@ -15,6 +16,8 @@ import { Dialog, DialogFooter } from '@/app/components/ui/dialog';
 import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
 import { HtmlTips } from '@/app/components/ui/html-tips';
+import { useDraftPersistence } from '@/app/lib/use-draft-persistence';
+import { DraftRestorePrompt } from '@/app/components/ui/draft-restore-prompt';
 
 type Project = {
   id: number;
@@ -31,9 +34,24 @@ type Project = {
   displayOrder: number;
 };
 
+type ProjectFormData = {
+  title: string;
+  year: string;
+  subtitle: string;
+  description: string;
+  category: string;
+  thumbnail: string;
+  screenshot1: string;
+  screenshot2: string;
+  screenshot3: string;
+  screenshot4: string;
+  displayOrder: number;
+};
+
 export default function ProjectsPage() {
   const toast = useToast();
   const { confirm } = useConfirm();
+  const pathname = usePathname();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -41,7 +59,7 @@ export default function ProjectsPage() {
   const [orderError, setOrderError] = useState<string>('');
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'all' | 'desktop' | 'mobile' | 'hardware'>('all');
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ProjectFormData>({
     title: '',
     year: new Date().getFullYear().toString(),
     subtitle: '',
@@ -54,6 +72,36 @@ export default function ProjectsPage() {
     screenshot4: '',
     displayOrder: 0,
   });
+
+  const draftEntityId = editingProject?.id ?? 'new';
+  const { showRestorePrompt, draftMeta, saveDraft, clearDraft, restoreDraft, dismissDraft } = useDraftPersistence<ProjectFormData>({
+    entity: 'project',
+    id: draftEntityId,
+    route: pathname,
+    debounceMs: 500,
+  });
+
+  const handleFormChange = useCallback((updates: Partial<ProjectFormData>) => {
+    setFormData(prev => {
+      const newData = { ...prev, ...updates };
+      if (isDialogOpen && (newData.title?.trim() || newData.subtitle?.trim() || newData.description?.trim())) {
+        saveDraft(newData);
+      }
+      return newData;
+    });
+  }, [isDialogOpen, saveDraft]);
+
+  const handleRestoreDraft = useCallback(() => {
+    const restored = restoreDraft();
+    if (restored) {
+      setFormData(restored);
+      setEditingProject(null);
+      if (!isDialogOpen) setIsDialogOpen(true);
+      toast.success('Draft restored');
+    }
+  }, [restoreDraft, toast, isDialogOpen]);
+
+  const handleDismissDraft = useCallback(() => dismissDraft(), [dismissDraft]);
 
   // Get all used order numbers (excluding the one being edited)
   const usedOrders = projects
@@ -173,6 +221,7 @@ export default function ProjectsPage() {
       });
 
       if (response.ok) {
+        clearDraft();
         toast.success(editingProject ? 'Project updated successfully!' : 'Project added successfully!');
         handleCloseDialog();
         fetchProjects();
@@ -414,14 +463,22 @@ export default function ProjectsPage() {
         </div>
       </Card>
 
+      {!isDialogOpen && showRestorePrompt && draftMeta && (
+        <DraftRestorePrompt savedAt={draftMeta.savedAt} onRestore={handleRestoreDraft} onDismiss={handleDismissDraft} />
+      )}
+
       {}
       <Dialog
         open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
+        onOpenChange={(open) => { if (!open) handleCloseDialog(); else setIsDialogOpen(true); }}
         title={editingProject ? 'Edit Project' : 'Add New Project'}
         maxWidth="2xl"
       >
-        <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 mb-6">
+        <div className="space-y-4 pr-2 mb-6">
+          {showRestorePrompt && draftMeta && (
+            <DraftRestorePrompt savedAt={draftMeta.savedAt} onRestore={handleRestoreDraft} onDismiss={handleDismissDraft} />
+          )}
+
           {}
           <div className="flex items-start gap-2 rounded-lg bg-muted/50 border border-border p-2">
             <Info className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
@@ -442,7 +499,7 @@ export default function ProjectsPage() {
             <Input
               id="dialog-title"
               value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onChange={(e) => handleFormChange({ title: e.target.value })}
               placeholder="eCompacct"
               required
             />
@@ -454,7 +511,7 @@ export default function ProjectsPage() {
               <Input
                 id="dialog-year"
                 value={formData.year}
-                onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                onChange={(e) => handleFormChange({ year: e.target.value })}
                 placeholder="2026"
                 required
               />
@@ -465,7 +522,7 @@ export default function ProjectsPage() {
               <Select
                 id="dialog-category"
                 value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                onChange={(e) => handleFormChange({ category: e.target.value })}
               >
                 <option value="desktop">Desktop</option>
                 <option value="mobile">Mobile</option>
@@ -479,7 +536,7 @@ export default function ProjectsPage() {
             <Input
               id="dialog-subtitle"
               value={formData.subtitle}
-              onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
+              onChange={(e) => handleFormChange({ subtitle: e.target.value })}
               placeholder="Lorem ipsum dolor sit amet"
               required
             />
@@ -490,7 +547,7 @@ export default function ProjectsPage() {
             <Textarea
               id="dialog-description"
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e) => handleFormChange({ description: e.target.value })}
               className="min-h-[100px]"
               placeholder="Project description..."
               required
@@ -501,7 +558,7 @@ export default function ProjectsPage() {
             <Label>Thumbnail</Label>
             <ImageUpload
               value={formData.thumbnail}
-              onChange={(url) => setFormData({ ...formData, thumbnail: url })}
+              onChange={(url) => handleFormChange({ thumbnail: url })}
             />
           </div>
 
@@ -510,19 +567,19 @@ export default function ProjectsPage() {
             <div className="space-y-3">
               <ImageUpload
                 value={formData.screenshot1}
-                onChange={(url) => setFormData({ ...formData, screenshot1: url })}
+                onChange={(url) => handleFormChange({ screenshot1: url })}
               />
               <ImageUpload
                 value={formData.screenshot2}
-                onChange={(url) => setFormData({ ...formData, screenshot2: url })}
+                onChange={(url) => handleFormChange({ screenshot2: url })}
               />
               <ImageUpload
                 value={formData.screenshot3}
-                onChange={(url) => setFormData({ ...formData, screenshot3: url })}
+                onChange={(url) => handleFormChange({ screenshot3: url })}
               />
               <ImageUpload
                 value={formData.screenshot4}
-                onChange={(url) => setFormData({ ...formData, screenshot4: url })}
+                onChange={(url) => handleFormChange({ screenshot4: url })}
               />
             </div>
           </div>
@@ -534,7 +591,7 @@ export default function ProjectsPage() {
               type="number"
               value={formData.displayOrder}
               onChange={(e) => {
-                setFormData({ ...formData, displayOrder: parseInt(e.target.value) || 0 });
+                handleFormChange({ displayOrder: parseInt(e.target.value) || 0 });
                 setOrderError('');
               }}
               className={orderError ? 'border-red-500' : ''}

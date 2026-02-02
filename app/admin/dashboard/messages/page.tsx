@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 import { Mail, MailOpen, Check, Archive, Trash2, Clock, User, Phone, MessageSquare, Save } from 'lucide-react';
 import Loading from '@/app/components/ui/loading';
 import { Card, CardContent } from '@/app/components/ui/card';
@@ -10,6 +11,8 @@ import { Textarea } from '@/app/components/ui/textarea';
 import { Dialog, DialogFooter } from '@/app/components/ui/dialog';
 import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
+import { useDraftPersistence } from '@/app/lib/use-draft-persistence';
+import { DraftRestorePrompt } from '@/app/components/ui/draft-restore-prompt';
 
 type ContactMessage = {
   id: number;
@@ -41,9 +44,12 @@ const getInitials = (name: string) => {
     .slice(0, 2);
 };
 
+type ReplyDraftData = { adminNotes: string };
+
 export default function MessagesPage() {
   const toast = useToast();
   const { confirm } = useConfirm();
+  const pathname = usePathname();
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -52,6 +58,27 @@ export default function MessagesPage() {
   const [adminNotes, setAdminNotes] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
   const selectedMessageRef = useRef<ContactMessage | null>(null);
+
+  const replyDraftId = selectedMessage?.id ?? 'none';
+  const { showRestorePrompt: showReplyRestorePrompt, draftMeta: replyDraftMeta, saveDraft: saveReplyDraft, clearDraft: clearReplyDraft, restoreDraft: restoreReplyDraft, dismissDraft: dismissReplyDraft } = useDraftPersistence<ReplyDraftData>({
+    entity: 'messages-reply',
+    id: replyDraftId,
+    route: pathname,
+    debounceMs: 500,
+  });
+
+  const handleReplyFormChange = useCallback((adminNotes: string) => {
+    setAdminNotes(adminNotes);
+    if (isDialogOpen && selectedMessage && adminNotes.trim()) saveReplyDraft({ adminNotes });
+  }, [isDialogOpen, selectedMessage, saveReplyDraft]);
+  const handleRestoreReplyDraft = useCallback(() => {
+    const restored = restoreReplyDraft();
+    if (restored) {
+      setAdminNotes(restored.adminNotes ?? '');
+      toast.success('Draft restored');
+    }
+  }, [restoreReplyDraft, toast]);
+  const handleDismissReplyDraft = useCallback(() => dismissReplyDraft(), [dismissReplyDraft]);
 
   // Update ref when selectedMessage changes
   useEffect(() => {
@@ -180,6 +207,7 @@ export default function MessagesPage() {
       await updateMessageStatus(selectedMessage.id, selectedMessage.status, adminNotes, true);
       setSavingNotes(false);
       
+      clearReplyDraft();
       handleCloseDialog();
     }
   };
@@ -294,6 +322,9 @@ export default function MessagesPage() {
       </div>
 
       {}
+      {!isDialogOpen && showReplyRestorePrompt && replyDraftMeta && (
+        <DraftRestorePrompt savedAt={replyDraftMeta.savedAt} onRestore={handleRestoreReplyDraft} onDismiss={handleDismissReplyDraft} />
+      )}
       <div className="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto pr-2">
           {filteredMessages.length === 0 ? (
             <Card className="rounded-xl border border-border bg-white">
@@ -394,7 +425,9 @@ export default function MessagesPage() {
       >
         {selectedMessage && (
           <div className="space-y-6">
-            {}
+            {isDialogOpen && showReplyRestorePrompt && replyDraftMeta && (
+              <DraftRestorePrompt savedAt={replyDraftMeta.savedAt} onRestore={handleRestoreReplyDraft} onDismiss={handleDismissReplyDraft} />
+            )}
             <div className="flex items-start gap-4 pb-4 border-b border-border">
               <div className={`
                 flex-shrink-0 h-14 w-14 rounded-full flex items-center justify-center text-lg font-bold
@@ -485,7 +518,7 @@ export default function MessagesPage() {
               <Textarea
                 id="dialog-adminNotes"
                 value={adminNotes}
-                onChange={(e) => setAdminNotes(e.target.value)}
+                onChange={(e) => handleReplyFormChange(e.target.value)}
                 className="min-h-[120px]"
                 placeholder="Add notes about this inquiry, follow-up actions, or internal comments..."
               />

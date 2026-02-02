@@ -5,6 +5,7 @@ import { Encode_Sans_Expanded } from 'next/font/google';
 import Image from 'next/image';
 import Loading from './ui/loading';
 import { resolveImageSrc } from '@/app/lib/resolve-image-src';
+import { sanitizeHtml } from '@/app/lib/sanitize';
 
 const encodeSansExpanded = Encode_Sans_Expanded({
   subsets: ['latin'],
@@ -332,11 +333,11 @@ function TeamMemberCard({
         >
           <div
             className={`${encodeSansExpanded.className} text-white text-[18px] md:text-[20px] font-bold leading-tight mb-0.5`}
-            dangerouslySetInnerHTML={{ __html: member.name }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(member.name) }}
           />
           <div 
             className="text-[10px] font-normal uppercase text-white"
-            dangerouslySetInnerHTML={{ __html: member.position }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(member.position) }}
           />
         </div>
       </div>
@@ -429,11 +430,11 @@ function BossMemberCard({
         >
           <div
             className={`${encodeSansExpanded.className} text-white text-[20px] md:text-[22px] font-bold leading-tight mb-1`}
-            dangerouslySetInnerHTML={{ __html: member.name }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(member.name) }}
           />
           <div 
             className="text-[11px] font-normal uppercase text-white"
-            dangerouslySetInnerHTML={{ __html: member.position }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(member.position) }}
           />
         </div>
       </div>

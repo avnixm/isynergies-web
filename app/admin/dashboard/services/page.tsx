@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 import { Pencil, Trash2, Plus, Info } from 'lucide-react';
 import Loading from '@/app/components/ui/loading';
 import { Button } from '@/app/components/ui/button';
@@ -15,6 +16,8 @@ import { ImageUpload } from '@/app/components/ui/image-upload';
 import { Textarea } from '@/app/components/ui/textarea';
 import { HtmlTips } from '@/app/components/ui/html-tips';
 import Image from 'next/image';
+import { useDraftPersistence } from '@/app/lib/use-draft-persistence';
+import { DraftRestorePrompt } from '@/app/components/ui/draft-restore-prompt';
 
 type Statistic = {
   id: number;
@@ -43,9 +46,15 @@ type ServicesListItem = {
   displayOrder: number;
 };
 
+type StatFormData = { label: string; value: string; displayOrder: number };
+type TickerFormData = { text: string; displayOrder: number };
+type ServiceFormData = { icon: string; displayOrder: number };
+type ListFormData = { label: string; displayOrder: number };
+
 export default function ServicesPage() {
   const toast = useToast();
   const { confirm } = useConfirm();
+  const pathname = usePathname();
   const [statistics, setStatistics] = useState<Statistic[]>([]);
   const [tickerItems, setTickerItems] = useState<TickerItem[]>([]);
   const [services, setServices] = useState<Service[]>([]);
@@ -67,20 +76,20 @@ export default function ServicesPage() {
   const [savingTicker, setSavingTicker] = useState(false);
   const [savingService, setSavingService] = useState(false);
   const [savingList, setSavingList] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<StatFormData>({
     label: '',
     value: '',
     displayOrder: 0,
   });
-  const [tickerFormData, setTickerFormData] = useState({
+  const [tickerFormData, setTickerFormData] = useState<TickerFormData>({
     text: '',
     displayOrder: 0,
   });
-  const [serviceFormData, setServiceFormData] = useState({
+  const [serviceFormData, setServiceFormData] = useState<ServiceFormData>({
     icon: '',
     displayOrder: 0,
   });
-  const [listFormData, setListFormData] = useState({
+  const [listFormData, setListFormData] = useState<ListFormData>({
     label: '',
     displayOrder: 0,
   });
@@ -117,6 +126,39 @@ export default function ServicesPage() {
     while (listUsedOrders.includes(order)) { order++; }
     return order;
   };
+
+  const statDraftId = editingStat?.id ?? 'new';
+  const { showRestorePrompt: showStatRestorePrompt, draftMeta: statDraftMeta, saveDraft: saveStatDraft, clearDraft: clearStatDraft, restoreDraft: restoreStatDraft, dismissDraft: dismissStatDraft } = useDraftPersistence<StatFormData>({ entity: 'services-stat', id: statDraftId, route: pathname, debounceMs: 500 });
+  const tickerDraftId = editingTicker?.id ?? 'new';
+  const { showRestorePrompt: showTickerRestorePrompt, draftMeta: tickerDraftMeta, saveDraft: saveTickerDraft, clearDraft: clearTickerDraft, restoreDraft: restoreTickerDraft, dismissDraft: dismissTickerDraft } = useDraftPersistence<TickerFormData>({ entity: 'services-ticker', id: tickerDraftId, route: pathname, debounceMs: 500 });
+  const serviceDraftId = editingService?.id ?? 'new';
+  const { showRestorePrompt: showServiceRestorePrompt, draftMeta: serviceDraftMeta, saveDraft: saveServiceDraft, clearDraft: clearServiceDraft, restoreDraft: restoreServiceDraft, dismissDraft: dismissServiceDraft } = useDraftPersistence<ServiceFormData>({ entity: 'services-service', id: serviceDraftId, route: pathname, debounceMs: 500 });
+  const listDraftId = editingListItem?.id ?? 'new';
+  const { showRestorePrompt: showListRestorePrompt, draftMeta: listDraftMeta, saveDraft: saveListDraft, clearDraft: clearListDraft, restoreDraft: restoreListDraft, dismissDraft: dismissListDraft } = useDraftPersistence<ListFormData>({ entity: 'services-list', id: listDraftId, route: pathname, debounceMs: 500 });
+
+  const handleStatFormChange = useCallback((updates: Partial<StatFormData>) => {
+    setFormData(prev => { const n = { ...prev, ...updates }; if (isStatDialogOpen && (n.label?.trim() || n.value?.trim())) saveStatDraft(n); return n; });
+  }, [isStatDialogOpen, saveStatDraft]);
+  const handleRestoreStatDraft = useCallback(() => { const r = restoreStatDraft(); if (r) { setFormData(r); setEditingStat(null); if (!isStatDialogOpen) setIsStatDialogOpen(true); toast.success('Draft restored'); } }, [restoreStatDraft, toast, isStatDialogOpen]);
+  const handleDismissStatDraft = useCallback(() => dismissStatDraft(), [dismissStatDraft]);
+
+  const handleTickerFormChange = useCallback((updates: Partial<TickerFormData>) => {
+    setTickerFormData(prev => { const n = { ...prev, ...updates }; if (isTickerDialogOpen && n.text?.trim()) saveTickerDraft(n); return n; });
+  }, [isTickerDialogOpen, saveTickerDraft]);
+  const handleRestoreTickerDraft = useCallback(() => { const r = restoreTickerDraft(); if (r) { setTickerFormData(r); setEditingTicker(null); if (!isTickerDialogOpen) setIsTickerDialogOpen(true); toast.success('Draft restored'); } }, [restoreTickerDraft, toast, isTickerDialogOpen]);
+  const handleDismissTickerDraft = useCallback(() => dismissTickerDraft(), [dismissTickerDraft]);
+
+  const handleServiceFormChange = useCallback((updates: Partial<ServiceFormData>) => {
+    setServiceFormData(prev => { const n = { ...prev, ...updates }; if (isServiceDialogOpen && n.icon?.trim()) saveServiceDraft(n); return n; });
+  }, [isServiceDialogOpen, saveServiceDraft]);
+  const handleRestoreServiceDraft = useCallback(() => { const r = restoreServiceDraft(); if (r) { setServiceFormData(r); setEditingService(null); if (!isServiceDialogOpen) setIsServiceDialogOpen(true); toast.success('Draft restored'); } }, [restoreServiceDraft, toast, isServiceDialogOpen]);
+  const handleDismissServiceDraft = useCallback(() => dismissServiceDraft(), [dismissServiceDraft]);
+
+  const handleListFormChange = useCallback((updates: Partial<ListFormData>) => {
+    setListFormData(prev => { const n = { ...prev, ...updates }; if (isListDialogOpen && n.label?.trim()) saveListDraft(n); return n; });
+  }, [isListDialogOpen, saveListDraft]);
+  const handleRestoreListDraft = useCallback(() => { const r = restoreListDraft(); if (r) { setListFormData(r); setEditingListItem(null); if (!isListDialogOpen) setIsListDialogOpen(true); toast.success('Draft restored'); } }, [restoreListDraft, toast, isListDialogOpen]);
+  const handleDismissListDraft = useCallback(() => dismissListDraft(), [dismissListDraft]);
 
   useEffect(() => {
     fetchStatistics();
@@ -301,6 +343,7 @@ export default function ServicesPage() {
       });
 
       if (response.ok) {
+        clearStatDraft();
         toast.success(editingStat ? 'Statistic updated successfully!' : 'Statistic added successfully!');
         handleCloseStatDialog();
         fetchStatistics();
@@ -402,6 +445,7 @@ export default function ServicesPage() {
       });
 
       if (response.ok) {
+        clearTickerDraft();
         toast.success(editingTicker ? 'Ticker item updated successfully!' : 'Ticker item added successfully!');
         handleCloseTickerDialog();
         fetchTickerItems();
@@ -497,6 +541,7 @@ export default function ServicesPage() {
         body: JSON.stringify(listFormData),
       });
       if (response.ok) {
+        clearListDraft();
         toast.success(editingListItem ? 'Services list item updated!' : 'Services list item added!');
         handleCloseListDialog();
         fetchServicesList();
@@ -607,6 +652,7 @@ export default function ServicesPage() {
       });
 
       if (response.ok) {
+        clearServiceDraft();
         toast.success(editingService ? 'Service updated successfully!' : 'Service added successfully!');
         handleCloseServiceDialog();
         fetchServices();
@@ -725,6 +771,9 @@ export default function ServicesPage() {
                 Add item
               </Button>
             </div>
+            {!isListDialogOpen && showListRestorePrompt && listDraftMeta && (
+              <DraftRestorePrompt savedAt={listDraftMeta.savedAt} onRestore={handleRestoreListDraft} onDismiss={handleDismissListDraft} />
+            )}
             {servicesListItems.length === 0 ? (
               <div className="rounded-lg border border-dashed border-border bg-muted/30 py-8 text-center">
                 <p className="text-sm text-muted-foreground">No bullet points yet. Add items like Development, Support, Maintenance.</p>
@@ -793,6 +842,9 @@ export default function ServicesPage() {
           </Button>
         </div>
         <div className="p-6">
+          {!isServiceDialogOpen && showServiceRestorePrompt && serviceDraftMeta && (
+            <DraftRestorePrompt savedAt={serviceDraftMeta.savedAt} onRestore={handleRestoreServiceDraft} onDismiss={handleDismissServiceDraft} />
+          )}
           {services.length === 0 ? (
             <div className="text-center py-12">
               <div className="mx-auto mb-4 h-12 w-12 text-muted-foreground">
@@ -889,6 +941,9 @@ export default function ServicesPage() {
           </Button>
         </div>
         <div className="p-6">
+          {!isStatDialogOpen && showStatRestorePrompt && statDraftMeta && (
+            <DraftRestorePrompt savedAt={statDraftMeta.savedAt} onRestore={handleRestoreStatDraft} onDismiss={handleDismissStatDraft} />
+          )}
           {statistics.length === 0 ? (
             <div className="text-center py-12">
               <div className="mx-auto mb-4 h-12 w-12 text-muted-foreground">
@@ -962,6 +1017,9 @@ export default function ServicesPage() {
           </Button>
         </div>
         <div className="p-6">
+          {!isTickerDialogOpen && showTickerRestorePrompt && tickerDraftMeta && (
+            <DraftRestorePrompt savedAt={tickerDraftMeta.savedAt} onRestore={handleRestoreTickerDraft} onDismiss={handleDismissTickerDraft} />
+          )}
           {tickerItems.length === 0 ? (
             <div className="text-center py-12">
               <div className="mx-auto mb-4 h-12 w-12 text-muted-foreground">
@@ -1026,12 +1084,15 @@ export default function ServicesPage() {
         title={editingStat ? 'Edit Statistic' : 'Add New Statistic'}
       >
         <div className="space-y-4 mb-6">
+          {isStatDialogOpen && showStatRestorePrompt && statDraftMeta && (
+            <DraftRestorePrompt savedAt={statDraftMeta.savedAt} onRestore={handleRestoreStatDraft} onDismiss={handleDismissStatDraft} />
+          )}
           <div className="space-y-2">
             <Label htmlFor="dialog-label">Label</Label>
             <Input
               id="dialog-label"
               value={formData.label}
-              onChange={(e) => setFormData({ ...formData, label: e.target.value })}
+              onChange={(e) => handleStatFormChange({ label: e.target.value })}
               placeholder="e.g., Clients, Projects, Customers"
               required
             />
@@ -1042,7 +1103,7 @@ export default function ServicesPage() {
             <Input
               id="dialog-value"
               value={formData.value}
-              onChange={(e) => setFormData({ ...formData, value: e.target.value })}
+              onChange={(e) => handleStatFormChange({ value: e.target.value })}
               placeholder="e.g., 30+, 5000+, 100+"
               required
             />
@@ -1055,7 +1116,7 @@ export default function ServicesPage() {
               type="number"
               value={formData.displayOrder}
               onChange={(e) => {
-                setFormData({ ...formData, displayOrder: parseInt(e.target.value) || 0 });
+                handleStatFormChange({ displayOrder: parseInt(e.target.value) || 0 });
                 setOrderError('');
               }}
               placeholder="0"
@@ -1092,12 +1153,15 @@ export default function ServicesPage() {
         title={editingTicker ? 'Edit Ticker Item' : 'Add Ticker Item'}
       >
         <div className="space-y-4 mb-6">
+          {isTickerDialogOpen && showTickerRestorePrompt && tickerDraftMeta && (
+            <DraftRestorePrompt savedAt={tickerDraftMeta.savedAt} onRestore={handleRestoreTickerDraft} onDismiss={handleDismissTickerDraft} />
+          )}
           <div className="space-y-2">
             <Label htmlFor="dialog-tickerText">Text</Label>
             <Input
               id="dialog-tickerText"
               value={tickerFormData.text}
-              onChange={(e) => setTickerFormData({ ...tickerFormData, text: e.target.value.toUpperCase() })}
+              onChange={(e) => handleTickerFormChange({ text: e.target.value.toUpperCase() })}
               placeholder="e.g., SOFTWARE DEVELOPMENT"
               required
             />
@@ -1111,7 +1175,7 @@ export default function ServicesPage() {
               type="number"
               value={tickerFormData.displayOrder}
               onChange={(e) => {
-                setTickerFormData({ ...tickerFormData, displayOrder: parseInt(e.target.value) || 0 });
+                handleTickerFormChange({ displayOrder: parseInt(e.target.value) || 0 });
                 setTickerOrderError('');
               }}
               placeholder="0"
@@ -1148,12 +1212,15 @@ export default function ServicesPage() {
         title={editingListItem ? 'Edit Services list item' : 'Add Services list item'}
       >
         <div className="space-y-4 mb-6">
+          {isListDialogOpen && showListRestorePrompt && listDraftMeta && (
+            <DraftRestorePrompt savedAt={listDraftMeta.savedAt} onRestore={handleRestoreListDraft} onDismiss={handleDismissListDraft} />
+          )}
           <div className="space-y-2">
             <Label htmlFor="dialog-listLabel">Label</Label>
             <Input
               id="dialog-listLabel"
               value={listFormData.label}
-              onChange={(e) => setListFormData({ ...listFormData, label: e.target.value })}
+              onChange={(e) => handleListFormChange({ label: e.target.value })}
               placeholder="e.g., Development, Support, Maintenance"
               required
             />
@@ -1165,7 +1232,7 @@ export default function ServicesPage() {
               type="number"
               value={listFormData.displayOrder}
               onChange={(e) => {
-                setListFormData({ ...listFormData, displayOrder: parseInt(e.target.value) || 0 });
+                handleListFormChange({ displayOrder: parseInt(e.target.value) || 0 });
                 setListOrderError('');
               }}
               placeholder="0"
@@ -1201,7 +1268,9 @@ export default function ServicesPage() {
         title={editingService ? 'Edit Service Icon' : 'Add Service Icon'}
       >
         <div className="space-y-4 mb-6">
-          {}
+          {isServiceDialogOpen && showServiceRestorePrompt && serviceDraftMeta && (
+            <DraftRestorePrompt savedAt={serviceDraftMeta.savedAt} onRestore={handleRestoreServiceDraft} onDismiss={handleDismissServiceDraft} />
+          )}
           <div className="flex items-start gap-2 rounded-lg bg-muted/50 border border-border p-2">
             <Info className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
             <div className="text-xs text-muted-foreground leading-relaxed">
@@ -1220,9 +1289,7 @@ export default function ServicesPage() {
             <Label>Icon Image</Label>
             <ImageUpload
               value={serviceFormData.icon || ''}
-              onChange={(url: string) => {
-                setServiceFormData({ ...serviceFormData, icon: url });
-              }}
+              onChange={(url: string) => handleServiceFormChange({ icon: url })}
             />
             {serviceFormData.icon && (
               <div className="relative h-32 w-32 mx-auto rounded-md overflow-hidden border border-gray-200 bg-gradient-to-b from-blue-900 to-blue-950">
@@ -1248,7 +1315,7 @@ export default function ServicesPage() {
               type="number"
               value={serviceFormData.displayOrder}
               onChange={(e) => {
-                setServiceFormData({ ...serviceFormData, displayOrder: parseInt(e.target.value) || 0 });
+                handleServiceFormChange({ displayOrder: parseInt(e.target.value) || 0 });
                 setServiceOrderError('');
               }}
               placeholder="0"

@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import NumberFlow from '@number-flow/react';
 import Loading from './ui/loading';
+import { sanitizeHtml } from '@/app/lib/sanitize';
 
 type HexImageProps = {
   src: string | null;
@@ -255,12 +256,12 @@ export default function Services() {
             }`}>
               <h2 
                 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-white mb-3 md:mb-6"
-                dangerouslySetInnerHTML={{ __html: servicesSection.title }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(servicesSection.title) }}
               />
 
               <p 
                 className="text-xs leading-relaxed font-light text-white/85 max-w-xl mb-3 md:mb-6"
-                dangerouslySetInnerHTML={{ __html: servicesSection.description }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(servicesSection.description) }}
               />
 
               <ul className="space-y-2 sm:space-y-3 text-sm md:text-base font-semibold text-white">
@@ -272,7 +273,7 @@ export default function Services() {
                       <span className="text-base sm:text-[18px] leading-none text-white/90 shrink-0">
                         •
                       </span>
-                      <span dangerouslySetInnerHTML={{ __html: label }} />
+                      <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(label) }} />
                     </li>
                   );
                 })}
@@ -333,7 +334,7 @@ export default function Services() {
             <div className="ticker-row">
               {tickerItems.map((item) => (
                 <span key={`ticker-1-${item.id}`}>
-                  <span className="ticker-item" dangerouslySetInnerHTML={{ __html: item.text }} />
+                  <span className="ticker-item" dangerouslySetInnerHTML={{ __html: sanitizeHtml(item.text) }} />
                   <span className="ticker-star">•</span>
                 </span>
               ))}
@@ -343,7 +344,7 @@ export default function Services() {
             <div className="ticker-row" aria-hidden>
               {tickerItems.map((item) => (
                 <span key={`ticker-2-${item.id}`}>
-                  <span className="ticker-item" dangerouslySetInnerHTML={{ __html: item.text }} />
+                  <span className="ticker-item" dangerouslySetInnerHTML={{ __html: sanitizeHtml(item.text) }} />
                   <span className="ticker-star">•</span>
                 </span>
               ))}
@@ -386,7 +387,7 @@ export default function Services() {
                     <div 
                       className="mt-1 text-xs sm:text-sm md:text-base font-semibold text-gray-900" 
                       style={{ color: '#111827' }}
-                      dangerouslySetInnerHTML={{ __html: stat.label }}
+                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(stat.label) }}
                     />
                   </div>
                 ))

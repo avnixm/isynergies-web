@@ -80,7 +80,7 @@ export default function TeamPage() {
   // Draft persistence for member form
   const draftEntityId = editingMember?.id ?? 'new';
   const {
-    hasDraft,
+    showRestorePrompt,
     draftMeta,
     saveDraft,
     clearDraft,
@@ -109,17 +109,17 @@ export default function TeamPage() {
     });
   }, [isDialogOpen, saveDraft]);
 
-  // Restore draft from page: open dialog and fill with draft
+  // Restore draft: if dialog closed, open it and fill; if dialog open, just fill form
   const handleRestoreDraft = useCallback(() => {
     const restored = restoreDraft();
     if (restored) {
       setFormData(restored);
       setEditingMember(null);
       setDirty(true);
-      setIsDialogOpen(true);
+      if (!isDialogOpen) setIsDialogOpen(true);
       toast.success('Draft restored');
     }
-  }, [restoreDraft, toast]);
+  }, [restoreDraft, toast, isDialogOpen]);
 
   const handleDismissDraft = useCallback(() => {
     dismissDraft();
@@ -722,7 +722,7 @@ export default function TeamPage() {
       </Tabs>
 
       {/* Draft banner on page when there's a draft (dialog closed) */}
-      {!isDialogOpen && hasDraft && draftMeta && (
+      {!isDialogOpen && showRestorePrompt && draftMeta && (
         <DraftRestorePrompt
           savedAt={draftMeta.savedAt}
           onRestore={handleRestoreDraft}
@@ -760,6 +760,15 @@ export default function TeamPage() {
               <code className="rounded bg-background px-1 py-0.5 text-xs">&lt;p&gt;</code>, etc.
             </div>
           </div>
+
+          {/* Unsaved draft found – show inside add/edit popup when draft exists */}
+          {showRestorePrompt && draftMeta && (
+            <DraftRestorePrompt
+              savedAt={draftMeta.savedAt}
+              onRestore={handleRestoreDraft}
+              onDismiss={handleDismissDraft}
+            />
+          )}
 
           <div className="grid gap-6 md:grid-cols-[1fr,1.5fr]">
             <div className="space-y-2">

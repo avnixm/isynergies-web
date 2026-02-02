@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useEffect, useState, useRef } from 'react';
 import Loading from './ui/loading';
 import CategoryStrip from './CategoryStrip';
+import { sanitizeHtml } from '@/app/lib/sanitize';
 
 type ShopCategory = {
   id: number;
@@ -184,7 +185,7 @@ export default function Shop() {
                 style={{
                   animationDelay: isVisible ? '0.2s' : '0s',
                 }}
-                dangerouslySetInnerHTML={{ __html: content.description }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.description) }}
               />
             </div>
 

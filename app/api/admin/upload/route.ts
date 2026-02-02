@@ -63,7 +63,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    
+    const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { error: `File size exceeds maximum allowed (${MAX_FILE_SIZE / 1024 / 1024} MB).` },
+        { status: 413 }
+      );
+    }
+
     const isImage = file.type.startsWith('image/');
     const isVideo = file.type.startsWith('video/');
     if (!isImage && !isVideo) {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { X, Plus, Pencil, Trash2, Info } from 'lucide-react';
 import { StickyFooter } from '../_components/sticky-footer';
@@ -15,6 +16,8 @@ import { Dialog, DialogFooter } from '@/app/components/ui/dialog';
 import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
 import { HtmlTips } from '@/app/components/ui/html-tips';
+import { useDraftPersistence } from '@/app/lib/use-draft-persistence';
+import { DraftRestorePrompt } from '@/app/components/ui/draft-restore-prompt';
 
 type AboutUsContent = {
   title: string;
@@ -36,9 +39,16 @@ type AboutUsGalleryImage = {
   displayOrder: number;
 };
 
+type GalleryFormData = {
+  image: string;
+  alt: string;
+  displayOrder: number;
+};
+
 export default function AboutUsPage() {
   const toast = useToast();
   const { confirm } = useConfirm();
+  const pathname = usePathname();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -58,11 +68,41 @@ export default function AboutUsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingGalleryImage, setEditingGalleryImage] = useState<AboutUsGalleryImage | null>(null);
   const [savingGallery, setSavingGallery] = useState(false);
-  const [galleryFormData, setGalleryFormData] = useState<{ image: string; alt: string; displayOrder: number }>({
+  const [galleryFormData, setGalleryFormData] = useState<GalleryFormData>({
     image: '',
     alt: 'About Us gallery image',
     displayOrder: 0,
   });
+
+  const draftEntityId = editingGalleryImage?.id ?? 'new';
+  const { showRestorePrompt, draftMeta, saveDraft, clearDraft, restoreDraft, dismissDraft } = useDraftPersistence<GalleryFormData>({
+    entity: 'about-us-gallery',
+    id: draftEntityId,
+    route: pathname,
+    debounceMs: 500,
+  });
+
+  const handleGalleryFormChange = useCallback((updates: Partial<GalleryFormData>) => {
+    setGalleryFormData(prev => {
+      const newData = { ...prev, ...updates };
+      if (isDialogOpen && (newData.image?.trim() || newData.alt?.trim())) {
+        saveDraft(newData);
+      }
+      return newData;
+    });
+  }, [isDialogOpen, saveDraft]);
+
+  const handleRestoreGalleryDraft = useCallback(() => {
+    const restored = restoreDraft();
+    if (restored) {
+      setGalleryFormData(restored);
+      setEditingGalleryImage(null);
+      if (!isDialogOpen) setIsDialogOpen(true);
+      toast.success('Draft restored');
+    }
+  }, [restoreDraft, toast, isDialogOpen]);
+
+  const handleDismissGalleryDraft = useCallback(() => dismissDraft(), [dismissDraft]);
 
   useEffect(() => {
     fetchContent();
@@ -125,6 +165,7 @@ export default function AboutUsPage() {
       displayOrder: 0,
     });
   };
+  // Don't clear draft on close so user can restore later
 
   const handleSaveGalleryImage = async () => {
     if (!galleryFormData.image.trim()) {
@@ -154,6 +195,7 @@ export default function AboutUsPage() {
       });
 
       if (response.ok) {
+        clearDraft();
         toast.success(editingGalleryImage ? 'Gallery image updated successfully!' : 'Gallery image added successfully!');
         handleCloseGalleryDialog();
         await fetchGalleryImages();
@@ -456,6 +498,13 @@ export default function AboutUsPage() {
           </Button>
         </div>
         <CardContent className="p-6">
+          {!isDialogOpen && showRestorePrompt && draftMeta && (
+            <DraftRestorePrompt
+              savedAt={draftMeta.savedAt}
+              onRestore={handleRestoreGalleryDraft}
+              onDismiss={handleDismissGalleryDraft}
+            />
+          )}
           {galleryImages.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
               No gallery images yet. Add at least 3 for the best scrolling effect.
@@ -539,11 +588,18 @@ export default function AboutUsPage() {
         title={editingGalleryImage ? 'Edit Gallery Image' : 'Add Gallery Image'}
       >
         <div className="space-y-4 mb-6">
+          {isDialogOpen && showRestorePrompt && draftMeta && (
+            <DraftRestorePrompt
+              savedAt={draftMeta.savedAt}
+              onRestore={handleRestoreGalleryDraft}
+              onDismiss={handleDismissGalleryDraft}
+            />
+          )}
           <div className="space-y-2">
             <Label htmlFor="dialog-gallery-image">Image</Label>
             <ImageUpload
               value={galleryFormData.image}
-              onChange={(v) => setGalleryFormData({ ...galleryFormData, image: v })}
+              onChange={(v) => handleGalleryFormChange({ image: v })}
             />
           </div>
 
@@ -552,7 +608,7 @@ export default function AboutUsPage() {
             <Input
               id="dialog-gallery-alt"
               value={galleryFormData.alt}
-              onChange={(e) => setGalleryFormData({ ...galleryFormData, alt: e.target.value })}
+              onChange={(e) => handleGalleryFormChange({ alt: e.target.value })}
               placeholder="About Us gallery image"
               required
             />
@@ -564,7 +620,7 @@ export default function AboutUsPage() {
               id="dialog-gallery-order"
               type="number"
               value={galleryFormData.displayOrder}
-              onChange={(e) => setGalleryFormData({ ...galleryFormData, displayOrder: parseInt(e.target.value) || 0 })}
+              onChange={(e) => handleGalleryFormChange({ displayOrder: parseInt(e.target.value) || 0 })}
               placeholder="0"
             />
           </div>

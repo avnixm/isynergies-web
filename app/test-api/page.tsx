@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 export default function TestAPI() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -9,6 +11,7 @@ export default function TestAPI() {
   const [formData, setFormData] = useState({ name: '', email: '' });
 
   const fetchUsers = async () => {
+    if (isProduction) return;
     setLoading(true);
     setMessage('');
     try {
@@ -29,6 +32,7 @@ export default function TestAPI() {
 
   const createUser = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isProduction) return;
     setLoading(true);
     setMessage('');
     try {
@@ -53,6 +57,17 @@ export default function TestAPI() {
       setLoading(false);
     }
   };
+
+  if (isProduction) {
+    return (
+      <div className="container mx-auto p-8 max-w-2xl">
+        <h1 className="text-3xl font-bold mb-6">API Testing Page</h1>
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-800 text-sm">
+          This page is disabled in production for security. Use it only in development.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-8 max-w-2xl">

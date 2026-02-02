@@ -3,9 +3,22 @@ import { db } from '@/app/db';
 import { adminUsers } from '@/app/db/schema';
 import { eq } from 'drizzle-orm';
 import { verifyPassword, createToken } from '@/app/lib/auth';
+import { checkRateLimit, getRateLimitKey } from '@/app/lib/rate-limit';
+
+const LOGIN_LIMIT = 10;
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 
 export async function POST(request: Request) {
   try {
+    const key = getRateLimitKey(request, 'login');
+    const rate = checkRateLimit(key, LOGIN_LIMIT, LOGIN_WINDOW_MS);
+    if (!rate.ok) {
+      return NextResponse.json(
+        { error: 'Too many login attempts. Try again later.' },
+        { status: 429, headers: { 'Retry-After': String(Math.ceil((rate.resetAt - Date.now()) / 1000)) } }
+      );
+    }
+
     const body = await request.json();
     const username = typeof body?.username === 'string' ? body.username.trim() : '';
     const password = typeof body?.password === 'string' ? body.password : '';
@@ -24,18 +37,12 @@ export async function POST(request: Request) {
       .limit(1);
 
     if (!user) {
-      const msg = process.env.NODE_ENV === 'development'
-        ? 'Invalid credentials. User not found — ensure the admin exists in the DB this app uses (e.g. run create-isyn-admin against that DB).'
-        : 'Invalid credentials';
-      return NextResponse.json({ error: msg }, { status: 401 });
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
     const isValid = await verifyPassword(password, user.password);
     if (!isValid) {
-      const msg = process.env.NODE_ENV === 'development'
-        ? 'Invalid credentials. Password mismatch — use exact username/password (case-sensitive).'
-        : 'Invalid credentials';
-      return NextResponse.json({ error: msg }, { status: 401 });
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
     

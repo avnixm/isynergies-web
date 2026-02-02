@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useRef } from 'react';
 import Loading from './ui/loading';
+import { sanitizeHtml } from '@/app/lib/sanitize';
 
 type ProjectCategory = 'desktop' | 'mobile' | 'hardware';
 
@@ -742,7 +743,7 @@ export default function Projects() {
                       </button>
                     </div>
 
-                <div className="mt-10 space-y-6 text-sm leading-relaxed text-gray-800" dangerouslySetInnerHTML={{ __html: selected.description }} />
+                <div className="mt-10 space-y-6 text-sm leading-relaxed text-gray-800" dangerouslySetInnerHTML={{ __html: sanitizeHtml(selected.description) }} />
                   </>
                 ) : (
                   <div className="space-y-6">
