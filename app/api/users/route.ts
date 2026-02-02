@@ -1,32 +1,14 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/app/db';
-import { adminUsers } from '@/app/db/schema';
-import { requireAuth } from '@/app/lib/auth-middleware';
 
 /**
- * GET /api/users — List admin users. Requires admin authentication.
- * Previously unauthenticated (Critical). Now protected.
+ * GET /api/users — Disabled. Listing admin users is a security risk (enumeration, least privilege).
+ * Use /api/admin/auth/me for the current authenticated user only.
  */
-export async function GET(request: Request) {
-  const authResult = await requireAuth(request);
-  if (authResult instanceof NextResponse) return authResult;
-
-  try {
-    const allUsers = await db.select({
-      id: adminUsers.id,
-      username: adminUsers.username,
-      email: adminUsers.email,
-      createdAt: adminUsers.createdAt,
-      updatedAt: adminUsers.updatedAt,
-    }).from(adminUsers);
-    return NextResponse.json(allUsers);
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch users' },
-      { status: 500 }
-    );
-  }
+export async function GET() {
+  return NextResponse.json(
+    { error: 'This endpoint is disabled for security.' },
+    { status: 403 }
+  );
 }
 
 /**
