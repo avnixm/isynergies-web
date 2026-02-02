@@ -169,7 +169,8 @@ Additional `*:prod` scripts (e.g. `add-team-groups-migration:prod`, `clear-team-
 
 ## Documentation
 
-- **[Responsive layout plan](docs/RESPONSIVE-LAYOUT-PLAN.md)** — Mobile-first strategy, CMS → UI mapping, Tailwind conventions, and non-regression checklist for the landing page.
+- **[docs/README.md](docs/README.md)** — Full technical documentation index (architecture, setup, config, API, auth, frontend/backend guides, deployment, security, troubleshooting, contributing, changelog).
+- **[Responsive layout plan](docs/RESPONSIVE-LAYOUT-PLAN.md)** — Mobile-first strategy, CMS → UI mapping, Tailwind conventions, and non-regression checklist for the landing page (create this file if missing).
 
 ---
 
