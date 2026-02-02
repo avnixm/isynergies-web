@@ -17,6 +17,7 @@ import { HtmlTips } from '@/app/components/ui/html-tips';
 import { MediaPreview } from '@/app/components/ui/media-preview';
 import { useDraftPersistence } from '@/app/lib/use-draft-persistence';
 import { DraftRestorePrompt } from '@/app/components/ui/draft-restore-prompt';
+import { getCached, setCached } from '../_lib/cache';
 
 type HeroSection = {
   id: number;
@@ -146,8 +147,17 @@ export default function HeroManagementPage() {
   const [deletingBlobs, setDeletingBlobs] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    fetchHeroSection();
-    fetchHeroTickerItems();
+    const sectionCache = getCached<HeroSection>('admin-hero-section');
+    const tickerCache = getCached<HeroTickerItem[]>('admin-hero-ticker');
+    if (sectionCache != null && tickerCache != null) {
+      setHeroSection(sectionCache);
+      setInitialHeroSection(sectionCache);
+      setHeroTickerItems(tickerCache);
+      setLoading(false);
+    } else {
+      fetchHeroSection();
+      fetchHeroTickerItems();
+    }
     fetchHeroImages();
     fetchBlobs();
   }, []);
@@ -163,6 +173,7 @@ export default function HeroManagementPage() {
         };
         setHeroSection(heroData);
         setInitialHeroSection(heroData);
+        setCached('admin-hero-section', heroData);
       }
     } catch (error) {
       console.error('Error fetching hero section:', error);
@@ -175,6 +186,7 @@ export default function HeroManagementPage() {
       if (response.ok) {
         const data = await response.json();
         setHeroTickerItems(data);
+        setCached('admin-hero-ticker', data);
       }
     } catch (error) {
       console.error('Error fetching hero ticker items:', error);

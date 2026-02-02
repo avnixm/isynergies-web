@@ -18,6 +18,7 @@ import { HtmlTips } from '@/app/components/ui/html-tips';
 import Image from 'next/image';
 import { useDraftPersistence } from '@/app/lib/use-draft-persistence';
 import { DraftRestorePrompt } from '@/app/components/ui/draft-restore-prompt';
+import { getCached, setCached } from '../_lib/cache';
 
 type ShopContent = {
   id?: number;
@@ -126,6 +127,14 @@ export default function ShopPage() {
   }, [dealerDraft, toast, isDealerDialogOpen]);
 
   useEffect(() => {
+    const cached = getCached<{ content: ShopContent; categories: ShopCategory[]; authorizedDealers: AuthorizedDealer[] }>('admin-shop');
+    if (cached != null) {
+      setContent(cached.content);
+      setCategories(cached.categories ?? []);
+      setAuthorizedDealers(cached.authorizedDealers ?? []);
+      setLoading(false);
+      return;
+    }
     fetchShopData();
   }, []);
 
@@ -135,21 +144,25 @@ export default function ShopPage() {
         fetch('/api/admin/shop'),
         fetch('/api/admin/authorized-dealers'),
       ]);
-      
+      let nextContent: ShopContent = content;
+      let nextCategories: ShopCategory[] = [];
+      let nextDealers: AuthorizedDealer[] = [];
       if (shopResponse.ok) {
         const data = await shopResponse.json();
         if (data.content) {
+          nextContent = data.content;
           setContent(data.content);
         }
         if (data.categories) {
+          nextCategories = data.categories;
           setCategories(data.categories);
         }
       }
-      
       if (dealersResponse.ok) {
-        const dealers = await dealersResponse.json();
-        setAuthorizedDealers(dealers);
+        nextDealers = await dealersResponse.json();
+        setAuthorizedDealers(nextDealers);
       }
+      setCached('admin-shop', { content: nextContent, categories: nextCategories, authorizedDealers: nextDealers });
     } catch (error) {
       console.error('Error fetching shop data:', error);
     } finally {

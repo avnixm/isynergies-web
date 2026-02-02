@@ -18,6 +18,7 @@ import { HtmlTips } from '@/app/components/ui/html-tips';
 import Image from 'next/image';
 import { useDraftPersistence } from '@/app/lib/use-draft-persistence';
 import { DraftRestorePrompt } from '@/app/components/ui/draft-restore-prompt';
+import { getCached, setCached } from '../_lib/cache';
 
 type Statistic = {
   id: number;
@@ -161,6 +162,20 @@ export default function ServicesPage() {
   const handleDismissListDraft = useCallback(() => dismissListDraft(), [dismissListDraft]);
 
   useEffect(() => {
+    const statsCache = getCached<Statistic[]>('admin-services-statistics');
+    const tickerCache = getCached<TickerItem[]>('admin-services-ticker');
+    const servicesCache = getCached<Service[]>('admin-services-list');
+    const listCache = getCached<ServicesListItem[]>('admin-services-list-items');
+    const sectionCache = getCached<{ title: string; description: string }>('admin-services-section');
+    if (statsCache != null && tickerCache != null && servicesCache != null && listCache != null && sectionCache != null) {
+      setStatistics(statsCache);
+      setTickerItems(tickerCache);
+      setServices(servicesCache);
+      setServicesListItems(listCache);
+      setServicesSection(sectionCache);
+      setLoading(false);
+      return;
+    }
     fetchStatistics();
     fetchTickerItems();
     fetchServices();
@@ -173,8 +188,9 @@ export default function ServicesPage() {
       const response = await fetch('/api/admin/statistics');
       if (response.ok) {
         const data = await response.json();
-        
-        setStatistics(Array.isArray(data) ? data : []);
+        const list = Array.isArray(data) ? data : [];
+        setStatistics(list);
+        setCached('admin-services-statistics', list);
       } else {
         console.error('Error fetching statistics:', response.status, response.statusText);
         setStatistics([]);
@@ -192,8 +208,9 @@ export default function ServicesPage() {
       const response = await fetch('/api/admin/ticker');
       if (response.ok) {
         const data = await response.json();
-        
-        setTickerItems(Array.isArray(data) ? data : []);
+        const list = Array.isArray(data) ? data : [];
+        setTickerItems(list);
+        setCached('admin-services-ticker', list);
       } else {
         console.error('Error fetching ticker items:', response.status, response.statusText);
         setTickerItems([]);
@@ -209,8 +226,9 @@ export default function ServicesPage() {
       const response = await fetch('/api/admin/services');
       if (response.ok) {
         const data = await response.json();
-        
-        setServices(Array.isArray(data) ? data : []);
+        const list = Array.isArray(data) ? data : [];
+        setServices(list);
+        setCached('admin-services-list', list);
       } else {
         console.error('Error fetching services:', response.status, response.statusText);
         setServices([]);
@@ -226,7 +244,9 @@ export default function ServicesPage() {
       const response = await fetch('/api/admin/services-list');
       if (response.ok) {
         const data = await response.json();
-        setServicesListItems(Array.isArray(data) ? data : []);
+        const list = Array.isArray(data) ? data : [];
+        setServicesListItems(list);
+        setCached('admin-services-list-items', list);
       } else {
         console.error('Error fetching services list:', response.status, response.statusText);
         setServicesListItems([]);
@@ -242,10 +262,12 @@ export default function ServicesPage() {
       const response = await fetch('/api/admin/services-section');
       if (response.ok) {
         const data = await response.json();
-        setServicesSection({
+        const next = {
           title: data.title ?? 'Our Services',
           description: data.description ?? '',
-        });
+        };
+        setServicesSection(next);
+        setCached('admin-services-section', next);
       }
     } catch (error) {
       console.error('Error fetching services section:', error);

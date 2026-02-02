@@ -17,6 +17,7 @@ import { HtmlTips } from '@/app/components/ui/html-tips';
 import Image from 'next/image';
 import { useDraftPersistence } from '@/app/lib/use-draft-persistence';
 import { DraftRestorePrompt } from '@/app/components/ui/draft-restore-prompt';
+import { getCached, setCached } from '../_lib/cache';
 
 
 interface MediaPreviewFrameProps {
@@ -207,6 +208,16 @@ export default function FeaturedAppPage() {
   const handleDismissFeatureDraft = useCallback(() => dismissFeatureDraft(), [dismissFeatureDraft]);
 
   useEffect(() => {
+    const contentCache = getCached<FeaturedAppContent>('admin-featured-app-content');
+    const carouselCache = getCached<FeaturedAppCarouselImage[]>('admin-featured-app-carousel');
+    const featuresCache = getCached<FeaturedAppFeature[]>('admin-featured-app-features');
+    if (contentCache != null && carouselCache != null && featuresCache != null) {
+      setContent(contentCache);
+      setCarouselImages(carouselCache);
+      setFeatures(featuresCache);
+      setLoading(false);
+      return;
+    }
     fetchContent();
     fetchCarouselImages();
     fetchFeatures();
@@ -217,7 +228,7 @@ export default function FeaturedAppPage() {
       const response = await fetch('/api/admin/featured-app');
       if (response.ok) {
       const data = await response.json();
-      setContent({
+      const next = {
         headerImage: data.headerImage || data.header_image || '',
         itemType: (data.itemType || data.item_type || 'app') as 'app' | 'website',
         downloadText: data.downloadText || data.download_text || 'Download now via',
@@ -233,7 +244,9 @@ export default function FeaturedAppPage() {
         appLogo: data.appLogo || data.app_logo || '',
         poweredByImage: data.poweredByImage || data.powered_by_image || '',
         bannerHeight: data.bannerHeight || data.banner_height || 'h-60',
-      });
+      };
+      setContent(next);
+      setCached('admin-featured-app-content', next);
       }
     } catch (error) {
       console.error('Error fetching content:', error);
@@ -249,6 +262,7 @@ export default function FeaturedAppPage() {
         const data = await response.json();
         const sortedData = data.sort((a: FeaturedAppCarouselImage, b: FeaturedAppCarouselImage) => a.displayOrder - b.displayOrder);
         setCarouselImages(sortedData);
+        setCached('admin-featured-app-carousel', sortedData);
       }
     } catch (error) {
       console.error('Error fetching carousel images:', error);
@@ -262,6 +276,7 @@ export default function FeaturedAppPage() {
         const data = await response.json();
         const sortedData = data.sort((a: FeaturedAppFeature, b: FeaturedAppFeature) => a.displayOrder - b.displayOrder);
         setFeatures(sortedData);
+        setCached('admin-featured-app-features', sortedData);
       }
     } catch (error) {
       console.error('Error fetching features:', error);

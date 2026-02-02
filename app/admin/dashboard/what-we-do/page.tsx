@@ -18,6 +18,7 @@ import { HtmlTips } from '@/app/components/ui/html-tips';
 import Image from 'next/image';
 import { useDraftPersistence } from '@/app/lib/use-draft-persistence';
 import { DraftRestorePrompt } from '@/app/components/ui/draft-restore-prompt';
+import { getCached, setCached } from '../_lib/cache';
 
 type WhatWeDoContent = {
   mainText: string;
@@ -90,6 +91,14 @@ export default function WhatWeDoPage() {
   const handleDismissImageDraft = useCallback(() => dismissDraft(), [dismissDraft]);
 
   useEffect(() => {
+    const contentCache = getCached<WhatWeDoContent>('admin-what-we-do-content');
+    const imagesCache = getCached<WhatWeDoImage[]>('admin-what-we-do-images');
+    if (contentCache != null && imagesCache != null) {
+      setContent(contentCache);
+      setImages(imagesCache);
+      setLoading(false);
+      return;
+    }
     fetchContent();
     fetchImages();
   }, []);
@@ -100,6 +109,7 @@ export default function WhatWeDoPage() {
       if (response.ok) {
         const data = await response.json();
         setContent(data);
+        setCached('admin-what-we-do-content', data);
       }
     } catch (error) {
       console.error('Error fetching content:', error);
@@ -114,6 +124,7 @@ export default function WhatWeDoPage() {
       if (response.ok) {
         const data = await response.json();
         setImages(data);
+        setCached('admin-what-we-do-images', data);
       }
     } catch (error) {
       console.error('Error fetching images:', error);
