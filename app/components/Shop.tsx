@@ -177,14 +177,15 @@ export default function Shop() {
               </div>
 
               {}
-              <p className={`max-w-xl text-xs md:text-sm leading-relaxed text-white/85 font-sans slide-right-content relative z-10 mb-6 sm:mb-8 md:mb-12 ${
-                isVisible ? 'animate' : 'opacity-0'
-              }`}
-              style={{
-                animationDelay: isVisible ? '0.2s' : '0s',
-              }}>
-                {content.description}
-              </p>
+              <p 
+                className={`max-w-xl text-xs md:text-sm leading-relaxed text-white/85 font-sans slide-right-content relative z-10 mb-6 sm:mb-8 md:mb-12 ${
+                  isVisible ? 'animate' : 'opacity-0'
+                }`}
+                style={{
+                  animationDelay: isVisible ? '0.2s' : '0s',
+                }}
+                dangerouslySetInnerHTML={{ __html: content.description }}
+              />
             </div>
 
             {/* Middle Section: Sales hexagon */}

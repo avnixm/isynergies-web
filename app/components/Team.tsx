@@ -332,12 +332,12 @@ function TeamMemberCard({
         >
           <div
             className={`${encodeSansExpanded.className} text-white text-[18px] md:text-[20px] font-bold leading-tight mb-0.5`}
-          >
-            {member.name}
-          </div>
-          <div className="text-[10px] font-normal uppercase text-white">
-            {member.position}
-          </div>
+            dangerouslySetInnerHTML={{ __html: member.name }}
+          />
+          <div 
+            className="text-[10px] font-normal uppercase text-white"
+            dangerouslySetInnerHTML={{ __html: member.position }}
+          />
         </div>
       </div>
     </div>
@@ -429,12 +429,12 @@ function BossMemberCard({
         >
           <div
             className={`${encodeSansExpanded.className} text-white text-[20px] md:text-[22px] font-bold leading-tight mb-1`}
-          >
-            {member.name}
-          </div>
-          <div className="text-[11px] font-normal uppercase text-white">
-            {member.position}
-          </div>
+            dangerouslySetInnerHTML={{ __html: member.name }}
+          />
+          <div 
+            className="text-[11px] font-normal uppercase text-white"
+            dangerouslySetInnerHTML={{ __html: member.position }}
+          />
         </div>
       </div>
     </div>

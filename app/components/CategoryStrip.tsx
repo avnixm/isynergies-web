@@ -64,9 +64,8 @@ export default function CategoryStrip({ name, text, image, className = '' }: Cat
               fontStretch: 'condensed',
               textShadow: image ? '4px 4px 12px rgba(0,0,0,0.9)' : '1px 1px 3px rgba(0,0,0,0.1)',
             }}
-          >
-            {text}
-          </span>
+            dangerouslySetInnerHTML={{ __html: text }}
+          />
         </div>
       </div>
     </div>

@@ -253,13 +253,15 @@ export default function Services() {
             <div className={`order-1 pl-4 pr-4 sm:pl-5 sm:pr-2 md:pl-0 md:pr-6 font-sans ml-0 sm:ml-2 md:ml-12 mt-0 md:-mt-10 slide-right-content ${
               isVisible ? 'animate' : 'opacity-0'
             }`}>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold text-white mb-3 md:mb-6">
-                {servicesSection.title}
-              </h2>
+              <h2 
+                className="text-2xl sm:text-3xl md:text-4xl font-semibold text-white mb-3 md:mb-6"
+                dangerouslySetInnerHTML={{ __html: servicesSection.title }}
+              />
 
-              <p className="text-xs leading-relaxed font-light text-white/85 max-w-xl mb-3 md:mb-6">
-                {servicesSection.description}
-              </p>
+              <p 
+                className="text-xs leading-relaxed font-light text-white/85 max-w-xl mb-3 md:mb-6"
+                dangerouslySetInnerHTML={{ __html: servicesSection.description }}
+              />
 
               <ul className="space-y-2 sm:space-y-3 text-sm md:text-base font-semibold text-white">
                 {servicesListItems.map((item) => {
@@ -270,7 +272,7 @@ export default function Services() {
                       <span className="text-base sm:text-[18px] leading-none text-white/90 shrink-0">
                         •
                       </span>
-                      <span>{label}</span>
+                      <span dangerouslySetInnerHTML={{ __html: label }} />
                     </li>
                   );
                 })}
@@ -331,7 +333,7 @@ export default function Services() {
             <div className="ticker-row">
               {tickerItems.map((item) => (
                 <span key={`ticker-1-${item.id}`}>
-                  <span className="ticker-item">{item.text}</span>
+                  <span className="ticker-item" dangerouslySetInnerHTML={{ __html: item.text }} />
                   <span className="ticker-star">•</span>
                 </span>
               ))}
@@ -341,7 +343,7 @@ export default function Services() {
             <div className="ticker-row" aria-hidden>
               {tickerItems.map((item) => (
                 <span key={`ticker-2-${item.id}`}>
-                  <span className="ticker-item">{item.text}</span>
+                  <span className="ticker-item" dangerouslySetInnerHTML={{ __html: item.text }} />
                   <span className="ticker-star">•</span>
                 </span>
               ))}
@@ -381,9 +383,11 @@ export default function Services() {
                     >
                       <AnimatedCounter value={stat.value} isVisible={isVisible} />
                     </div>
-                    <div className="mt-1 text-xs sm:text-sm md:text-base font-semibold text-gray-900" style={{ color: '#111827' }}>
-                      {stat.label}
-                    </div>
+                    <div 
+                      className="mt-1 text-xs sm:text-sm md:text-base font-semibold text-gray-900" 
+                      style={{ color: '#111827' }}
+                      dangerouslySetInnerHTML={{ __html: stat.label }}
+                    />
                   </div>
                 ))
               )}
