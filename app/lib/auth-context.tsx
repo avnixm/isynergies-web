@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import { clearAdminCache, getCachedUser, setCachedUser } from '@/app/admin/dashboard/_lib/cache';
 
 // ============================================================================
 // AUTH CONTEXT - Resilient authentication state management
@@ -80,6 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('admin_token');
     }
+    clearAdminCache();
     setUser(null);
   }, []);
 
@@ -121,6 +123,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // Instant display from cache while revalidating
+    const cached = getCachedUser();
+    if (cached != null && !wasAuthenticatedRef.current) {
+      setUser(cached as AuthUser);
+    }
+
     // Only show full-screen "Checking admin session" on initial load, NOT on tab focus
     // when user is already authenticated (prevents "reload" feeling while encoding)
     if (!isRetry && !wasAuthenticatedRef.current) {
@@ -139,6 +147,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const data = await response.json();
         authLog('Auth success', { user: data.user?.username });
         setUser(data.user);
+        setCachedUser(data.user);
         setStatus('authenticated');
         setError(null);
         setRetryCount(0);

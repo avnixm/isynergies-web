@@ -18,6 +18,7 @@ import { useConfirm } from '@/app/components/ui/confirm-dialog';
 import { HtmlTips } from '@/app/components/ui/html-tips';
 import { useDraftPersistence } from '@/app/lib/use-draft-persistence';
 import { DraftRestorePrompt } from '@/app/components/ui/draft-restore-prompt';
+import { getCached, setCached } from '../_lib/cache';
 
 type Project = {
   id: number;
@@ -117,6 +118,12 @@ export default function ProjectsPage() {
   };
 
   useEffect(() => {
+    const cached = getCached<Project[]>('admin-projects');
+    if (cached != null) {
+      setProjects(cached);
+      setLoading(false);
+      return;
+    }
     fetchProjects();
   }, []);
 
@@ -124,7 +131,9 @@ export default function ProjectsPage() {
     try {
       const response = await fetch('/api/admin/projects');
       const data = await response.json();
-      setProjects(data);
+      const list = Array.isArray(data) ? data : [];
+      setProjects(list);
+      setCached('admin-projects', list);
     } catch (error) {
       console.error('Error fetching projects:', error);
     } finally {

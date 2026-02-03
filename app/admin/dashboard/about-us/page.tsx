@@ -18,6 +18,7 @@ import { useConfirm } from '@/app/components/ui/confirm-dialog';
 import { HtmlTips } from '@/app/components/ui/html-tips';
 import { useDraftPersistence } from '@/app/lib/use-draft-persistence';
 import { DraftRestorePrompt } from '@/app/components/ui/draft-restore-prompt';
+import { getCached, setCached } from '../_lib/cache';
 
 type AboutUsContent = {
   title: string;
@@ -104,6 +105,14 @@ export default function AboutUsPage() {
   const handleDismissGalleryDraft = useCallback(() => dismissDraft(), [dismissDraft]);
 
   useEffect(() => {
+    const contentCache = getCached<AboutUsContent>('admin-about-us-content');
+    const galleryCache = getCached<AboutUsGalleryImage[]>('admin-about-us-gallery');
+    if (contentCache != null && galleryCache != null) {
+      setFormData(contentCache);
+      setGalleryImages(galleryCache);
+      setLoading(false);
+      return;
+    }
     fetchContent();
     fetchGalleryImages();
   }, []);
@@ -113,6 +122,7 @@ export default function AboutUsPage() {
       const response = await fetch('/api/admin/about-us');
       const data = await response.json();
       setFormData(data);
+      setCached('admin-about-us-content', data);
     } catch (error) {
       console.error('Error fetching content:', error);
       setMessage({ type: 'error', text: 'Failed to load content' });
@@ -126,7 +136,9 @@ export default function AboutUsPage() {
       const response = await fetch('/api/admin/about-us/gallery-images');
       if (!response.ok) return;
       const data = await response.json();
-      setGalleryImages(Array.isArray(data) ? data : []);
+      const list = Array.isArray(data) ? data : [];
+      setGalleryImages(list);
+      setCached('admin-about-us-gallery', list);
     } catch (error) {
       console.error('Error fetching gallery images:', error);
     }

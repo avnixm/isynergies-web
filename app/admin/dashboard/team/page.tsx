@@ -20,6 +20,7 @@ import { FeaturedTabPanel } from './_components/FeaturedTabPanel';
 import { LayoutPreviewTab } from './_components/LayoutPreviewTab';
 import { useDraftPersistence } from '@/app/lib/use-draft-persistence';
 import { DraftRestorePrompt } from '@/app/components/ui/draft-restore-prompt';
+import { getCached, setCached } from '../_lib/cache';
 
 type TeamMember = {
   id: number;
@@ -178,6 +179,15 @@ export default function TeamPage() {
     : 0;
 
   useEffect(() => {
+    const membersCache = getCached<TeamMember[]>('admin-team-members');
+    const groupsCache = getCached<TeamGroupsData>('admin-team-groups');
+    if (membersCache != null && groupsCache != null) {
+      setMembers(membersCache);
+      setGroupsData(groupsCache);
+      setLoading(false);
+      setLoadingGroups(false);
+      return;
+    }
     fetchMembers();
     fetchTeamGroups();
   }, []);
@@ -188,6 +198,7 @@ export default function TeamPage() {
       const data = await response.json();
       if (response.ok && Array.isArray(data)) {
         setMembers(data);
+        setCached('admin-team-members', data);
       } else {
         setMembers([]);
         if (!response.ok) {
@@ -209,11 +220,13 @@ export default function TeamPage() {
       const response = await fetch('/api/admin/team-groups');
       const data = await response.json();
       if (response.ok && data && Array.isArray(data.groups) && Array.isArray(data.ungrouped)) {
-        setGroupsData({
+        const next = {
           featuredMemberId: data.featuredMemberId ?? null,
           groups: data.groups,
           ungrouped: data.ungrouped,
-        });
+        };
+        setGroupsData(next);
+        setCached('admin-team-groups', next);
       } else {
         setGroupsData({ featuredMemberId: null, groups: [], ungrouped: [] });
         if (!response.ok) {

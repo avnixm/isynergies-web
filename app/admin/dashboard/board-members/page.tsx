@@ -18,6 +18,7 @@ import { HtmlTips } from '@/app/components/ui/html-tips';
 import { User } from 'lucide-react';
 import { useDraftPersistence } from '@/app/lib/use-draft-persistence';
 import { DraftRestorePrompt } from '@/app/components/ui/draft-restore-prompt';
+import { getCached, setCached } from '../_lib/cache';
 
 type BoardMember = {
   id: number;
@@ -93,6 +94,14 @@ export default function BoardMembersPage() {
   };
 
   useEffect(() => {
+    const membersCache = getCached<BoardMember[]>('admin-board-members-list');
+    const settingsCache = getCached<{ footerText: string }>('admin-board-settings');
+    if (membersCache != null && settingsCache != null) {
+      setMembers(membersCache);
+      setFooterText(settingsCache.footerText ?? '');
+      setLoading(false);
+      return;
+    }
     fetchMembers();
     fetchBoardSettings();
   }, []);
@@ -103,6 +112,7 @@ export default function BoardMembersPage() {
       if (response.ok) {
         const data = await response.json();
         setFooterText(data.footerText);
+        setCached('admin-board-settings', { footerText: data.footerText ?? '' });
       }
     } catch (error) {
       console.error('Error fetching board settings:', error);
@@ -139,7 +149,9 @@ export default function BoardMembersPage() {
     try {
       const response = await fetch('/api/admin/board-members');
       const data = await response.json();
-      setMembers(data);
+      const list = Array.isArray(data) ? data : [];
+      setMembers(list);
+      setCached('admin-board-members-list', list);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching board members:', error);

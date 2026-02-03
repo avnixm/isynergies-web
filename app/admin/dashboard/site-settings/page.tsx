@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { StickyFooter } from '../_components/sticky-footer';
+import { getCached, setCached } from '../_lib/cache';
 import Loading from '@/app/components/ui/loading';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
@@ -41,6 +42,12 @@ export default function SiteSettingsPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    const cached = getCached<SiteSettings>('admin-site-settings');
+    if (cached != null) {
+      setSettings(cached);
+      setLoading(false);
+      return;
+    }
     fetchSettings();
   }, []);
 
@@ -48,8 +55,7 @@ export default function SiteSettingsPage() {
     try {
       const response = await fetch('/api/admin/site-settings');
       const data = await response.json();
-      
-      setSettings({
+      const next = {
         companyName: data.companyName || '',
         companyAddress: data.companyAddress || '',
         companyPhone: data.companyPhone || '',
@@ -59,7 +65,9 @@ export default function SiteSettingsPage() {
         companyTwitter: data.companyTwitter || '',
         companyInstagram: data.companyInstagram || '',
         logoImage: data.logoImage || null,
-      });
+      };
+      setSettings(next);
+      setCached('admin-site-settings', next);
     } catch (error) {
       console.error('Error fetching site settings:', error);
     } finally {

@@ -13,6 +13,7 @@ import { useToast } from '@/app/components/ui/toast';
 import { useConfirm } from '@/app/components/ui/confirm-dialog';
 import { useDraftPersistence } from '@/app/lib/use-draft-persistence';
 import { DraftRestorePrompt } from '@/app/components/ui/draft-restore-prompt';
+import { getCached, setCached } from '../_lib/cache';
 
 type ContactMessage = {
   id: number;
@@ -94,8 +95,7 @@ export default function MessagesPage() {
       if (response.ok) {
         const data = await response.json();
         setMessages(data);
-        
-        
+        setCached('admin-messages', data);
         const currentSelected = selectedMessageRef.current;
         if (currentSelected) {
           const updatedMessage = data.find((m: ContactMessage) => m.id === currentSelected.id);
@@ -113,20 +113,20 @@ export default function MessagesPage() {
   };
 
   useEffect(() => {
-    // Fetch immediately
-    fetchMessages();
-    
-    // Refresh messages every 5 seconds
+    const cached = getCached<ContactMessage[]>('admin-messages');
+    if (cached != null) {
+      setMessages(cached);
+      setLoading(false);
+    } else {
+      fetchMessages();
+    }
     const interval = setInterval(() => {
       fetchMessages();
     }, 5000);
-    
-    // Also refresh when window gains focus
     const handleFocus = () => {
       fetchMessages();
     };
     window.addEventListener('focus', handleFocus);
-    
     return () => {
       clearInterval(interval);
       window.removeEventListener('focus', handleFocus);

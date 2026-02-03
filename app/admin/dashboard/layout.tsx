@@ -16,11 +16,10 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { 
-    status, 
-    user, 
-    error, 
-    isTransientError, 
+  const {
+    status,
+    user,
+    error,
     retryCount,
     logout,
     showSessionExpiredModal,
@@ -29,16 +28,16 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   } = useAuth();
 
   useEffect(() => {
-    document.body.classList.add('admin-dashboard-active');
+    document.body.classList.add("admin-dashboard-active");
     return () => {
-      document.body.classList.remove('admin-dashboard-active');
+      document.body.classList.remove("admin-dashboard-active");
     };
   }, []);
 
   // Only redirect to login if truly unauthenticated (no token)
   // NOT on transient errors or session_expired (modal handles that)
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    if (status === "unauthenticated") {
       router.push("/admin/login");
     }
   }, [status, router]);
@@ -49,7 +48,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   };
 
   // Show checking state
-  if (status === 'checking') {
+  if (status === "checking") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="rounded-xl border border-border bg-white px-6 py-4 text-sm text-gray-800 shadow-sm">
@@ -60,7 +59,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   }
 
   // Show transient error state (but don't kick user out)
-  if (status === 'error') {
+  if (status === "error") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="mx-4 max-w-md rounded-xl border border-amber-200 bg-amber-50 p-6 shadow-sm">
@@ -71,7 +70,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
                 Connection Issue
               </h2>
               <p className="mt-1 text-sm text-amber-700">
-                {error || 'Unable to verify your session.'}
+                {error || "Unable to verify your session."}
               </p>
               {retryCount > 0 && retryCount <= 3 && (
                 <p className="mt-2 flex items-center gap-1 text-xs text-amber-600">
@@ -96,7 +95,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   }
 
   // If unauthenticated, show nothing (redirect will happen)
-  if (status === 'unauthenticated') {
+  if (status === "unauthenticated") {
     return null;
   }
 
@@ -110,7 +109,11 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
         message={error || undefined}
       />
 
-      <div className="flex h-screen bg-white text-gray-800 overflow-hidden max-w-full" data-admin-dashboard style={{ height: '100vh', overflow: 'hidden' }}>
+      <div
+        className="flex h-screen bg-white text-gray-800 overflow-hidden max-w-full"
+        data-admin-dashboard
+        style={{ height: "100vh", overflow: "hidden" }}
+      >
         <Sidebar
           pathname={pathname}
           user={user}
@@ -119,9 +122,17 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
           onMobileClose={() => setSidebarOpen(false)}
         />
 
-        <div className="flex flex-1 flex-col overflow-hidden min-w-0 h-screen" style={{ height: '100vh', overflow: 'hidden' }}>
+        <div
+          className="flex flex-1 flex-col overflow-hidden min-w-0 h-screen"
+          style={{ height: "100vh", overflow: "hidden" }}
+        >
           <Header user={user} onMenuClick={() => setSidebarOpen((prev) => !prev)} />
-          <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto overflow-x-hidden bg-muted/40 min-w-0" style={{ overflowY: 'auto', overflowX: 'hidden' }}>
+          <main
+            id="main-content"
+            tabIndex={-1}
+            className="flex-1 overflow-y-auto overflow-x-hidden bg-muted/40 min-w-0"
+            style={{ overflowY: "auto", overflowX: "hidden" }}
+          >
             <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 md:px-8 md:py-8 w-full min-w-0">
               {children}
             </div>
@@ -148,4 +159,3 @@ export default function AdminLayout({
     </AuthProvider>
   );
 }
-

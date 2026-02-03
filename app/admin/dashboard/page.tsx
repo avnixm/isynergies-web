@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Users, Briefcase, UserCog, Wrench, Activity } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
 import { Button } from '@/app/components/ui/button';
+import { getCached, setCached } from './_lib/cache';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -14,7 +15,14 @@ export default function AdminDashboard() {
     services: 0,
   });
 
+  const STATS_CACHE_KEY = 'admin-dashboard-stats';
+
   useEffect(() => {
+    const cached = getCached<{ boardMembers: number; projects: number; teamMembers: number; services: number }>(STATS_CACHE_KEY);
+    if (cached) {
+      setStats(cached);
+      return;
+    }
     fetchStats();
   }, []);
 
@@ -22,8 +30,6 @@ export default function AdminDashboard() {
     const token = localStorage.getItem('admin_token');
     const headers = { 'Authorization': `Bearer ${token}` };
 
-    
-    
     const [boardResult, projectsResult, teamResult, servicesResult] = await Promise.allSettled([
       fetch('/api/admin/board-members', { headers }).then(res => res.ok ? res.json() : []),
       fetch('/api/admin/projects', { headers }).then(res => res.ok ? res.json() : []),
@@ -31,18 +37,19 @@ export default function AdminDashboard() {
       fetch('/api/admin/services', { headers }).then(res => res.ok ? res.json() : []),
     ]);
 
-    
     const board = boardResult.status === 'fulfilled' ? boardResult.value : [];
     const projects = projectsResult.status === 'fulfilled' ? projectsResult.value : [];
     const team = teamResult.status === 'fulfilled' ? teamResult.value : [];
     const services = servicesResult.status === 'fulfilled' ? servicesResult.value : [];
 
-    setStats({
+    const next = {
       boardMembers: Array.isArray(board) ? board.length : 0,
       projects: Array.isArray(projects) ? projects.length : 0,
       teamMembers: Array.isArray(team) ? team.length : 0,
       services: Array.isArray(services) ? services.length : 0,
-    });
+    };
+    setStats(next);
+    setCached(STATS_CACHE_KEY, next);
   };
 
   const statCards = [
