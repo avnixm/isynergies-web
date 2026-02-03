@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { ToastProvider } from "@/app/components/ui/toast";
 import { ConfirmDialogProvider } from "@/app/components/ui/confirm-dialog";
@@ -15,6 +15,7 @@ import { AlertTriangle, RefreshCw } from "lucide-react";
 function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { 
     status, 
     user, 
@@ -110,10 +111,16 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
       />
 
       <div className="flex h-screen bg-white text-gray-800 overflow-hidden max-w-full" data-admin-dashboard style={{ height: '100vh', overflow: 'hidden' }}>
-        <Sidebar pathname={pathname} user={user} onLogout={handleLogout} />
+        <Sidebar
+          pathname={pathname}
+          user={user}
+          onLogout={handleLogout}
+          mobileOpen={sidebarOpen}
+          onMobileClose={() => setSidebarOpen(false)}
+        />
 
         <div className="flex flex-1 flex-col overflow-hidden min-w-0 h-screen" style={{ height: '100vh', overflow: 'hidden' }}>
-          <Header user={user} />
+          <Header user={user} onMenuClick={() => setSidebarOpen((prev) => !prev)} />
           <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto overflow-x-hidden bg-muted/40 min-w-0" style={{ overflowY: 'auto', overflowX: 'hidden' }}>
             <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 md:px-8 md:py-8 w-full min-w-0">
               {children}

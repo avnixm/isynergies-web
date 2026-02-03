@@ -139,13 +139,13 @@ export default function ServicesPage() {
   const handleStatFormChange = useCallback((updates: Partial<StatFormData>) => {
     setFormData(prev => { const n = { ...prev, ...updates }; if (isStatDialogOpen && (n.label?.trim() || n.value?.trim())) saveStatDraft(n); return n; });
   }, [isStatDialogOpen, saveStatDraft]);
-  const handleRestoreStatDraft = useCallback(() => { const r = restoreStatDraft(); if (r) { setFormData(r); setEditingStat(null); if (!isStatDialogOpen) setIsStatDialogOpen(true); toast.success('Draft restored'); } }, [restoreStatDraft, toast, isStatDialogOpen]);
+  const handleRestoreStatDraft = useCallback(() => { const r = restoreStatDraft(); if (r) { setFormData(r); if (!isStatDialogOpen) setIsStatDialogOpen(true); toast.success('Draft restored'); } }, [restoreStatDraft, toast, isStatDialogOpen]);
   const handleDismissStatDraft = useCallback(() => dismissStatDraft(), [dismissStatDraft]);
 
   const handleTickerFormChange = useCallback((updates: Partial<TickerFormData>) => {
     setTickerFormData(prev => { const n = { ...prev, ...updates }; if (isTickerDialogOpen && n.text?.trim()) saveTickerDraft(n); return n; });
   }, [isTickerDialogOpen, saveTickerDraft]);
-  const handleRestoreTickerDraft = useCallback(() => { const r = restoreTickerDraft(); if (r) { setTickerFormData(r); setEditingTicker(null); if (!isTickerDialogOpen) setIsTickerDialogOpen(true); toast.success('Draft restored'); } }, [restoreTickerDraft, toast, isTickerDialogOpen]);
+  const handleRestoreTickerDraft = useCallback(() => { const r = restoreTickerDraft(); if (r) { setTickerFormData(r); if (!isTickerDialogOpen) setIsTickerDialogOpen(true); toast.success('Draft restored'); } }, [restoreTickerDraft, toast, isTickerDialogOpen]);
   const handleDismissTickerDraft = useCallback(() => dismissTickerDraft(), [dismissTickerDraft]);
 
   const handleServiceFormChange = useCallback((updates: Partial<ServiceFormData>) => {
@@ -157,7 +157,7 @@ export default function ServicesPage() {
   const handleListFormChange = useCallback((updates: Partial<ListFormData>) => {
     setListFormData(prev => { const n = { ...prev, ...updates }; if (isListDialogOpen && n.label?.trim()) saveListDraft(n); return n; });
   }, [isListDialogOpen, saveListDraft]);
-  const handleRestoreListDraft = useCallback(() => { const r = restoreListDraft(); if (r) { setListFormData(r); setEditingListItem(null); if (!isListDialogOpen) setIsListDialogOpen(true); toast.success('Draft restored'); } }, [restoreListDraft, toast, isListDialogOpen]);
+  const handleRestoreListDraft = useCallback(() => { const r = restoreListDraft(); if (r) { setListFormData(r); if (!isListDialogOpen) setIsListDialogOpen(true); toast.success('Draft restored'); } }, [restoreListDraft, toast, isListDialogOpen]);
   const handleDismissListDraft = useCallback(() => dismissListDraft(), [dismissListDraft]);
 
   useEffect(() => {

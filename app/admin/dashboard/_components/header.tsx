@@ -8,9 +8,10 @@ import { Button } from "@/app/components/ui/button"
 
 type HeaderProps = {
   user: { username?: string } | null
+  onMenuClick?: () => void
 }
 
-export function Header({ user }: HeaderProps) {
+export function Header({ user, onMenuClick }: HeaderProps) {
   const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
@@ -76,6 +77,7 @@ export function Header({ user }: HeaderProps) {
             size="icon"
             className="mr-1 rounded-lg md:hidden"
             aria-label="Toggle navigation"
+            onClick={onMenuClick}
           >
             <Menu className="h-4 w-4 text-gray-800" />
           </Button>

@@ -181,7 +181,6 @@ export default function FeaturedAppPage() {
     const restored = restoreCarouselDraft();
     if (restored) {
       setFormCarouselImage(restored);
-      setEditingCarouselImage(null);
       if (!isCarouselDialogOpen) setIsCarouselDialogOpen(true);
       toast.success('Draft restored');
     }
@@ -199,7 +198,6 @@ export default function FeaturedAppPage() {
     const restored = restoreFeatureDraft();
     if (restored) {
       setFormFeature(restored);
-      setEditingFeature(null);
       if (!isFeatureDialogOpen) setIsFeatureDialogOpen(true);
       toast.success('Draft restored');
     }

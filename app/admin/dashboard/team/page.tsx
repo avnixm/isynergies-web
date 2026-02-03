@@ -114,7 +114,6 @@ export default function TeamPage() {
     const restored = restoreDraft();
     if (restored) {
       setFormData(restored);
-      setEditingMember(null);
       setDirty(true);
       if (!isDialogOpen) setIsDialogOpen(true);
       toast.success('Draft restored');

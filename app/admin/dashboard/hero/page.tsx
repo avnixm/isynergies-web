@@ -109,7 +109,6 @@ export default function HeroManagementPage() {
     const restored = restoreTickerDraft();
     if (restored) {
       setTickerFormData(restored);
-      setEditingTickerItem(null);
       if (!isDialogOpen) setIsDialogOpen(true);
       toast.success('Draft restored');
     }
@@ -127,7 +126,6 @@ export default function HeroManagementPage() {
     const restored = restoreHeroImageDraft();
     if (restored) {
       setHeroImageFormData(restored);
-      setEditingHeroImage(null);
       if (!isHeroImageDialogOpen) setIsHeroImageDialogOpen(true);
       toast.success('Draft restored');
     }

@@ -81,7 +81,6 @@ export default function WhatWeDoPage() {
     const restored = restoreDraft();
     if (restored) {
       setFormImage(restored);
-      setEditingImage(null);
       if (!isImageDialogOpen) setIsImageDialogOpen(true);
       toast.success('Draft restored');
     }
