@@ -97,7 +97,6 @@ export default function AboutUsPage() {
     const restored = restoreDraft();
     if (restored) {
       setGalleryFormData(restored);
-      setEditingGalleryImage(null);
       if (!isDialogOpen) setIsDialogOpen(true);
       toast.success('Draft restored');
     }

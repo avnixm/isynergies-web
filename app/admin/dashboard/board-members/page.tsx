@@ -79,7 +79,6 @@ export default function BoardMembersPage() {
     const restored = restoreDraft();
     if (restored) {
       setFormData(restored);
-      setEditingMember(null);
       if (!isDialogOpen) setIsDialogOpen(true);
       toast.success('Draft restored');
     }

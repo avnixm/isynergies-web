@@ -96,7 +96,6 @@ export default function ProjectsPage() {
     const restored = restoreDraft();
     if (restored) {
       setFormData(restored);
-      setEditingProject(null);
       if (!isDialogOpen) setIsDialogOpen(true);
       toast.success('Draft restored');
     }

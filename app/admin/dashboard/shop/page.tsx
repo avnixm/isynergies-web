@@ -111,7 +111,6 @@ export default function ShopPage() {
     const restored = categoryDraft.restoreDraft();
     if (restored) {
       setCategoryFormData(restored);
-      setEditingCategory(null);
       if (!isDialogOpen) setIsDialogOpen(true);
       toast.success('Draft restored');
     }
@@ -120,7 +119,6 @@ export default function ShopPage() {
     const restored = dealerDraft.restoreDraft();
     if (restored) {
       setDealerFormData(restored);
-      setEditingDealer(null);
       if (!isDealerDialogOpen) setIsDealerDialogOpen(true);
       toast.success('Draft restored');
     }

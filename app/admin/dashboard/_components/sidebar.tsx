@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import Link from "next/link"
 import {
   LayoutDashboard,
@@ -15,6 +16,7 @@ import {
   LogOut,
   User as UserIcon,
   Smartphone,
+  X,
 } from "lucide-react"
 
 import { Button } from "@/app/components/ui/button"
@@ -24,6 +26,8 @@ type SidebarProps = {
   pathname: string
   user: { username?: string; email?: string } | null
   onLogout: () => void
+  mobileOpen?: boolean
+  onMobileClose?: () => void
 }
 
 const navItems = [
@@ -49,16 +53,42 @@ const navItems = [
   },
 ]
 
-export function Sidebar({ pathname, user, onLogout }: SidebarProps) {
+function SidebarContent({
+  pathname,
+  user,
+  onLogout,
+  onLinkClick,
+  showCloseButton,
+  onClose,
+}: {
+  pathname: string
+  user: { username?: string; email?: string } | null
+  onLogout: () => void
+  onLinkClick?: () => void
+  showCloseButton?: boolean
+  onClose?: () => void
+}) {
   return (
-    <aside className="hidden md:flex w-64 h-full bg-white text-gray-800 flex-col border-r border-border overflow-hidden flex-shrink-0">
-      {}
-      <div className="p-6 border-b border-border flex-shrink-0">
-        <p className="text-lg font-semibold text-primary truncate">iSynergies Inc.</p>
-        <p className="text-xs text-gray-800 mt-1">Admin CMS</p>
+    <>
+      <div className="p-6 border-b border-border flex-shrink-0 flex items-center justify-between">
+        <div>
+          <p className="text-lg font-semibold text-primary truncate">iSynergies Inc.</p>
+          <p className="text-xs text-gray-800 mt-1">Admin CMS</p>
+        </div>
+        {showCloseButton && onClose && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="rounded-lg md:hidden shrink-0"
+            aria-label="Close menu"
+            onClick={onClose}
+          >
+            <X className="h-5 w-5 text-gray-800" />
+          </Button>
+        )}
       </div>
 
-      {}
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto overflow-x-hidden min-h-0">
         {navItems.map((item) => {
           const Icon = item.icon
@@ -68,6 +98,7 @@ export function Sidebar({ pathname, user, onLogout }: SidebarProps) {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onLinkClick}
               className={cn(
                 "group flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                 isActive
@@ -87,7 +118,6 @@ export function Sidebar({ pathname, user, onLogout }: SidebarProps) {
         })}
       </nav>
 
-      {}
       <div className="p-4 border-t border-border space-y-3 flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
@@ -113,7 +143,56 @@ export function Sidebar({ pathname, user, onLogout }: SidebarProps) {
           Logout
         </Button>
       </div>
-    </aside>
+    </>
+  )
+}
+
+export function Sidebar({ pathname, user, onLogout, mobileOpen = false, onMobileClose }: SidebarProps) {
+  useEffect(() => {
+    if (!mobileOpen || !onMobileClose) return
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onMobileClose()
+    }
+    document.addEventListener("keydown", handleEscape)
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.removeEventListener("keydown", handleEscape)
+      document.body.style.overflow = ""
+    }
+  }, [mobileOpen, onMobileClose])
+
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex w-64 h-full bg-white text-gray-800 flex-col border-r border-border overflow-hidden flex-shrink-0">
+        <SidebarContent pathname={pathname} user={user} onLogout={onLogout} />
+      </aside>
+
+      {/* Mobile drawer overlay */}
+      {mobileOpen && onMobileClose && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/50 md:hidden"
+            aria-hidden
+            onClick={onMobileClose}
+          />
+          <aside
+            className="fixed inset-y-0 left-0 z-50 w-64 max-w-[85vw] bg-white text-gray-800 flex flex-col border-r border-border shadow-xl md:hidden"
+            aria-modal
+            aria-label="Navigation menu"
+          >
+            <SidebarContent
+              pathname={pathname}
+              user={user}
+              onLogout={onLogout}
+              onLinkClick={onMobileClose}
+              showCloseButton
+              onClose={onMobileClose}
+            />
+          </aside>
+        </>
+      )}
+    </>
   )
 }
 
