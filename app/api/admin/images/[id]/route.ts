@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { requireAuth } from '@/app/lib/auth-middleware';
 import { db } from '@/app/db';
-import { images, imageChunks } from '@/app/db/schema';
-import { eq } from 'drizzle-orm';
+import { images, imageChunks, media } from '@/app/db/schema';
+import { and, eq, like } from 'drizzle-orm';
 
 
 
@@ -81,10 +81,38 @@ export async function DELETE(
       );
     }
 
+    
+    
+    const imagePath = `/api/images/${imageId}`;
+
+    
+    
+    const mediaRecords = await db
+      .select()
+      .from(media)
+      .where(
+        and(
+          
+          like(media.url, '/api/images/%'),
+          eq(media.url, imagePath),
+        ),
+      );
+
+    
+    if (mediaRecords.length > 0) {
+      await db
+        .delete(media)
+        .where(eq(media.url, imagePath));
+    }
+
+    
     await db.delete(imageChunks).where(eq(imageChunks.imageId, imageId));
     await db.delete(images).where(eq(images.id, imageId));
 
-    return NextResponse.json({ success: true, message: 'Image deleted successfully' });
+    return NextResponse.json({
+      success: true,
+      message: 'Image and any referencing media records deleted successfully',
+    });
   } catch (error: any) {
     console.error('Error deleting image:', error);
     return NextResponse.json(

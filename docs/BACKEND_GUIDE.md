@@ -11,7 +11,8 @@ This document covers the server-side structure: route layout, validation, DB acc
 3. [DB access and transactions](#db-access-and-transactions)
 4. [Background jobs](#background-jobs)
 5. [File upload handling](#file-upload-handling)
-6. [Adding a new endpoint](#adding-a-new-endpoint)
+6. [Media deletion and cleanup](#media-deletion-and-cleanup)
+7. [Adding a new endpoint](#adding-a-new-endpoint)
 
 ---
 
@@ -75,6 +76,57 @@ Then parse body, validate, call DB, return `NextResponse.json(...)`.
   - Confirm the `/api/admin/blob-available` route reports `available: true` in production.
   - Verify that the `VideoUpload` component shows \"Uploading to Vercel Blob...\" for large files.
 - When Blob is not configured, videos fall back to DB-based upload (`upload-chunk` / `upload`), which is limited by HTTP body size, MySQL packet limits, and DB pool sizing.
+
+---
+
+## Media deletion and cleanup
+
+### Standard delete flows
+
+- **Media as primary abstraction:**
+  - The `media` table is the preferred way to represent uploaded videos and other large assets.
+  - `media.url` often points to `/api/images/:imageId`, which serves the actual bytes (including chunked video).
+- **Admin media delete route (`/api/admin/media/[id]`):**
+  - `DELETE /api/admin/media/:id`:
+    - Looks up the `media` row by id.
+    - If `media.url` starts with `/api/images/:imageId`, it deletes:
+      - All `image_chunks` for that `imageId`.
+      - The `images` row for that `imageId`.
+    - Finally deletes the `media` row itself.
+- **Admin images delete route (`/api/admin/images/[id]`):**
+  - `DELETE /api/admin/images/:id`:
+    - Computes `imagePath = '/api/images/:id'`.
+    - Deletes any `media` rows whose `url` exactly matches `imagePath`.
+    - Deletes all `image_chunks` for `images.id = :id`.
+    - Deletes the `images` row.
+  - This makes it safe for frontend components (`ImageUpload` / `VideoUpload`) to fall back to the images delete route when no `media` record exists.
+
+### Resource-specific deletes
+
+- **Featured App carousel:**
+  - `DELETE /api/admin/featured-app/carousel/:id`:
+    - Fetches the carousel row to inspect its `image` field.
+    - If `image` is a numeric string:
+      - Tries to treat it as a `media.id` and, if found, applies the same cleanup as `/api/admin/media/:id` (including deleting underlying `/api/images/:imageId` data when referenced).
+    - If `image` is a `/api/images/:imageId` URL:
+      - Deletes matching `image_chunks` and `images` rows for that `imageId`.
+    - Then deletes the carousel record.
+  - This ensures that deleting a carousel item generally removes its dedicated video/image storage as well.
+- **Other admin resources:**
+  - Pages that contain image/video fields generally use the shared `ImageUpload` / `VideoUpload` components, whose delete buttons call the admin media/image delete routes.
+  - Where a resource row is deleted (e.g. hero images, features), we do **not** automatically delete the underlying image/media, because the same asset may be reused in multiple places.
+
+### Orphaned data cleanup tool
+
+- **Route:** `POST /api/admin/media-cleanup`
+- **Auth:** Protected by `requireAuth` (admin cookie/token).
+- **Behavior:**
+  - Scans `media` rows where `url` starts with `/api/images/` and deletes any whose referenced `images` row no longer exists.
+  - Scans `image_chunks` rows and deletes any whose `imageId` has no corresponding `images` row.
+  - Returns a JSON report with counts and IDs of deleted rows.
+- **Safety:** The cleanup route does **not** delete `images` rows that may still be referenced by other tables; it only removes:
+  - `media` that point to missing images.
+  - `image_chunks` whose parent image row is gone.
 
 ---
 

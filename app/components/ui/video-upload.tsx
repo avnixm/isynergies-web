@@ -5,6 +5,7 @@ import { useDropzone } from 'react-dropzone';
 import { Upload, Trash2, Video } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
 import { MediaPreview } from './media-preview';
+import { useConfirm } from './confirm-dialog';
 
 const MAX_SINGLE_UPLOAD_BYTES = 20 * 1024 * 1024; // 20 MB
 
@@ -19,9 +20,16 @@ export function VideoUpload({ value, onChange, disabled }: VideoUploadProps) {
   const [uploadProgress, setUploadProgress] = useState<string>('');
   const [deleting, setDeleting] = useState(false);
 
+  const { confirm } = useConfirm();
+
   const handleDelete = useCallback(async () => {
     if (!value || deleting) return;
-    
+
+    const confirmed = await confirm(
+      'Are you sure you want to delete this video? This will permanently remove the underlying file and any related media records.'
+    );
+    if (!confirmed) return;
+
     const token = localStorage.getItem('admin_token');
     if (!token) {
       alert('No authentication token found. Please log in again.');
@@ -78,7 +86,7 @@ export function VideoUpload({ value, onChange, disabled }: VideoUploadProps) {
       setDeleting(false);
       onChange('');
     }
-  }, [value, onChange, deleting]);
+  }, [value, onChange, deleting, confirm]);
 
   const deleteOldBlob = useCallback(async (oldUrl: string, token: string) => {
     if (oldUrl && oldUrl.startsWith('https://') && oldUrl.includes('blob.vercel-storage.com')) {

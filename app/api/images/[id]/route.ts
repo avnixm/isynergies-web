@@ -208,28 +208,54 @@ export async function GET(
       }
 
       if (chunks.length === 0) {
-        console.error(`No chunks found for image ${imageId}`);
+        console.error('[images/:id] No chunks found for image', {
+          imageId,
+          expectedChunks,
+        });
         return NextResponse.json(
-          { error: 'Image chunks not found' },
-          { status: 404 }
+          {
+            error: 'Image chunks not found',
+            imageId,
+            expectedChunks,
+            actualChunks: 0,
+          },
+          { status: 404 },
         );
       }
 
       if (expectedChunks > 0 && chunks.length !== expectedChunks) {
-        console.error(`Incomplete chunks for image ${imageId}: got ${chunks.length}, expected ${expectedChunks}`);
+        console.error('[images/:id] Incomplete chunk set for image', {
+          imageId,
+          expectedChunks,
+          actualChunks: chunks.length,
+          chunkIndices: chunks.map((c: any) => c.chunkIndex),
+        });
         return NextResponse.json(
-          { error: `Incomplete video data: ${chunks.length}/${expectedChunks} chunks available` },
-          { status: 500 }
+          {
+            error: `Incomplete video data: ${chunks.length}/${expectedChunks} chunks available`,
+            imageId,
+            expectedChunks,
+            actualChunks: chunks.length,
+          },
+          { status: 500 },
         );
       }
       
       
       for (let i = 0; i < chunks.length; i++) {
         if (chunks[i].chunkIndex !== i) {
-          console.error(`Missing chunk ${i} for image ${imageId}. Found indices: ${chunks.map(c => c.chunkIndex).join(', ')}`);
+          console.error('[images/:id] Detected missing or out-of-order chunk', {
+            imageId,
+            missingIndex: i,
+            chunkIndices: chunks.map((c: any) => c.chunkIndex),
+          });
           return NextResponse.json(
-            { error: `Missing chunk ${i} in video data` },
-            { status: 500 }
+            {
+              error: `Missing chunk ${i} in video data`,
+              imageId,
+              missingIndex: i,
+            },
+            { status: 500 },
           );
         }
       }
@@ -239,10 +265,17 @@ export async function GET(
       for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
         if (!chunk.data || chunk.data.length === 0) {
-          console.error(`Chunk ${i} for image ${imageId} is empty`);
+          console.error('[images/:id] Empty or missing chunk data', {
+            imageId,
+            chunkIndex: i,
+          });
           return NextResponse.json(
-            { error: `Chunk ${i} is empty or missing data` },
-            { status: 500 }
+            {
+              error: `Chunk ${i} is empty or missing data`,
+              imageId,
+              chunkIndex: i,
+            },
+            { status: 500 },
           );
         }
         chunkDataArray.push(chunk.data);
@@ -254,10 +287,15 @@ export async function GET(
       base64Data = image.data;
       
       if (!base64Data || base64Data.length === 0) {
-        console.error(`Empty base64 data for non-chunked image ${imageId}`);
+        console.error('[images/:id] Empty base64 payload for non-chunked image', {
+          imageId,
+        });
         return NextResponse.json(
-          { error: 'Image data is empty' },
-          { status: 500 }
+          {
+            error: 'Image data is empty',
+            imageId,
+          },
+          { status: 500 },
         );
       }
     }
@@ -288,17 +326,28 @@ export async function GET(
         buffer = Buffer.from(base64Data, 'base64');
       }
       if (buffer.length === 0) {
-        console.error(`Empty buffer after base64 decode for image ${imageId}`);
+        console.error('[images/:id] Empty buffer after base64 decode', {
+          imageId,
+        });
         return NextResponse.json(
-          { error: 'Failed to decode image data' },
-          { status: 500 }
+          {
+            error: 'Failed to decode image data',
+            imageId,
+          },
+          { status: 500 },
         );
       }
     } catch (decodeError: any) {
-      console.error(`Base64 decode error for image ${imageId}:`, decodeError);
+      console.error('[images/:id] Base64 decode error', {
+        imageId,
+        message: decodeError?.message,
+      });
       return NextResponse.json(
-        { error: `Failed to decode image data: ${decodeError.message}` },
-        { status: 500 }
+        {
+          error: `Failed to decode image data: ${decodeError.message}`,
+          imageId,
+        },
+        { status: 500 },
       );
     }
 
