@@ -18,6 +18,65 @@ export function VideoUpload({ value, onChange, disabled }: VideoUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string>('');
 
+  const handleDelete = useCallback(async () => {
+    if (!value) return;
+    
+    const token = localStorage.getItem('admin_token');
+    if (!token) {
+      alert('No authentication token found. Please log in again.');
+      return;
+    }
+
+    try {
+      if (value.startsWith('https://') && value.includes('blob.vercel-storage.com')) {
+        await fetch('/api/admin/delete-blob', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ url: value }),
+        });
+      } else if (value.match(/^\d+$/)) {
+        const id = value;
+        const mediaRes = await fetch(`/api/admin/media/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (mediaRes.ok) {
+          await fetch(`/api/admin/media/${id}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        } else {
+          await fetch(`/api/admin/images/${id}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        }
+      } else if (value.startsWith('/api/images/')) {
+        const match = value.match(/\/api\/images\/(\d+)/);
+        if (match) {
+          await fetch(`/api/admin/images/${match[1]}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        }
+      } else if (value.startsWith('/api/media/')) {
+        const match = value.match(/\/api\/media\/(\d+)/);
+        if (match) {
+          await fetch(`/api/admin/media/${match[1]}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting video:', error);
+    }
+    
+    onChange('');
+  }, [value, onChange]);
+
   const deleteOldBlob = useCallback(async (oldUrl: string, token: string) => {
     if (oldUrl && oldUrl.startsWith('https://') && oldUrl.includes('blob.vercel-storage.com')) {
       try {
@@ -318,7 +377,7 @@ export function VideoUpload({ value, onChange, disabled }: VideoUploadProps) {
           )}
           <button
             type="button"
-            onClick={() => onChange('')}
+            onClick={handleDelete}
             className="absolute top-2 right-2 p-1.5 rounded-lg bg-white border border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed z-20"
             disabled={disabled}
             aria-label="Delete video"

@@ -3,6 +3,71 @@ import { db } from '@/app/db';
 import { images, imageChunks, media } from '@/app/db/schema';
 import { eq, asc } from 'drizzle-orm';
 
+const CHUNKED_VIDEO_CACHE_TTL_MS = 2 * 60 * 1000;
+const CHUNKED_VIDEO_CACHE_MAX = 15;
+const chunkedVideoBufferCache = new Map<
+  number,
+  { buffer: Buffer; expiresAt: number }
+>();
+const chunkedVideoChunksCache = new Map<
+  number,
+  { chunks: any[]; expiresAt: number }
+>();
+
+function getCachedChunkedBuffer(imageId: number): Buffer | null {
+  const entry = chunkedVideoBufferCache.get(imageId);
+  if (!entry || Date.now() >= entry.expiresAt) {
+    if (entry) chunkedVideoBufferCache.delete(imageId);
+    return null;
+  }
+  return entry.buffer;
+}
+
+function setCachedChunkedBuffer(imageId: number, buffer: Buffer): void {
+  if (chunkedVideoBufferCache.size >= CHUNKED_VIDEO_CACHE_MAX) {
+    let oldestKey: number | null = null;
+    let oldestExp = Infinity;
+    for (const [k, v] of chunkedVideoBufferCache) {
+      if (v.expiresAt < oldestExp) {
+        oldestExp = v.expiresAt;
+        oldestKey = k;
+      }
+    }
+    if (oldestKey != null) chunkedVideoBufferCache.delete(oldestKey);
+  }
+  chunkedVideoBufferCache.set(imageId, {
+    buffer,
+    expiresAt: Date.now() + CHUNKED_VIDEO_CACHE_TTL_MS,
+  });
+}
+
+function getCachedChunks(imageId: number): any[] | null {
+  const entry = chunkedVideoChunksCache.get(imageId);
+  if (!entry || Date.now() >= entry.expiresAt) {
+    if (entry) chunkedVideoChunksCache.delete(imageId);
+    return null;
+  }
+  return entry.chunks;
+}
+
+function setCachedChunks(imageId: number, chunks: any[]): void {
+  if (chunkedVideoChunksCache.size >= CHUNKED_VIDEO_CACHE_MAX) {
+    let oldestKey: number | null = null;
+    let oldestExp = Infinity;
+    for (const [k, v] of chunkedVideoChunksCache) {
+      if (v.expiresAt < oldestExp) {
+        oldestExp = v.expiresAt;
+        oldestKey = k;
+      }
+    }
+    if (oldestKey != null) chunkedVideoChunksCache.delete(oldestKey);
+  }
+  chunkedVideoChunksCache.set(imageId, {
+    chunks,
+    expiresAt: Date.now() + CHUNKED_VIDEO_CACHE_TTL_MS,
+  });
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -135,12 +200,17 @@ export async function GET(
       
       const expectedChunks = (image as any).chunkCount || (image as any).chunk_count || 0;
       
-      
-      chunks = await db
-        .select()
-        .from(imageChunks)
-        .where(eq(imageChunks.imageId, imageId))
-        .orderBy(asc(imageChunks.chunkIndex));
+      const cachedChunks = getCachedChunks(imageId);
+      if (cachedChunks) {
+        chunks = cachedChunks;
+      } else {
+        chunks = await db
+          .select()
+          .from(imageChunks)
+          .where(eq(imageChunks.imageId, imageId))
+          .orderBy(asc(imageChunks.chunkIndex));
+        setCachedChunks(imageId, chunks);
+      }
 
       if (chunks.length === 0) {
         console.error(`No chunks found for image ${imageId}`);
@@ -150,9 +220,6 @@ export async function GET(
         );
       }
 
-      console.log(`Reassembling ${chunks.length} chunks for image ${imageId} (expected: ${expectedChunks})`);
-      
-      
       if (expectedChunks > 0 && chunks.length !== expectedChunks) {
         console.error(`Incomplete chunks for image ${imageId}: got ${chunks.length}, expected ${expectedChunks}`);
         return NextResponse.json(
@@ -187,7 +254,6 @@ export async function GET(
       }
       
       base64Data = chunkDataArray.join('');
-      console.log(`Reassembled ${imageId}: ${chunks.length} chunks, ${base64Data.length} base64 chars`);
     } else {
       
       base64Data = image.data;
@@ -205,18 +271,24 @@ export async function GET(
     let buffer: Buffer;
     try {
       if (isChunked && chunks.length > 0) {
-        const bufferParts: Buffer[] = [];
-        for (const chunk of chunks) {
-          const part = Buffer.from(chunk.data, 'base64');
-          if (part.length === 0 && chunk.data.length > 0) {
-            return NextResponse.json(
-              { error: 'Invalid base64 data in chunks' },
-              { status: 500 }
-            );
+        const cached = getCachedChunkedBuffer(imageId);
+        if (cached) {
+          buffer = cached;
+        } else {
+          const bufferParts: Buffer[] = [];
+          for (const chunk of chunks) {
+            const part = Buffer.from(chunk.data, 'base64');
+            if (part.length === 0 && chunk.data.length > 0) {
+              return NextResponse.json(
+                { error: 'Invalid base64 data in chunks' },
+                { status: 500 }
+              );
+            }
+            bufferParts.push(part);
           }
-          bufferParts.push(part);
+          buffer = Buffer.concat(bufferParts);
+          setCachedChunkedBuffer(imageId, buffer);
         }
-        buffer = Buffer.concat(bufferParts);
       } else {
         buffer = Buffer.from(base64Data, 'base64');
       }
@@ -252,20 +324,14 @@ export async function GET(
         hexSignature.startsWith('464c5601') || 
         hexSignature.startsWith('3026b2758e66cf11a6d900aa0062ce6c'); 
       
-      console.log(`Serving video ${imageId}:`, {
-        mimeType: image.mimeType,
-        size: buffer.length,
-        filename: image.filename,
-        isChunked,
-        expectedChunks: isChunked ? ((image as any).chunkCount || (image as any).chunk_count || 0) : 1,
-        actualChunks: isChunked ? (chunks?.length || 0) : 1,
-        base64Length: base64Data.length,
-        bufferLength: buffer.length,
-        firstBytes: hexSignature,
-        lastBytes: lastHexSignature,
-        isValidVideoSignature: isValidVideo,
-        first16Bytes: buffer.slice(0, 16).toString('hex'),
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Serving video ${imageId}:`, {
+          mimeType: image.mimeType,
+          size: buffer.length,
+          bufferLength: buffer.length,
+          isValidVideoSignature: isValidVideo,
+        });
+      }
       
       
       if (buffer.length < 100) {
@@ -338,7 +404,9 @@ export async function GET(
         const chunkSize = (end - start) + 1;
         const chunk = buffer.slice(start, end + 1);
         
-        console.log(`Range request for video ${imageId}: ${start}-${end}/${buffer.length}`);
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Range request for video ${imageId}: ${start}-${end}/${buffer.length}`);
+        }
         
         return new NextResponse(new Uint8Array(chunk), {
           status: 206, // Partial Content

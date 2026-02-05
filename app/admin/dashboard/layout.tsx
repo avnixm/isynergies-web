@@ -28,12 +28,15 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   } = useAuth();
 
   useEffect(() => {
+    checkAuth();
     document.body.classList.add("admin-dashboard-active");
     return () => {
       document.body.classList.remove("admin-dashboard-active");
     };
-  }, []);
+  }, [checkAuth]);
 
+  // Auth check logic lives in AuthProvider (auth-context.tsx) - uses getCachedUser,
+  // setCachedUser, clearAdminCache, retries, session_expired modal, etc.
   // Only redirect to login if truly unauthenticated (no token)
   // NOT on transient errors or session_expired (modal handles that)
   useEffect(() => {

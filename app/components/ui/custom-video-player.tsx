@@ -211,7 +211,13 @@ export function CustomVideoPlayer({
       );
       
       
-      if (directVideoUrl && !useIframeFallback) {
+      // Never iframe-fallback for internal app endpoints (/api/images, /api/media).
+      // If the <video> tag can't load it, an <iframe> will usually be blocked (X-Frame-Options),
+      // which produces the confusing "This content is blocked / refused to connect" overlay.
+      const isInternalApi =
+        src.startsWith('/api/') || /\/api\/(images|media)\//.test(src);
+
+      if (directVideoUrl && !useIframeFallback && !isInternalApi) {
         console.log('Attempting iframe fallback for:', src);
         setUseIframeFallback(true);
         setIsLoading(false);

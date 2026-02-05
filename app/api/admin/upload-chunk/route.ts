@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/app/db';
 import { images, imageChunks } from '@/app/db/schema';
 import { requireAuth } from '@/app/lib/auth-middleware';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 
 
@@ -26,6 +26,14 @@ export async function POST(request: Request) {
 
     if (!file || !uploadId || isNaN(chunkIndex) || isNaN(totalChunks)) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    if (totalChunks <= 0 || chunkIndex < 0 || chunkIndex >= totalChunks) {
+      return NextResponse.json({ error: 'Invalid chunk index or totalChunks' }, { status: 400 });
+    }
+
+    if (!fileName || !fileType || isNaN(fileSize) || fileSize <= 0) {
+      return NextResponse.json({ error: 'Invalid file metadata' }, { status: 400 });
     }
 
     
@@ -79,8 +87,7 @@ export async function POST(request: Request) {
       const allImages = await db
         .select()
         .from(images)
-        .where(eq(images.isChunked, 1))
-        .limit(100);
+        .where(eq(images.isChunked, 1));
 
       let targetImageId: number | null = null;
       for (const img of allImages) {
@@ -92,6 +99,20 @@ export async function POST(request: Request) {
 
       if (!targetImageId) {
         return NextResponse.json({ error: 'Upload session not found' }, { status: 404 });
+      }
+
+      
+      const existingChunk = await db
+        .select()
+        .from(imageChunks)
+        .where(and(eq(imageChunks.imageId, targetImageId), eq(imageChunks.chunkIndex, chunkIndex)))
+        .limit(1);
+
+      if (existingChunk.length > 0) {
+        return NextResponse.json(
+          { error: `Chunk ${chunkIndex} already uploaded` },
+          { status: 409 }
+        );
       }
 
       

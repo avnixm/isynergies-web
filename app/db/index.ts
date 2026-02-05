@@ -5,6 +5,16 @@ import * as schema from './schema';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
+function parsePositiveInt(value: string | undefined, fallback: number): number {
+  const n = parseInt(value || '', 10);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
+function parseNonNegativeInt(value: string | undefined, fallback: number): number {
+  const n = parseInt(value || '', 10);
+  return Number.isFinite(n) && n >= 0 ? n : fallback;
+}
+
 
 
 
@@ -21,8 +31,18 @@ const connection = mysql.createPool({
   
   
   
-  connectionLimit: isDevelopment ? 5 : 1,
-  queueLimit: isDevelopment ? 10 : 3,
+  // MySQL2 pool sizing:
+  // - cPanel/PM2 runs as a long-lived Node process, so we can safely use a higher pool size.
+  // - Very small limits cause "Queue limit reached" under normal burst traffic (range requests, admin dashboard loads).
+  connectionLimit: parsePositiveInt(
+    process.env.DB_CONNECTION_LIMIT,
+    isDevelopment ? 5 : 10
+  ),
+  // 0 = unlimited in mysql2; use a higher default instead of a tiny queue to avoid hard failures.
+  queueLimit: parseNonNegativeInt(
+    process.env.DB_QUEUE_LIMIT,
+    isDevelopment ? 10 : 50
+  ),
   idleTimeout: 5000,
   connectTimeout: parseInt(process.env.DB_CONNECT_TIMEOUT || '15000', 10), 
   

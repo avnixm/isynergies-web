@@ -618,26 +618,15 @@ export default function FeaturedApp() {
   const getMediaUrl = (value: string | null | undefined, kind: 'image' | 'video' = 'image'): string => {
     if (!value) return '';
 
-    // IMPORTANT: Videos uploaded via Vercel Blob are stored in the `media` table.
-    // If we ever get a video value that points at `/api/images/:id`, remap it to `/api/media/:id`
-    // to avoid returning non-video content (ID collisions between images and media).
-    if (kind === 'video') {
-      
-      const relMatch = value.match(/^\/api\/images\/(\d+)\s*$/);
-      if (relMatch) {
-        return `/api/media/${relMatch[1]}`;
-      }
-
-      
-      const absMatch = value.match(/^(https?:\/\/[^/]+)\/api\/images\/(\d+)\s*$/);
-      if (absMatch) {
-        return `${absMatch[1]}/api/media/${absMatch[2]}`;
-      }
-
-      
-      if (isNumericId(value)) {
-        return `/api/media/${value.trim()}`;
-      }
+    // Videos can be stored either:
+    // - as a media ID (from `media` table), or
+    // - as a DB image/video record served by `/api/images/:id`, or
+    // - as a Vercel Blob URL.
+    //
+    // We use `/api/images/:id` for numeric IDs because it can serve BOTH images and media IDs
+    // without redirects (important: Chromium can block media loads that go through redirects).
+    if (kind === 'video' && isNumericId(value)) {
+      return `/api/images/${value.trim()}`;
     }
 
     
