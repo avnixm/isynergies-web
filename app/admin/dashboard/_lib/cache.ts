@@ -1,25 +1,54 @@
 /**
  * In-memory cache for admin dashboard to reduce repeated API calls.
  * Survives client-side navigation; cleared on logout.
+ * Auth user is also persisted to sessionStorage so it survives full page reloads
+ * (e.g. when proxy causes reloads), avoiding "Checking admin session" flash.
  */
 
-const AUTH_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const AUTH_TTL_MS = 30 * 60 * 1000; // 30 minutes
 const STATS_TTL_MS = 2 * 60 * 1000; // 2 minutes
+const AUTH_STORAGE_KEY = 'admin_auth_cache';
 
 let authCache: { user: unknown; expiresAt: number } | null = null;
 const genericCache = new Map<string, { value: unknown; expiresAt: number }>();
 
-export function getCachedUser(): unknown | null {
-  if (!authCache) return null;
-  if (Date.now() >= authCache.expiresAt) {
-    authCache = null;
+function getAuthFromStorage(): { user: unknown; expiresAt: number } | null {
+  if (typeof sessionStorage === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(AUTH_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { user: unknown; expiresAt: number };
+    if (Date.now() >= parsed.expiresAt) {
+      sessionStorage.removeItem(AUTH_STORAGE_KEY);
+      return null;
+    }
+    return parsed;
+  } catch {
     return null;
   }
-  return authCache.user;
+}
+
+export function getCachedUser(): unknown | null {
+  if (authCache && Date.now() < authCache.expiresAt) return authCache.user;
+  if (authCache && Date.now() >= authCache.expiresAt) authCache = null;
+  const stored = getAuthFromStorage();
+  if (stored) {
+    authCache = stored; // hydrate in-memory
+    return stored.user;
+  }
+  return null;
 }
 
 export function setCachedUser(user: unknown): void {
-  authCache = { user, expiresAt: Date.now() + AUTH_TTL_MS };
+  const entry = { user, expiresAt: Date.now() + AUTH_TTL_MS };
+  authCache = entry;
+  if (typeof sessionStorage !== 'undefined') {
+    try {
+      sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(entry));
+    } catch {
+      // ignore quota / private mode
+    }
+  }
 }
 
 export function getCached<T>(key: string): T | null {
@@ -40,4 +69,11 @@ export function setCached<T>(key: string, value: T, ttlMs: number = STATS_TTL_MS
 export function clearAdminCache(): void {
   authCache = null;
   genericCache.clear();
+  if (typeof sessionStorage !== 'undefined') {
+    try {
+      sessionStorage.removeItem(AUTH_STORAGE_KEY);
+    } catch {
+      // ignore
+    }
+  }
 }

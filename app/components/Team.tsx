@@ -824,7 +824,7 @@ export default function Team() {
       {}
       <div className="container relative z-10 mx-auto max-w-7xl px-4 md:px-8 lg:px-16">
         {}
-        <div className="mx-auto mb-10 w-full max-w-5xl overflow-hidden rounded-2xl">
+          <div className="mx-auto mb-10 w-full max-w-5xl overflow-hidden rounded-2xl">
           <div className="flex h-[60px] items-center justify-center bg-gradient-to-r from-transparent via-[#0D1E66] to-transparent">
             <h2 className="text-center font-sans text-4xl font-semibold text-white md:text-5xl">
               Our Team

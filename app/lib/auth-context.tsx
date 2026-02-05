@@ -130,16 +130,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Instant display from cache while revalidating
     const cached = getCachedUser();
     if (cached != null) {
-      console.log('[Auth] Using cached user (no /me flash)');
+      authLog('Using cached user (no /me flash)');
       if (!wasAuthenticatedRef.current) {
         setUser(cached as AuthUser);
+        // Avoid "Checking admin session" screen on full reload (e.g. cPanel proxy):
+        // show dashboard immediately and revalidate in background.
+        setStatus('authenticated');
+        wasAuthenticatedRef.current = true;
       }
     } else {
-      console.log('[Auth] No cache, fetching /me');
+      authLog('No cache, fetching /me');
     }
 
-    // Silent recheck (tab focus/visibility): never show full-screen "Checking..."
-    if (!silentRecheck && !isRetry && !wasAuthenticatedRef.current) {
+    // Only show full-screen "Checking admin session" when we have no token or no cache.
+    // If we have a token and cached user, we already set status to 'authenticated' above.
+    const hasToken = !!token;
+    const hasCache = cached != null;
+    if (!isRetry && !wasAuthenticatedRef.current && !(hasToken && hasCache)) {
       setStatus('checking');
     }
 
