@@ -10,6 +10,7 @@ import {
 } from '@/app/components/ui/dropdown-menu';
 import { MoreVertical, Pencil, Trash2, User } from 'lucide-react';
 import { resolveImageSrc } from '@/app/lib/resolve-image-src';
+import { sanitizeHtml, stripHtml } from '@/app/lib/sanitize-html';
 
 export type MembersTabCardMember = {
   id: number;
@@ -41,7 +42,7 @@ export function MembersTabCard({ member, onEdit, onDelete }: MembersTabCardProps
         {src ? (
           <img
             src={src}
-            alt={member.name}
+            alt={stripHtml(member.name)}
             className="relative z-[1] h-full w-full object-contain object-center transition-transform duration-200 group-hover:scale-110"
           />
         ) : (
@@ -54,12 +55,16 @@ export function MembersTabCard({ member, onEdit, onDelete }: MembersTabCardProps
 
       <div className="flex min-w-0 flex-1 flex-col border-l border-border">
         <div className="px-3 py-2">
-          <p className="line-clamp-1 text-sm font-semibold leading-tight text-foreground" title={member.name}>
-            {member.name}
-          </p>
-          <p className="line-clamp-2 text-xs text-muted-foreground" title={member.position}>
-            {member.position}
-          </p>
+          <p
+            className="line-clamp-1 text-sm font-semibold leading-tight text-foreground"
+            title={stripHtml(member.name)}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(member.name) }}
+          />
+          <p
+            className="line-clamp-2 text-xs text-muted-foreground"
+            title={stripHtml(member.position)}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(member.position) }}
+          />
         </div>
         <div className="mt-auto flex items-center justify-between gap-2 border-t border-border px-3 py-1.5">
           <Badge variant="secondary" className="text-[10px]">

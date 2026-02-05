@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo } from 'react';
-import { usePathname } from 'next/navigation';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { Info } from 'lucide-react';
 import Loading from '@/app/components/ui/loading';
 import { Button } from '@/app/components/ui/button';
@@ -18,9 +17,14 @@ import { MembersTab, type SortOption, type MembersFilter } from './_components/M
 import { GroupsTab } from './_components/GroupsTab';
 import { FeaturedTabPanel } from './_components/FeaturedTabPanel';
 import { LayoutPreviewTab } from './_components/LayoutPreviewTab';
-import { useDraftPersistence } from '@/app/lib/use-draft-persistence';
-import { DraftRestorePrompt } from '@/app/components/ui/draft-restore-prompt';
-import { getCached, setCached } from '../_lib/cache';
+import { sanitizeHtml } from '@/app/lib/sanitize-html';
+import {
+  draftKey,
+  getDraft,
+  setDraftDebounced,
+  removeDraft,
+  type TeamMemberDraft,
+} from '@/app/lib/draft-storage';
 
 type TeamMember = {
   id: number;
@@ -46,23 +50,9 @@ type TeamGroupsData = {
   ungrouped: TeamMember[];
 };
 
-function getToken() {
-  if (typeof window === 'undefined') return '';
-  return localStorage.getItem('admin_token') ?? '';
-}
-
-// Form data type for draft persistence
-type MemberFormData = {
-  name: string;
-  position: string;
-  image: string;
-  displayOrder: number;
-};
-
 export default function TeamPage() {
   const toast = useToast();
   const { confirm } = useConfirm();
-  const pathname = usePathname();
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [groupsData, setGroupsData] = useState<TeamGroupsData | null>(null);
@@ -71,59 +61,12 @@ export default function TeamPage() {
   const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
   const [orderError, setOrderError] = useState<string>('');
   const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState<MemberFormData>({
+  const [formData, setFormData] = useState({
     name: '',
     position: '',
     image: '',
     displayOrder: 0,
   });
-
-  // Draft persistence for member form
-  const draftEntityId = editingMember?.id ?? 'new';
-  const {
-    showRestorePrompt,
-    draftMeta,
-    saveDraft,
-    clearDraft,
-    restoreDraft,
-    dismissDraft,
-    isDirty,
-    setDirty,
-  } = useDraftPersistence<MemberFormData>({
-    entity: 'team-member',
-    id: draftEntityId,
-    route: pathname,
-    debounceMs: 500,
-  });
-
-  // Draft auto-saves; no modal on close—draft shows on page when present.
-
-  // Auto-save form data as draft when it changes
-  const handleFormChange = useCallback((updates: Partial<MemberFormData>) => {
-    setFormData(prev => {
-      const newData = { ...prev, ...updates };
-      // Only save draft if dialog is open and form has meaningful content
-      if (isDialogOpen && (newData.name.trim() || newData.position.trim())) {
-        saveDraft(newData);
-      }
-      return newData;
-    });
-  }, [isDialogOpen, saveDraft]);
-
-  // Restore draft: if dialog closed, open it and fill; if dialog open, just fill form
-  const handleRestoreDraft = useCallback(() => {
-    const restored = restoreDraft();
-    if (restored) {
-      setFormData(restored);
-      setDirty(true);
-      if (!isDialogOpen) setIsDialogOpen(true);
-      toast.success('Draft restored');
-    }
-  }, [restoreDraft, toast, isDialogOpen]);
-
-  const handleDismissDraft = useCallback(() => {
-    dismissDraft();
-  }, [dismissDraft]);
   // Group builder state
   const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
   const [editingGroupId, setEditingGroupId] = useState<number | null>(null);
@@ -134,8 +77,17 @@ export default function TeamPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('displayOrder');
   const [membersFilter, setMembersFilter] = useState<MembersFilter>('all');
+  const initialFormDataRef = useRef<{ name: string; position: string; image: string; displayOrder: number } | null>(null);
 
   const safeMembers = Array.isArray(members) ? members : [];
+  const currentDraftKey = isDialogOpen ? draftKey('team_member', editingMember?.id ?? null) : null;
+  const hasDraft = typeof window !== 'undefined' && currentDraftKey ? getDraft<TeamMemberDraft>(currentDraftKey) != null : false;
+  const isDirty = isDialogOpen && initialFormDataRef.current != null && (
+    formData.name !== initialFormDataRef.current.name ||
+    formData.position !== initialFormDataRef.current.position ||
+    formData.image !== initialFormDataRef.current.image ||
+    formData.displayOrder !== initialFormDataRef.current.displayOrder
+  );
 
   const filteredAndSortedMembers = useMemo(() => {
     let list = safeMembers;
@@ -179,26 +131,36 @@ export default function TeamPage() {
     : 0;
 
   useEffect(() => {
-    const membersCache = getCached<TeamMember[]>('admin-team-members');
-    const groupsCache = getCached<TeamGroupsData>('admin-team-groups');
-    if (membersCache != null && groupsCache != null) {
-      setMembers(membersCache);
-      setGroupsData(groupsCache);
-      setLoading(false);
-      setLoadingGroups(false);
-      return;
-    }
     fetchMembers();
     fetchTeamGroups();
   }, []);
 
+  useEffect(() => {
+    if (isDialogOpen && currentDraftKey) {
+      setDraftDebounced(currentDraftKey, formData);
+    }
+  }, [isDialogOpen, currentDraftKey, formData.name, formData.position, formData.image, formData.displayOrder]);
+
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
+
   const fetchMembers = async () => {
     try {
-      const response = await fetch('/api/admin/team');
+      const response = await fetch('/api/admin/team', {
+        credentials: 'include',
+      });
       const data = await response.json();
       if (response.ok && Array.isArray(data)) {
         setMembers(data);
-        setCached('admin-team-members', data);
       } else {
         setMembers([]);
         if (!response.ok) {
@@ -217,16 +179,16 @@ export default function TeamPage() {
 
   const fetchTeamGroups = async () => {
     try {
-      const response = await fetch('/api/admin/team-groups');
+      const response = await fetch('/api/admin/team-groups', {
+        credentials: 'include',
+      });
       const data = await response.json();
       if (response.ok && data && Array.isArray(data.groups) && Array.isArray(data.ungrouped)) {
-        const next = {
+        setGroupsData({
           featuredMemberId: data.featuredMemberId ?? null,
           groups: data.groups,
           ungrouped: data.ungrouped,
-        };
-        setGroupsData(next);
-        setCached('admin-team-groups', next);
+        });
       } else {
         setGroupsData({ featuredMemberId: null, groups: [], ungrouped: [] });
         if (!response.ok) {
@@ -248,33 +210,77 @@ export default function TeamPage() {
     fetchTeamGroups();
   };
 
-  const handleOpenAddDialog = () => {
+  const handleOpenAddDialog = async () => {
     setEditingMember(null);
-    
-    // Start with fresh form data
-    const freshFormData = {
-      name: '',
-      position: '',
-      image: '',
-      displayOrder: getNextAvailableOrder(),
-    };
-    
-    setFormData(freshFormData);
+    const key = draftKey('team_member', null);
+    const draft = getDraft<TeamMemberDraft>(key);
+    let next: { name: string; position: string; image: string; displayOrder: number };
+    if (draft) {
+      const restore = await confirm('You have an unsaved draft. Restore it?', 'Restore draft?');
+      if (restore) {
+        next = {
+          name: draft.name ?? '',
+          position: draft.position ?? '',
+          image: draft.image ?? '',
+          displayOrder: typeof draft.displayOrder === 'number' ? draft.displayOrder : getNextAvailableOrder(),
+        };
+      } else {
+        removeDraft(key);
+        next = {
+          name: '',
+          position: '',
+          image: '',
+          displayOrder: getNextAvailableOrder(),
+        };
+      }
+    } else {
+      next = {
+        name: '',
+        position: '',
+        image: '',
+        displayOrder: getNextAvailableOrder(),
+      };
+    }
+    setFormData(next);
+    initialFormDataRef.current = { ...next };
     setOrderError('');
-    setDirty(false);
     setIsDialogOpen(true);
   };
 
-  const handleOpenEditDialog = (member: TeamMember) => {
+  const handleOpenEditDialog = async (member: TeamMember) => {
+    const key = draftKey('team_member', member.id);
+    const draft = getDraft<TeamMemberDraft>(key);
+    let next: { name: string; position: string; image: string; displayOrder: number };
+    if (draft) {
+      const restore = await confirm('You have an unsaved draft for this member. Restore it?', 'Restore draft?');
+      if (restore) {
+        next = {
+          name: draft.name ?? '',
+          position: draft.position ?? '',
+          image: draft.image ?? '',
+          displayOrder: typeof draft.displayOrder === 'number' ? draft.displayOrder : member.displayOrder,
+        };
+      } else {
+        removeDraft(key);
+        next = {
+          name: member.name,
+          position: member.position,
+          image: member.image || '',
+          displayOrder: member.displayOrder,
+        };
+      }
+    } else {
+      next = {
+        name: member.name,
+        position: member.position,
+        image: member.image || '',
+        displayOrder: member.displayOrder,
+      };
+    }
+    setFormData(next);
+    initialFormDataRef.current = { ...next };
     setEditingMember(member);
-    setFormData({
-      name: member.name,
-      position: member.position,
-      image: member.image || '',
-      displayOrder: member.displayOrder,
-    });
     setOrderError('');
-    setDirty(false);
     setIsDialogOpen(true);
   };
 
@@ -288,7 +294,12 @@ export default function TeamPage() {
       displayOrder: getNextAvailableOrder(),
     });
     setOrderError('');
-    // Draft stays saved; will show on page when present
+    initialFormDataRef.current = null;
+  };
+
+  const handleDiscardDraft = () => {
+    if (currentDraftKey) removeDraft(currentDraftKey);
+    handleCloseDialog();
   };
 
   const handleSave = async () => {
@@ -305,25 +316,28 @@ export default function TeamPage() {
     }
 
     setSaving(true);
-    const token = localStorage.getItem('admin_token');
 
     try {
       const url = editingMember ? `/api/admin/team/${editingMember.id}` : '/api/admin/team';
       const method = editingMember ? 'PUT' : 'POST';
+      const payload = {
+        ...formData,
+        name: sanitizeHtml(formData.name),
+        position: sanitizeHtml(formData.position),
+      };
 
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        credentials: 'include',
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
-        // Clear draft on successful save
-        clearDraft();
-        setDirty(false);
+        const key = draftKey('team_member', editingMember?.id ?? null);
+        removeDraft(key);
         toast.success(editingMember ? 'Team member updated successfully!' : 'Team member added successfully!');
         handleCloseDialog();
         refetchAll();
@@ -346,11 +360,10 @@ export default function TeamPage() {
     
     if (!confirmed) return;
 
-    const token = localStorage.getItem('admin_token');
     try {
       const response = await fetch(`/api/admin/team/${id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
+        credentials: 'include',
       });
       
       if (response.ok) {
@@ -367,11 +380,11 @@ export default function TeamPage() {
 
   
   const handleSetFeatured = async (memberId: number | null) => {
-    const token = getToken();
     try {
       const res = await fetch('/api/admin/team-groups/featured', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ memberId }),
       });
       if (res.ok) {
@@ -413,12 +426,12 @@ export default function TeamPage() {
       return;
     }
     setSavingGroup(true);
-    const token = getToken();
     try {
       if (editingGroupId !== null) {
         const res = await fetch(`/api/admin/team-groups/${editingGroupId}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify(groupFormData),
         });
         if (res.ok) {
@@ -429,7 +442,8 @@ export default function TeamPage() {
       } else {
         const res = await fetch('/api/admin/team-groups', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify(groupFormData),
         });
         if (res.ok) {
@@ -451,11 +465,10 @@ export default function TeamPage() {
       'Delete Group'
     );
     if (!ok) return;
-    const token = getToken();
     try {
       const res = await fetch(`/api/admin/team-groups/${g.id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
       });
       if (res.ok) {
         toast.success('Group deleted');
@@ -474,16 +487,17 @@ export default function TeamPage() {
     const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
     if (swapIdx < 0 || swapIdx >= list.length) return;
     const other = list[swapIdx];
-    const token = getToken();
     try {
       await fetch(`/api/admin/team-groups/${g.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ displayOrder: other.displayOrder }),
       });
       await fetch(`/api/admin/team-groups/${other.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ displayOrder: g.displayOrder }),
       });
       toast.success('Order updated');
@@ -495,12 +509,12 @@ export default function TeamPage() {
 
   const handleAssignToGroup = async (member: TeamMember, newGroupId: number | null) => {
     setAssigningMemberId(member.id);
-    const token = getToken();
     try {
       if (newGroupId === null) {
         const res = await fetch(`/api/admin/team/${member.id}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ groupId: null, groupOrder: null }),
         });
         if (res.ok) {
@@ -518,7 +532,8 @@ export default function TeamPage() {
       ];
       let res = await fetch(`/api/admin/team-groups/${newGroupId}/members`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ members: newMembers }),
       });
       if (!res.ok) {
@@ -533,7 +548,8 @@ export default function TeamPage() {
             .map((m, i) => ({ memberId: m.id, groupOrder: i }));
           await fetch(`/api/admin/team-groups/${member.groupId}/members`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify({ members: without }),
           });
         }
@@ -554,7 +570,6 @@ export default function TeamPage() {
     direction: 'up' | 'down'
   ) => {
     setMovingMemberId(member.id);
-    const token = getToken();
     try {
       if (groupId === null) {
         const list = [...(groupsData?.ungrouped ?? [])].sort((a, b) => a.displayOrder - b.displayOrder);
@@ -565,12 +580,14 @@ export default function TeamPage() {
         const other = list[swapIdx];
         await fetch(`/api/admin/team/${member.id}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ displayOrder: other.displayOrder }),
         });
         await fetch(`/api/admin/team/${other.id}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ displayOrder: member.displayOrder }),
         });
         toast.success('Order updated');
@@ -590,7 +607,8 @@ export default function TeamPage() {
       const membersPayload = reordered.map((m, i) => ({ memberId: m.id, groupOrder: i }));
       const res = await fetch(`/api/admin/team-groups/${groupId}/members`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ members: membersPayload }),
       });
       if (res.ok) {
@@ -605,12 +623,12 @@ export default function TeamPage() {
   };
 
   const handleReorderInGroup = async (groupId: number, orderedMembers: TeamMember[]) => {
-    const token = getToken();
     try {
       const membersPayload = orderedMembers.map((m, i) => ({ memberId: m.id, groupOrder: i }));
       const res = await fetch(`/api/admin/team-groups/${groupId}/members`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ members: membersPayload }),
       });
       if (res.ok) {
@@ -623,13 +641,13 @@ export default function TeamPage() {
   };
 
   const handleReorderUngrouped = async (orderedMembers: TeamMember[]) => {
-    const token = getToken();
     try {
       await Promise.all(
         orderedMembers.map((m, i) =>
           fetch(`/api/admin/team/${m.id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify({ displayOrder: i }),
           })
         )
@@ -733,25 +751,18 @@ export default function TeamPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Draft banner on page when there's a draft (dialog closed) */}
-      {!isDialogOpen && showRestorePrompt && draftMeta && (
-        <DraftRestorePrompt
-          savedAt={draftMeta.savedAt}
-          onRestore={handleRestoreDraft}
-          onDismiss={handleDismissDraft}
-        />
-      )}
-
       {}
       <Dialog
         open={isDialogOpen}
-        onOpenChange={(open) => {
-          if (!open) handleCloseDialog();
-          else setIsDialogOpen(true);
-        }}
+        onOpenChange={setIsDialogOpen}
         title={editingMember ? 'Edit Team Member' : 'Add Team Member'}
         footer={
           <DialogFooter className="justify-end">
+            {hasDraft && (
+              <Button variant="ghost" onClick={handleDiscardDraft} disabled={saving} className="mr-auto text-muted-foreground">
+                Discard draft
+              </Button>
+            )}
             <Button variant="outline" onClick={handleCloseDialog} disabled={saving}>
               Cancel
             </Button>
@@ -772,22 +783,12 @@ export default function TeamPage() {
               <code className="rounded bg-background px-1 py-0.5 text-xs">&lt;p&gt;</code>, etc.
             </div>
           </div>
-
-          {/* Unsaved draft found – show inside add/edit popup when draft exists */}
-          {showRestorePrompt && draftMeta && (
-            <DraftRestorePrompt
-              savedAt={draftMeta.savedAt}
-              onRestore={handleRestoreDraft}
-              onDismiss={handleDismissDraft}
-            />
-          )}
-
           <div className="grid gap-6 md:grid-cols-[1fr,1.5fr]">
             <div className="space-y-2">
               <Label>Photo</Label>
               <ImageUpload
                 value={formData.image}
-                onChange={(url) => handleFormChange({ image: url })}
+                onChange={(url) => setFormData((prev) => ({ ...prev, image: url }))}
               />
             </div>
             <div className="flex flex-col gap-4">
@@ -796,7 +797,7 @@ export default function TeamPage() {
                 <Input
                   id="dialog-name"
                   value={formData.name}
-                  onChange={(e) => handleFormChange({ name: e.target.value })}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                   placeholder="John Doe"
                   required
                 />
@@ -806,7 +807,7 @@ export default function TeamPage() {
                 <Input
                   id="dialog-position"
                   value={formData.position}
-                  onChange={(e) => handleFormChange({ position: e.target.value })}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, position: e.target.value }))}
                   placeholder="Software Developer"
                   required
                 />
@@ -818,7 +819,7 @@ export default function TeamPage() {
                   type="number"
                   value={formData.displayOrder}
                   onChange={(e) => {
-                    handleFormChange({ displayOrder: parseInt(e.target.value) || 0 });
+                    setFormData((prev) => ({ ...prev, displayOrder: parseInt(e.target.value) || 0 }));
                     setOrderError('');
                   }}
                   className={orderError ? 'border-red-500' : ''}

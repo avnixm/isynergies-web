@@ -190,7 +190,6 @@ export default function AboutUsPage() {
 
     setSavingGallery(true);
     try {
-      const token = localStorage.getItem('admin_token');
       const url = editingGalleryImage 
         ? `/api/admin/about-us/gallery-images/${editingGalleryImage.id}`
         : '/api/admin/about-us/gallery-images';
@@ -200,8 +199,8 @@ export default function AboutUsPage() {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
+        credentials: 'include',
         body: JSON.stringify(galleryFormData),
       });
 
@@ -230,12 +229,9 @@ export default function AboutUsPage() {
     if (!confirmed) return;
 
     try {
-      const token = localStorage.getItem('admin_token');
       const response = await fetch(`/api/admin/about-us/gallery-images/${id}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -264,13 +260,12 @@ export default function AboutUsPage() {
     setMessage(null);
 
     try {
-      const token = localStorage.getItem('admin_token');
       const response = await fetch('/api/admin/about-us', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
+        credentials: 'include',
         body: JSON.stringify(formData),
       });
 

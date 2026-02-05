@@ -27,14 +27,11 @@ export default function AdminDashboard() {
   }, []);
 
   const fetchStats = async () => {
-    const token = localStorage.getItem('admin_token');
-    const headers = { 'Authorization': `Bearer ${token}` };
-
     const [boardResult, projectsResult, teamResult, servicesResult] = await Promise.allSettled([
-      fetch('/api/admin/board-members', { headers }).then(res => res.ok ? res.json() : []),
-      fetch('/api/admin/projects', { headers }).then(res => res.ok ? res.json() : []),
-      fetch('/api/admin/team', { headers }).then(res => res.ok ? res.json() : []),
-      fetch('/api/admin/services', { headers }).then(res => res.ok ? res.json() : []),
+      fetch('/api/admin/board-members', { credentials: 'include' }).then(res => res.ok ? res.json() : []),
+      fetch('/api/admin/projects', { credentials: 'include' }).then(res => res.ok ? res.json() : []),
+      fetch('/api/admin/team', { credentials: 'include' }).then(res => res.ok ? res.json() : []),
+      fetch('/api/admin/services', { credentials: 'include' }).then(res => res.ok ? res.json() : []),
     ]);
 
     const board = boardResult.status === 'fulfilled' ? boardResult.value : [];

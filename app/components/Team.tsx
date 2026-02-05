@@ -5,7 +5,7 @@ import { Encode_Sans_Expanded } from 'next/font/google';
 import Image from 'next/image';
 import Loading from './ui/loading';
 import { resolveImageSrc } from '@/app/lib/resolve-image-src';
-import { sanitizeHtml } from '@/app/lib/sanitize';
+import { sanitizeHtml, stripHtml as stripHtmlLib } from '@/app/lib/sanitize-html';
 
 const encodeSansExpanded = Encode_Sans_Expanded({
   subsets: ['latin'],
@@ -248,6 +248,8 @@ function buildTeamLayout({
   return { row1, row2, row3 };
 }
 
+const stripHtml = stripHtmlLib;
+
 function TeamMemberCard({
   member,
   overlayHidden,
@@ -279,7 +281,7 @@ function TeamMemberCard({
       }}
       role="button"
       tabIndex={0}
-      aria-label={`${member.name}, ${member.position}`}
+      aria-label={`${stripHtml(member.name)}, ${stripHtml(member.position)}`}
     >
       <div
         className="relative h-[200px] w-[165px] rounded-[24px] overflow-visible shadow-[0_10px_25px_rgba(0,0,0,0.25)]"
@@ -306,7 +308,7 @@ function TeamMemberCard({
           <div className="absolute inset-0 z-[1] flex items-end justify-center overflow-visible">
             <Image
               src={src}
-              alt={member.name}
+              alt={stripHtml(member.name)}
               width={220}
               height={240}
               className="rounded-[24px] object-contain outline-none"
@@ -335,7 +337,7 @@ function TeamMemberCard({
             className={`${encodeSansExpanded.className} text-white text-[18px] md:text-[20px] font-bold leading-tight mb-0.5`}
             dangerouslySetInnerHTML={{ __html: sanitizeHtml(member.name) }}
           />
-          <div 
+          <div
             className="text-[10px] font-normal uppercase text-white"
             dangerouslySetInnerHTML={{ __html: sanitizeHtml(member.position) }}
           />
@@ -379,7 +381,7 @@ function BossMemberCard({
       }}
       role="button"
       tabIndex={0}
-      aria-label={`${member.name}, ${member.position}`}
+      aria-label={`${stripHtml(member.name)}, ${stripHtml(member.position)}`}
     >
       <div
         className="relative h-[240px] w-[200px] rounded-[24px] overflow-visible shadow-[0_18px_45px_rgba(0,0,0,0.35)]"
@@ -404,7 +406,7 @@ function BossMemberCard({
           <div className="absolute inset-0 z-[1] flex items-end justify-center overflow-visible">
             <Image
               src={src}
-              alt={member.name}
+              alt={stripHtml(member.name)}
               width={176}
               height={280}
               className="rounded-[24px] object-contain outline-none"
@@ -432,7 +434,7 @@ function BossMemberCard({
             className={`${encodeSansExpanded.className} text-white text-[20px] md:text-[22px] font-bold leading-tight mb-1`}
             dangerouslySetInnerHTML={{ __html: sanitizeHtml(member.name) }}
           />
-          <div 
+          <div
             className="text-[11px] font-normal uppercase text-white"
             dangerouslySetInnerHTML={{ __html: sanitizeHtml(member.position) }}
           />

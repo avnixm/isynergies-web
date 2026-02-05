@@ -88,9 +88,8 @@ export default function MessagesPage() {
 
   const fetchMessages = async () => {
     try {
-      const token = localStorage.getItem('admin_token');
       const response = await fetch('/api/admin/contact-messages', {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        credentials: 'include'
       });
       if (response.ok) {
         const data = await response.json();
@@ -151,14 +150,13 @@ export default function MessagesPage() {
   };
 
   const updateMessageStatus = async (id: number, status: string, notes: string, showToast: boolean = true) => {
-    const token = localStorage.getItem('admin_token');
     try {
       const response = await fetch(`/api/admin/contact-messages/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
+        credentials: 'include',
         body: JSON.stringify({ status, adminNotes: notes }),
       });
 
@@ -220,11 +218,10 @@ export default function MessagesPage() {
     
     if (!confirmed) return;
 
-    const token = localStorage.getItem('admin_token');
     try {
       const response = await fetch(`/api/admin/contact-messages/${id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
+        credentials: 'include',
       });
 
       if (response.ok) {

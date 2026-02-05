@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Lock, User } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
@@ -9,8 +9,9 @@ import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Button } from '@/app/components/ui/button';
 
-export default function AdminLogin() {
+function AdminLoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -25,6 +26,7 @@ export default function AdminLogin() {
       const response = await fetch('/api/admin/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ username, password }),
       });
 
@@ -36,8 +38,10 @@ export default function AdminLogin() {
         return;
       }
 
-      localStorage.setItem('admin_token', data.token);
-      router.push('/admin/dashboard');
+      // Cookie is set server-side; no need to store token in localStorage
+      const returnTo = searchParams.get('returnTo');
+      const target = returnTo && returnTo.startsWith('/admin/') ? returnTo : '/admin/dashboard';
+      router.push(target);
     } catch (err) {
       setError('An error occurred. Please try again.');
       setLoading(false);
@@ -114,3 +118,14 @@ export default function AdminLogin() {
   );
 }
 
+export default function AdminLogin() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary via-primary/90 to-primary">
+        <div className="text-sm text-white">Loading…</div>
+      </div>
+    }>
+      <AdminLoginForm />
+    </Suspense>
+  );
+}

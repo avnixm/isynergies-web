@@ -23,6 +23,7 @@ import {
 import { GripVertical, MoreHorizontal, Pencil, Trash2, User } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
 import { resolveImageSrc } from '@/app/lib/resolve-image-src';
+import { sanitizeHtml } from '@/app/lib/sanitize-html';
 
 export type GroupsTabMember = {
   id: number;
@@ -128,8 +129,14 @@ function MemberCard({
         )}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-foreground">{member.name}</p>
-        <p className="truncate text-xs text-muted-foreground">{member.position}</p>
+        <p
+          className="truncate text-sm font-medium text-foreground"
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(member.name) }}
+        />
+        <p
+          className="truncate text-xs text-muted-foreground"
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(member.position) }}
+        />
       </div>
       <DropdownMenu>
         <DropdownMenuTrigger

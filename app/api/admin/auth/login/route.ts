@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/app/db';
 import { adminUsers } from '@/app/db/schema';
 import { eq } from 'drizzle-orm';
-import { verifyPassword, createToken } from '@/app/lib/auth';
+import { verifyPassword, createToken, setAdminAuthCookie, ONE_DAY_SECONDS } from '@/app/lib/auth';
 import { checkRateLimit, getRateLimitKey } from '@/app/lib/rate-limit';
 
 const LOGIN_LIMIT = 10;
@@ -51,10 +51,9 @@ export async function POST(request: Request) {
       username: user.username,
     });
 
-    
     const response = NextResponse.json({
       success: true,
-      token,
+      token, // Still return token for debugging/tooling, but client won't use it
       user: {
         id: user.id,
         username: user.username,
@@ -62,13 +61,8 @@ export async function POST(request: Request) {
       },
     });
 
-    response.cookies.set('admin_token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60, 
-      path: '/',
-    });
+    // Set HttpOnly cookie (1 day expiry)
+    setAdminAuthCookie(token, response);
 
     return response;
   } catch (error: any) {

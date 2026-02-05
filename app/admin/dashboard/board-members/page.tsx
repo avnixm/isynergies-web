@@ -121,14 +121,13 @@ export default function BoardMembersPage() {
 
   const handleSaveFooterText = async () => {
     setSavingFooter(true);
-    const token = localStorage.getItem('admin_token');
     try {
       const response = await fetch('/api/admin/board-settings', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
+        credentials: 'include',
         body: JSON.stringify({ footerText }),
       });
 
@@ -147,7 +146,9 @@ export default function BoardMembersPage() {
 
   const fetchMembers = async () => {
     try {
-      const response = await fetch('/api/admin/board-members');
+      const response = await fetch('/api/admin/board-members', {
+        credentials: 'include',
+      });
       const data = await response.json();
       const list = Array.isArray(data) ? data : [];
       setMembers(list);
@@ -212,7 +213,6 @@ export default function BoardMembersPage() {
     }
 
     setSaving(true);
-    const token = localStorage.getItem('admin_token');
 
     try {
       const url = editingMember
@@ -224,8 +224,8 @@ export default function BoardMembersPage() {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
+        credentials: 'include',
         body: JSON.stringify(formData),
       });
 
@@ -253,11 +253,10 @@ export default function BoardMembersPage() {
     
     if (!confirmed) return;
 
-    const token = localStorage.getItem('admin_token');
     try {
       const response = await fetch(`/api/admin/board-members/${id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
+        credentials: 'include',
       });
       
       if (response.ok) {

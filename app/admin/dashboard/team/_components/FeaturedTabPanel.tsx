@@ -5,6 +5,7 @@ import { Label } from '@/app/components/ui/label';
 import { Select } from '@/app/components/ui/select';
 import { User } from 'lucide-react';
 import { resolveImageSrc } from '@/app/lib/resolve-image-src';
+import { sanitizeHtml } from '@/app/lib/sanitize-html';
 
 export type FeaturedMember = {
   id: number;
@@ -78,8 +79,14 @@ export function FeaturedTabPanel({
                 })()}
               </div>
               <div className="shrink-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-                <p className="text-lg font-semibold text-white truncate">{featured.name}</p>
-                <p className="text-sm text-white/90 truncate">{featured.position}</p>
+                <p
+                  className="text-lg font-semibold text-white truncate"
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(featured.name) }}
+                />
+                <p
+                  className="text-sm text-white/90 truncate"
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(featured.position) }}
+                />
               </div>
             </div>
           ) : (

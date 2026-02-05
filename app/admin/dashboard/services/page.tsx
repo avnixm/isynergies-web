@@ -276,14 +276,13 @@ export default function ServicesPage() {
 
   const handleSaveSection = async () => {
     setSavingSection(true);
-    const token = localStorage.getItem('admin_token');
     try {
       const res = await fetch('/api/admin/services-section', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
+        credentials: 'include',
         body: JSON.stringify({
           title: servicesSection.title,
           description: servicesSection.description,
@@ -349,7 +348,6 @@ export default function ServicesPage() {
     }
 
     setSavingStat(true);
-    const token = localStorage.getItem('admin_token');
 
     try {
       const url = editingStat ? `/api/admin/statistics/${editingStat.id}` : '/api/admin/statistics';
@@ -359,8 +357,8 @@ export default function ServicesPage() {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
+        credentials: 'include',
         body: JSON.stringify(formData),
       });
 
@@ -388,11 +386,10 @@ export default function ServicesPage() {
     
     if (!confirmed) return;
 
-    const token = localStorage.getItem('admin_token');
     try {
       const response = await fetch(`/api/admin/statistics/${id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
+        credentials: 'include',
       });
       
       if (response.ok) {
@@ -451,7 +448,6 @@ export default function ServicesPage() {
     }
 
     setSavingTicker(true);
-    const token = localStorage.getItem('admin_token');
 
     try {
       const url = editingTicker ? `/api/admin/ticker/${editingTicker.id}` : '/api/admin/ticker';
@@ -461,8 +457,8 @@ export default function ServicesPage() {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
+        credentials: 'include',
         body: JSON.stringify(tickerFormData),
       });
 
@@ -490,11 +486,10 @@ export default function ServicesPage() {
     
     if (!confirmed) return;
 
-    const token = localStorage.getItem('admin_token');
     try {
       const response = await fetch(`/api/admin/ticker/${id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
+        credentials: 'include',
       });
       
       if (response.ok) {
@@ -550,7 +545,6 @@ export default function ServicesPage() {
       return;
     }
     setSavingList(true);
-    const token = localStorage.getItem('admin_token');
     try {
       const url = editingListItem ? `/api/admin/services-list/${editingListItem.id}` : '/api/admin/services-list';
       const method = editingListItem ? 'PUT' : 'POST';
@@ -558,8 +552,8 @@ export default function ServicesPage() {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
+        credentials: 'include',
         body: JSON.stringify(listFormData),
       });
       if (response.ok) {
@@ -584,11 +578,10 @@ export default function ServicesPage() {
       'Delete Services List Item'
     );
     if (!confirmed) return;
-    const token = localStorage.getItem('admin_token');
     try {
       const response = await fetch(`/api/admin/services-list/${id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
+        credentials: 'include',
       });
       if (response.ok) {
         toast.success('Services list item deleted!');
@@ -650,7 +643,6 @@ export default function ServicesPage() {
     }
 
     setSavingService(true);
-    const token = localStorage.getItem('admin_token');
 
     try {
       const url = editingService ? `/api/admin/services/${editingService.id}` : '/api/admin/services';
@@ -668,8 +660,8 @@ export default function ServicesPage() {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
+        credentials: 'include',
         body: JSON.stringify(payload),
       });
 
@@ -697,11 +689,10 @@ export default function ServicesPage() {
     
     if (!confirmed) return;
 
-    const token = localStorage.getItem('admin_token');
     try {
       const response = await fetch(`/api/admin/services/${id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
+        credentials: 'include',
       });
       
       if (response.ok) {

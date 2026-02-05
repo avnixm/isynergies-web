@@ -4,8 +4,8 @@ import { adminUsers } from '../app/db/schema';
 import { eq } from 'drizzle-orm';
 import { hashPassword } from '../app/lib/auth';
 
-const USERNAME = 'isyn_admin';
-const PASSWORD = 'admin_of_isyn';
+const USERNAME = 'admin';
+const PASSWORD = 'admin';
 const EMAIL = 'isyn_admin@isynergies.com';
 
 async function createIsynAdmin() {
