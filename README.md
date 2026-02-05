@@ -170,6 +170,7 @@ Additional `*:prod` scripts (e.g. `add-team-groups-migration:prod`, `clear-team-
 ## Documentation
 
 - **[docs/README.md](docs/README.md)** — Full technical documentation index (architecture, setup, config, API, auth, frontend/backend guides, deployment, security, troubleshooting, contributing, changelog).
+- **[docs/INSTALLATION_CPANEL_PM2.md](docs/INSTALLATION_CPANEL_PM2.md)** — Install on cPanel/WHM with PM2 (production server; differs from localhost and Vercel).
 - **[Responsive layout plan](docs/RESPONSIVE-LAYOUT-PLAN.md)** — Mobile-first strategy, CMS → UI mapping, Tailwind conventions, and non-regression checklist for the landing page (create this file if missing).
 
 ---

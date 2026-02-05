@@ -7,6 +7,7 @@ import Loading from '@/app/components/ui/loading';
 import { Button } from '@/app/components/ui/button';
 import { Label } from '@/app/components/ui/label';
 import { ImageUpload } from '@/app/components/ui/image-upload';
+import { VideoUpload } from '@/app/components/ui/video-upload';
 import { Input } from '@/app/components/ui/input';
 import { Dialog, DialogFooter } from '@/app/components/ui/dialog';
 import { Plus, Pencil, Trash2, Check, AlertCircle } from 'lucide-react';
@@ -755,13 +756,11 @@ export default function HeroManagementPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="backgroundVideo">Background Video</Label>
-                    <ImageUpload
+                    <VideoUpload
                       value={heroSection.backgroundVideo || ''}
                       onChange={(imageId) =>
                         setHeroSection({ ...heroSection, backgroundVideo: imageId })
                       }
-                      acceptVideo={true}
-                      mediaType="video"
                     />
                   </div>
                 </div>

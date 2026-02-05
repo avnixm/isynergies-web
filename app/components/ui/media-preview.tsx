@@ -55,30 +55,14 @@ export function MediaPreview({
           }}
           onError={(e) => {
             const video = e.target as HTMLVideoElement;
-            const errorDetails = {
-              error: video.error,
-              code: video.error?.code,
-              message: video.error?.message,
-              networkState: video.networkState,
-              readyState: video.readyState,
-              src: url,
-            };
-            console.error('Video preview error:', errorDetails);
-            console.error('Video element error code:', video.error?.code);
-            console.error('Video element error message:', video.error?.message);
-            
-            
-            
-            
-            
-            
-            
-            if (video.error?.code === 4) {
+            const code = video.error?.code ?? 'unknown';
+            const message = (video.error?.message ?? '') || String(video.error?.code ?? '');
+            console.error('Video preview error:', `code=${code} message=${message} url=${url} networkState=${video.networkState} readyState=${video.readyState}`);
+            if (code === 4) {
               console.error('Video format not supported. URL:', url);
-            } else if (video.error?.code === 2) {
+            } else if (code === 2) {
               console.error('Network error loading video. Check CORS and URL accessibility.');
             }
-            
             setError(true);
             setLoading(false);
           }}

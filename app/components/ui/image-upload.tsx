@@ -11,14 +11,11 @@ interface ImageUploadProps {
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
-  acceptVideo?: boolean; 
-  mediaType?: 'image' | 'video'; 
 }
 
-export function ImageUpload({ value, onChange, disabled, acceptVideo = false, mediaType }: ImageUploadProps) {
+export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string>('');
-  const [detectedMediaType, setDetectedMediaType] = useState<'image' | 'video' | null>(null);
 
   
   const deleteOldBlob = useCallback(async (oldUrl: string, token: string) => {
@@ -120,91 +117,7 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
       console.log(`Uploading file: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
 
       
-      const isVideo = file.type.startsWith('video/');
-      
-      if (isVideo && acceptVideo) {
-        
-        setUploadProgress('Uploading to Vercel Blob...');
-        
-        
-        const { upload } = await import('@vercel/blob/client');
-        
-        
-        const blob = await upload(file.name, file, {
-          access: 'public',
-          handleUploadUrl: '/api/videos/upload',
-          clientPayload: JSON.stringify({
-            filename: file.name,
-            contentType: file.type,
-            size: file.size,
-            oldBlobUrl: oldBlobUrl, 
-          }),
-          onUploadProgress: (progress) => {
-            const percentage = progress.percentage || 0;
-            setUploadProgress(`Uploading: ${Math.round(percentage)}%`);
-          },
-        });
-
-        if (!blob || !blob.url) {
-          throw new Error('Upload failed: No blob URL returned');
-        }
-
-        
-        
-        setUploadProgress('Creating media record...');
-        
-        try {
-          
-          const createMediaResponse = await fetch('/api/admin/media', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              url: blob.url, 
-              contentType: file.type,
-              sizeBytes: file.size,
-              title: file.name,
-            }),
-          });
-
-          if (!createMediaResponse.ok) {
-            const errorData = await createMediaResponse.json().catch(() => ({ error: 'Failed to create media record' }));
-            throw new Error(errorData.error || `Failed to create media record: ${createMediaResponse.status}`);
-          }
-
-          const mediaData = await createMediaResponse.json();
-          
-          if (mediaData.id) {
-            
-            console.log(`Created media record: ID ${mediaData.id}, type ${mediaData.type}`);
-            onChange(String(mediaData.id));
-            
-            
-            if (oldBlobUrl) {
-              await deleteOldBlob(oldBlobUrl, token);
-            }
-          } else {
-            throw new Error('Media record created but no ID returned');
-          }
-        } catch (mediaError: any) {
-          console.error('Error creating media record:', mediaError);
-          
-          console.warn('Falling back to storing blob URL directly:', blob.url);
-          onChange(blob.url);
-          
-          
-          if (oldBlobUrl) {
-            await deleteOldBlob(oldBlobUrl, token);
-          }
-        }
-        
-        setUploadProgress('');
-        return;
-      }
-
-      // For images, use the existing upload flow
+      // Image upload only (video uses VideoUpload component)
       // Vercel has a 4.5MB limit, and MySQL has max_allowed_packet limits
       // Base64 encoding increases size by ~33%, so we need smaller chunks
       // Use 1MB raw chunks = ~1.33MB base64 (safe for both Vercel and MySQL)
@@ -347,24 +260,13 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: acceptVideo
-      ? {
-          'image/png': ['.png'],
-          'image/jpeg': ['.jpg', '.jpeg'],
-          'image/gif': ['.gif'],
-          'image/webp': ['.webp'],
-          'image/svg+xml': ['.svg'],
-          'video/mp4': ['.mp4'],
-          'video/webm': ['.webm'],
-          'video/quicktime': ['.mov'],
-        }
-      : {
-          'image/png': ['.png'],
-          'image/jpeg': ['.jpg', '.jpeg'],
-          'image/gif': ['.gif'],
-          'image/webp': ['.webp'],
-          'image/svg+xml': ['.svg'],
-        },
+    accept: {
+      'image/png': ['.png'],
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/gif': ['.gif'],
+      'image/webp': ['.webp'],
+      'image/svg+xml': ['.svg'],
+    },
     maxFiles: 1,
     disabled: disabled || uploading,
   });
@@ -434,16 +336,11 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
         : `/api/images/${value}`) // Fallback to images table only after fetch completes
     : '';
 
-  // Check if it's a video file - prioritize resolved type, then mediaType prop, then URL-based detection
-  const isVideo = resolvedMediaType === 'video' || mediaType === 'video' || (displayUrl && (
-    displayUrl.endsWith('.mp4') || 
-    displayUrl.endsWith('.webm') || 
-    displayUrl.endsWith('.mov') || 
-    displayUrl.includes('video') ||
+  // ImageUpload is image-only; preview type from resolved media or URL hints for backward compatibility
+  const isVideo = resolvedMediaType === 'video' || (displayUrl && (
+    displayUrl.endsWith('.mp4') || displayUrl.endsWith('.webm') || displayUrl.endsWith('.mov') ||
     (displayUrl.includes('blob.vercel-storage.com') && (displayUrl.includes('.mp4') || displayUrl.includes('.webm') || displayUrl.includes('.mov')))
   ));
-
-  
   const previewType: 'image' | 'video' = resolvedMediaType || (isVideo ? 'video' : 'image');
 
   return (
@@ -494,7 +391,7 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
                 {isDragActive ? (
                   <>
                     <Upload className="h-12 w-12 text-blue-500" />
-                    <p className="text-sm text-blue-600 font-medium">Drop the {acceptVideo ? 'file' : 'image'} here</p>
+                    <p className="text-sm text-blue-600 font-medium">Drop the image here</p>
                   </>
                 ) : (
                   <>
@@ -502,9 +399,7 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
                     <p className="text-sm text-gray-600">
                       <span className="font-medium text-blue-600">Click to upload</span> or drag and drop
                     </p>
-                    <p className="text-xs text-gray-500">
-                      {acceptVideo ? 'PNG, JPG, JPEG, GIF, WEBP, SVG, MP4, WEBM, MOV' : 'PNG, JPG, JPEG, GIF, WEBP, SVG'}
-                    </p>
+                    <p className="text-xs text-gray-500">PNG, JPG, JPEG, GIF, WEBP, SVG</p>
                   </>
                 )}
               </>

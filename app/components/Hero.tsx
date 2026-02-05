@@ -100,6 +100,22 @@ export default function Hero({ navLinks }: HeroProps) {
     ? getImageUrl(heroSection?.heroImagesBackgroundImage ?? null)
     : getImageUrl(heroSection?.backgroundImage ?? null);
   const bgVideo = getImageUrl(heroSection?.backgroundVideo ?? null);
+  const [videoSrc, setVideoSrc] = useState<string | null>(null);
+  useEffect(() => {
+    if (!bgVideo) {
+      setVideoSrc(null);
+      return;
+    }
+    if (bgVideo.startsWith('http')) {
+      setVideoSrc(bgVideo);
+      return;
+    }
+    if (typeof window !== 'undefined') {
+      setVideoSrc(window.location.origin + (bgVideo.startsWith('/') ? bgVideo : '/' + bgVideo));
+    } else {
+      setVideoSrc(null);
+    }
+  }, [bgVideo]);
   const weMakeItImage = getImageUrl(heroSection?.weMakeItLogo ?? null);
   const isLogoImage = getImageUrl(heroSection?.isLogo ?? null);
   const fullLogoImage = getImageUrl(heroSection?.fullLogo ?? null);
@@ -306,11 +322,11 @@ export default function Hero({ navLinks }: HeroProps) {
       </div>
 
       {}
-      {!heroSection?.useHeroImages && bgVideo && !videoError && (typeof caches === 'undefined' || videoCacheFailed ? true : !!videoCachedSrc) && (
+      {!heroSection?.useHeroImages && bgVideo && !videoError && (videoCachedSrc || videoSrc) && (typeof caches === 'undefined' || videoCacheFailed ? true : !!videoCachedSrc) && (
         <div className="absolute inset-0 z-[5] overflow-hidden">
           <video
             ref={videoRef}
-            src={(typeof caches !== 'undefined' && !videoCacheFailed && videoCachedSrc ? videoCachedSrc : bgVideo) as string}
+            src={(typeof caches !== 'undefined' && !videoCacheFailed && videoCachedSrc ? videoCachedSrc : videoSrc) as string}
             loop
             muted
             playsInline
@@ -321,22 +337,12 @@ export default function Hero({ navLinks }: HeroProps) {
             style={{ objectFit: 'cover', transform: 'scale(1.1)' }}
             onError={(e) => {
               const video = e.target as HTMLVideoElement;
-              const error = video.error;
-              console.error('Background video failed to load:', {
-                errorCode: error?.code,
-                errorMessage: error?.message,
-                networkState: video.networkState,
-                readyState: video.readyState,
-                src: bgVideo,
-                error: error ? {
-                  code: error.code,
-                  message: error.message,
-                  MEDIA_ERR_ABORTED: error.MEDIA_ERR_ABORTED,
-                  MEDIA_ERR_NETWORK: error.MEDIA_ERR_NETWORK,
-                  MEDIA_ERR_DECODE: error.MEDIA_ERR_DECODE,
-                  MEDIA_ERR_SRC_NOT_SUPPORTED: error.MEDIA_ERR_SRC_NOT_SUPPORTED,
-                } : null,
-              });
+              const code = video.error?.code ?? 'unknown';
+              const message = (video.error?.message ?? '') || String(video.error?.code ?? '');
+              console.error(
+                'Background video failed to load:',
+                `code=${code} message=${message} src=${bgVideo} networkState=${video.networkState} readyState=${video.readyState}`
+              );
               console.warn('Background video failed to load, falling back to images');
               setVideoError(true);
             }}

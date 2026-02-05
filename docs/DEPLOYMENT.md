@@ -2,6 +2,8 @@
 
 This document covers deployment: environments, build, DB migrations, rollback, post-deploy checks, secrets, and operational runbook for deployment failures.
 
+**cPanel / WHM with PM2:** For installation on a cPanel/WHM server using PM2 (instead of Vercel), see **[INSTALLATION_CPANEL_PM2.md](INSTALLATION_CPANEL_PM2.md)**.
+
 ---
 
 ## Table of contents
