@@ -23,6 +23,16 @@ export async function POST(request: Request) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
+  const token = getBlobToken();
+  if (!token) {
+    return NextResponse.json({
+      success: true,
+      message: 'Vercel Blob is not configured (no BLOB_READ_WRITE_TOKEN). Nothing to clean up.',
+      deleted: 0,
+      skipped: 0,
+    });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const dryRun = searchParams.get('dryRun') === 'true';
@@ -74,7 +84,7 @@ export async function POST(request: Request) {
       const listResult = await list({
         cursor,
         limit: Math.min(100, limit - totalChecked),
-        token: getBlobToken(),
+        token,
       });
 
       for (const blob of listResult.blobs) {
@@ -130,7 +140,7 @@ export async function POST(request: Request) {
         
         try {
           
-          await del(urlsToDelete, { token: getBlobToken() });
+          await del(urlsToDelete, { token });
           
           
           batch.forEach((blob) => {
@@ -205,6 +215,15 @@ export async function GET(request: Request) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
+  const token = getBlobToken();
+  if (!token) {
+    return NextResponse.json({
+      success: true,
+      summary: { totalBlobsInStorage: 0, referencedBlobs: 0, orphanedBlobs: 0 },
+      orphanedBlobs: [],
+    });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '1000', 10);
@@ -238,7 +257,7 @@ export async function GET(request: Request) {
       const listResult = await list({
         cursor,
         limit: Math.min(100, limit - totalChecked),
-        token: getBlobToken(),
+        token,
       });
 
       for (const blob of listResult.blobs) {

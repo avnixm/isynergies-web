@@ -9,6 +9,7 @@ import { Label } from '@/app/components/ui/label';
 import { Input } from '@/app/components/ui/input';
 import { Dialog, DialogFooter } from '@/app/components/ui/dialog';
 import { ImageUpload } from '@/app/components/ui/image-upload';
+import { VideoUpload } from '@/app/components/ui/video-upload';
 import { Plus, Pencil, Trash2, Info } from 'lucide-react';
 import { StickyFooter } from '../_components/sticky-footer';
 import { useToast } from '@/app/components/ui/toast';
@@ -1218,12 +1219,17 @@ export default function FeaturedAppPage() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="carousel-image-upload">{formCarouselImage.mediaType === 'video' ? 'Video' : 'Image'}</Label>
-            <ImageUpload
-              value={formCarouselImage.image}
-              onChange={(imageId) => handleCarouselFormChange({ image: imageId })}
-              acceptVideo={formCarouselImage.mediaType === 'video'}
-              mediaType={formCarouselImage.mediaType === 'video' ? 'video' : 'image'}
-            />
+            {formCarouselImage.mediaType === 'video' ? (
+              <VideoUpload
+                value={formCarouselImage.image}
+                onChange={(imageId) => handleCarouselFormChange({ image: imageId })}
+              />
+            ) : (
+              <ImageUpload
+                value={formCarouselImage.image}
+                onChange={(imageId) => handleCarouselFormChange({ image: imageId })}
+              />
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="carousel-image-alt">Alt Text</Label>

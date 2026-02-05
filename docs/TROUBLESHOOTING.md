@@ -28,6 +28,7 @@ This document lists common issues by symptom, root causes, fixes, decision trees
 | **401 on admin API** (after login) | Token not sent (cross-origin, no cookie) or token invalid/expired. | Use same origin for dashboard; ensure cookie `admin_token` is sent. Re-login if token expired (7d). |
 | **Build fails** (Turbopack / Next.js) | Node version, Turbopack bug, or dependency issue. | Use Node 20; retry build. If Turbopack error persists, check Next.js issues or try disabling Turbopack if supported. |
 | **Upload fails** (Blob) | Missing or invalid `BLOB_READ_WRITE_TOKEN`, or file type/size not allowed. | Set `BLOB_READ_WRITE_TOKEN` from Vercel Storage; check allowed MIME types and 20MB limit. |
+| **Video upload over 20MB fails** (no Blob) | With `SINGLE_VIDEO_UPLOAD=true` or when Blob is not configured, video must be ≤ 20MB. | Use a video under 20MB, or set `BLOB_READ_WRITE_TOKEN` for Blob uploads (no size limit from this app). |
 | **Contact form does not send email** | Email env vars not set. | Set `EMAIL_USER` and `EMAIL_APP_PASSWORD` (or `APP_PASSWORD`). Form still saves to DB without them. |
 | **Dashboard shows "Checking admin session…" forever** | /me request failing (network, 5xx, CORS). | Check Network tab for `/api/admin/auth/me`; fix server or CORS. Auth context retries on 5xx. |
 | **CI fails (pnpm / typecheck)** | Repo has npm lockfile but CI uses pnpm; or typecheck script missing. | Align: use `pnpm install` and commit `pnpm-lock.yaml`, or switch CI to npm. Add `"typecheck": "tsc --noEmit"` to package.json if CI runs typecheck. |
@@ -52,7 +53,7 @@ This document lists common issues by symptom, root causes, fixes, decision trees
 
 1. Is Blob upload used?  
    - Yes → Is `BLOB_READ_WRITE_TOKEN` set? Is file type in allowlist? Is size ≤ 20MB?  
-   - No (DB upload) → Is auth present? Is size ≤ 20MB? Check route error response.
+   - No (DB upload) → Is auth present? Is size ≤ 20MB? With `SINGLE_VIDEO_UPLOAD=true`, video is single-request only and must be ≤ 20MB. Check route error response.
 
 ### If 500 on admin route
 

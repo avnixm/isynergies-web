@@ -85,13 +85,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }, []);
 
-  const checkAuth = useCallback(async (isRetry = false): Promise<void> => {
+  const checkAuth = useCallback(async (isRetry = false, silentRecheck = false): Promise<void> => {
     const now = Date.now();
-    
+
     // Debounce: don't check too frequently unless it's a retry
     if (!isRetry && now - lastCheckTimeRef.current < MIN_CHECK_INTERVAL) {
-      authLog('Debounced - too soon since last check', { 
-        timeSinceLastCheck: now - lastCheckTimeRef.current 
+      authLog('Debounced - too soon since last check', {
+        timeSinceLastCheck: now - lastCheckTimeRef.current,
       });
       return;
     }
@@ -105,7 +105,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isCheckingRef.current = true;
     lastCheckTimeRef.current = now;
 
-    // Cancel any pending request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
@@ -113,14 +112,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const token = getToken();
 
+    // No token: if we were never authenticated, redirect to login; if we were, try cookie (avoids false logout on Chromium tab restore)
     if (!token) {
-      authLog('No token found');
-      setStatus('unauthenticated');
-      setUser(null);
-      setError(null);
-      setRetryCount(0);
-      isCheckingRef.current = false;
-      return;
+      if (!wasAuthenticatedRef.current) {
+        authLog('No token found');
+        setStatus('unauthenticated');
+        setUser(null);
+        setError(null);
+        setRetryCount(0);
+        isCheckingRef.current = false;
+        return;
+      }
+      authLog('No token in storage - rechecking with cookie');
+      // Fall through to fetch with credentials only (no Bearer)
     }
 
     // Instant display from cache while revalidating
@@ -129,17 +133,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(cached as AuthUser);
     }
 
-    // Only show full-screen "Checking admin session" on initial load, NOT on tab focus
-    // when user is already authenticated (prevents "reload" feeling while encoding)
-    if (!isRetry && !wasAuthenticatedRef.current) {
+    // Silent recheck (tab focus/visibility): never show full-screen "Checking..."
+    if (!silentRecheck && !isRetry && !wasAuthenticatedRef.current) {
       setStatus('checking');
     }
 
     try {
-      authLog('Checking auth...', { retryCount: isRetry ? retryCount + 1 : 0 });
+      authLog(silentRecheck ? 'Tab focused - checking auth' : 'Checking auth...', {
+        retryCount: isRetry ? retryCount + 1 : 0,
+      });
+
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
 
       const response = await fetch('/api/admin/auth/me', {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: Object.keys(headers).length ? headers : undefined,
+        credentials: 'include',
         signal: abortControllerRef.current.signal,
       });
 
@@ -268,17 +277,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Initial auth check on mount
   useEffect(() => {
     checkAuth();
-    
-    // Check auth on tab focus (but debounced)
-    const handleFocus = () => {
-      authLog('Tab focused - checking auth');
-      checkAuth();
+
+    const runSilentRecheck = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        checkAuth(false, true);
+      }
     };
-    
-    window.addEventListener('focus', handleFocus);
-    
+
+    window.addEventListener('focus', runSilentRecheck);
+    document.addEventListener('visibilitychange', runSilentRecheck);
+
     return () => {
-      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('focus', runSilentRecheck);
+      document.removeEventListener('visibilitychange', runSilentRecheck);
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }

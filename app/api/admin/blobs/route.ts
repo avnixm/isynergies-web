@@ -29,6 +29,15 @@ export async function GET(request: Request) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
+  const token = getBlobToken();
+  if (!token) {
+    return NextResponse.json({
+      success: true,
+      blobs: [],
+      total: 0,
+    });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '100', 10);
@@ -49,7 +58,7 @@ export async function GET(request: Request) {
       const listResult = await list({
         cursor,
         limit: Math.min(100, limit - totalChecked),
-        token: getBlobToken(),
+        token,
       });
 
       for (const blob of listResult.blobs) {

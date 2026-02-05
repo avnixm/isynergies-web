@@ -34,8 +34,8 @@ This document lists all environment variables used by the application, their def
 | `SMTP_SECURE` | No | (falsy) | `true` | Use TLS for SMTP. | — |
 | `NEXT_PUBLIC_SITE_URL` | No | — | `https://yoursite.com` | Public site URL for redirects/links in emails. | Used in contact email template. |
 | `BASE_URL` | No | — | `https://yoursite.com` | Fallback for site URL when building links. | Used in contact route if origin/host not available. |
-| `BLOB_READ_WRITE_TOKEN` | No*** | — | `vercel_blob_rw_...` | Vercel Blob token for uploads. | ***Required for admin image/media uploads (Vercel Blob). From Vercel project → Storage → .env.local. Never commit. |
-| `isyn_READ_WRITE_TOKEN` | No | — | (legacy) | Legacy name; if set, copied to `BLOB_READ_WRITE_TOKEN` in `app/lib/blob-token.ts`. | Prefer `BLOB_READ_WRITE_TOKEN`. |
+| `BLOB_READ_WRITE_TOKEN` | No*** | — | `vercel_blob_rw_...` | Vercel Blob token for uploads. Read only from environment (e.g. `.env`). | ***Required for admin image/media uploads (Vercel Blob). From Vercel project → Storage. Never commit. |
+| `SINGLE_VIDEO_UPLOAD` | No | — | `true` | When `true`, video uploads use a single HTTP request (no chunking). Recommended for cPanel/PM2; max video 20MB when Blob not used. | Set to `true` to avoid chunked upload reconstruction on same server. |
 
 \* Database is required for the app and admin; defaults allow local dev with a local MySQL instance.  
 \** In development, a default placeholder is used if `JWT_SECRET` is unset; in production the app throws if unset or placeholder.  

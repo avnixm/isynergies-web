@@ -9,7 +9,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const imageId = parseInt(id);
+    let imageId = parseInt(id);
     const range = request.headers.get('range');
     
     
@@ -53,6 +53,28 @@ export async function GET(
     }
 
     
+    // Media record pointing to DB-stored file: serve that image directly (no redirect) so Chromium URL safety accepts it
+    if (mediaRecord && blobUrl && typeof blobUrl === 'string' && blobUrl.startsWith('/api/images/')) {
+      const match = blobUrl.match(/\/api\/images\/(\d+)/);
+      if (match) {
+        const resolvedId = parseInt(match[1], 10);
+        const [resolvedImage] = await db
+          .select()
+          .from(images)
+          .where(eq(images.id, resolvedId))
+          .limit(1);
+        if (resolvedImage) {
+          image = resolvedImage;
+          imageId = resolvedId;
+        } else {
+          return NextResponse.json(
+            { error: 'Media points to missing image' },
+            { status: 404 }
+          );
+        }
+      }
+    }
+
     if (blobUrl && blobUrl.startsWith('https://')) {
       console.log(`Redirecting to Vercel Blob URL for ${image ? 'image' : 'media'} ${imageId}: ${blobUrl}`);
       
@@ -165,34 +187,7 @@ export async function GET(
       }
       
       base64Data = chunkDataArray.join('');
-      
       console.log(`Reassembled ${imageId}: ${chunks.length} chunks, ${base64Data.length} base64 chars`);
-      
-      if (!base64Data || base64Data.length === 0) {
-        console.error(`Empty base64 data after reassembly for image ${imageId}`);
-        return NextResponse.json(
-          { error: 'Failed to reassemble image data' },
-          { status: 500 }
-        );
-      }
-      
-      
-      try {
-        const testBuffer = Buffer.from(base64Data.substring(0, Math.min(100, base64Data.length)), 'base64');
-        if (testBuffer.length === 0) {
-          console.error(`Invalid base64 data for image ${imageId} - cannot decode first 100 chars`);
-          return NextResponse.json(
-            { error: 'Invalid base64 data in chunks' },
-            { status: 500 }
-          );
-        }
-      } catch (base64Error) {
-        console.error(`Base64 validation error for image ${imageId}:`, base64Error);
-        return NextResponse.json(
-          { error: 'Invalid base64 encoding in chunks' },
-          { status: 500 }
-        );
-      }
     } else {
       
       base64Data = image.data;
@@ -209,8 +204,22 @@ export async function GET(
     
     let buffer: Buffer;
     try {
-      buffer = Buffer.from(base64Data, 'base64');
-      
+      if (isChunked && chunks.length > 0) {
+        const bufferParts: Buffer[] = [];
+        for (const chunk of chunks) {
+          const part = Buffer.from(chunk.data, 'base64');
+          if (part.length === 0 && chunk.data.length > 0) {
+            return NextResponse.json(
+              { error: 'Invalid base64 data in chunks' },
+              { status: 500 }
+            );
+          }
+          bufferParts.push(part);
+        }
+        buffer = Buffer.concat(bufferParts);
+      } else {
+        buffer = Buffer.from(base64Data, 'base64');
+      }
       if (buffer.length === 0) {
         console.error(`Empty buffer after base64 decode for image ${imageId}`);
         return NextResponse.json(
