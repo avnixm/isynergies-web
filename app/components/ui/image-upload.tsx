@@ -21,7 +21,7 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
   const [detectedMediaType, setDetectedMediaType] = useState<'image' | 'video' | null>(null);
 
   
-  const deleteOldBlob = useCallback(async (oldUrl: string) => {
+  const deleteOldBlob = useCallback(async (oldUrl: string, token: string) => {
     
     if (oldUrl && oldUrl.startsWith('https://') && oldUrl.includes('blob.vercel-storage.com')) {
       try {
@@ -30,8 +30,8 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
           },
-          credentials: 'include',
           body: JSON.stringify({ url: oldUrl }),
         });
 
@@ -60,6 +60,13 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
     const file = acceptedFiles[0];
     setUploading(true);
 
+    const token = localStorage.getItem('admin_token');
+    if (!token) {
+      setUploading(false);
+      alert('No authentication token found. Please log in again.');
+      return;
+    }
+
     
     const oldValue = value;
     let oldBlobUrl: string | null = null;
@@ -74,7 +81,9 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
         try {
           
           const mediaResponse = await fetch(`/api/admin/media/${oldValue}`, {
-            credentials: 'include',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
           });
           if (mediaResponse.ok) {
             const mediaData = await mediaResponse.json();
@@ -85,7 +94,9 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
             
             try {
               const imageRecordResponse = await fetch(`/api/admin/images/${oldValue}`, {
-                credentials: 'include',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                },
               });
               if (imageRecordResponse.ok) {
                 const imageRecord = await imageRecordResponse.json();
@@ -148,8 +159,8 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
             },
-            credentials: 'include',
             body: JSON.stringify({
               url: blob.url, 
               contentType: file.type,
@@ -172,7 +183,7 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
             
             
             if (oldBlobUrl) {
-              await deleteOldBlob(oldBlobUrl);
+              await deleteOldBlob(oldBlobUrl, token);
             }
           } else {
             throw new Error('Media record created but no ID returned');
@@ -185,7 +196,7 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
           
           
           if (oldBlobUrl) {
-            await deleteOldBlob(oldBlobUrl);
+            await deleteOldBlob(oldBlobUrl, token);
           }
         }
         
@@ -226,7 +237,9 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
 
           const chunkResponse = await fetch('/api/admin/upload-chunk', {
             method: 'POST',
-            credentials: 'include',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
             body: chunkFormData,
           });
 
@@ -251,9 +264,9 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
         const finalizeResponse = await fetch('/api/admin/upload-finalize', {
           method: 'POST',
           headers: {
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
-          credentials: 'include',
           body: JSON.stringify({
             uploadId,
             imageId,
@@ -271,7 +284,7 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
         
         // Delete old blob after successful upload
         if (oldBlobUrl) {
-          await deleteOldBlob(oldBlobUrl);
+          await deleteOldBlob(oldBlobUrl, token);
         }
       } else {
         // Direct upload for small files
@@ -280,7 +293,9 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
 
         const uploadResponse = await fetch('/api/admin/upload', {
           method: 'POST',
-          credentials: 'include',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
           body: formData,
         });
 
@@ -299,7 +314,7 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
         
         
         if (oldBlobUrl) {
-          await deleteOldBlob(oldBlobUrl);
+          await deleteOldBlob(oldBlobUrl, token);
         }
       }
     } catch (error) {
@@ -375,8 +390,13 @@ export function ImageUpload({ value, onChange, disabled, acceptVideo = false, me
       let cancelled = false;
       const fetchMediaRecord = async () => {
         try {
+          const token = localStorage.getItem('admin_token');
+          if (!token) {
+            if (!cancelled) setIsFetchingMedia(false);
+            return;
+          }
           const response = await fetch(`/api/admin/media/${id}`, {
-            credentials: 'include',
+            headers: { 'Authorization': `Bearer ${token}` },
           });
           if (cancelled) return;
           if (response.ok) {

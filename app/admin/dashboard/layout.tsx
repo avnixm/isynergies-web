@@ -1,43 +1,53 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { ToastProvider } from "@/app/components/ui/toast";
 import { ConfirmDialogProvider } from "@/app/components/ui/confirm-dialog";
-import { Button } from "@/app/components/ui/button";
-import { Dialog, DialogFooter } from "@/app/components/ui/dialog";
 import { AuthProvider, useAuth } from "@/app/lib/auth-context";
+import { SessionExpiredModal } from "@/app/components/ui/session-expired-modal";
+
 import { Sidebar } from "./_components/sidebar";
 import { Header } from "./_components/header";
+import { AlertTriangle, RefreshCw } from "lucide-react";
 
-function DashboardShell({ children }: { children: React.ReactNode }) {
+// Inner layout that uses auth context
+function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { status, user, logout, clearSessionExpired, showSessionExpiredModal } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const {
+    status,
+    user,
+    error,
+    retryCount,
+    logout,
+    showSessionExpiredModal,
+    clearSessionExpired,
+    checkAuth,
+  } = useAuth();
 
   useEffect(() => {
     document.body.classList.add("admin-dashboard-active");
-    return () => document.body.classList.remove("admin-dashboard-active");
+    return () => {
+      document.body.classList.remove("admin-dashboard-active");
+    };
   }, []);
 
+  // Only redirect to login if truly unauthenticated (no token)
+  // NOT on transient errors or session_expired (modal handles that)
   useEffect(() => {
     if (status === "unauthenticated") {
-      const returnTo = pathname ? encodeURIComponent(pathname) : "";
-      router.push(returnTo ? `/admin/login?returnTo=${returnTo}` : "/admin/login");
+      router.push("/admin/login");
     }
-  }, [status, pathname, router]);
-
-  const goToLogin = () => {
-    clearSessionExpired();
-    const returnTo = pathname ? encodeURIComponent(pathname) : "";
-    router.push(returnTo ? `/admin/login?returnTo=${returnTo}` : "/admin/login");
-  };
+  }, [status, router]);
 
   const handleLogout = async () => {
     await logout();
     router.push("/admin/login");
   };
 
+  // Show checking state
   if (status === "checking") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
@@ -48,32 +58,75 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (status === "unauthenticated") return null;
+  // Show transient error state (but don't kick user out)
+  if (status === "error") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <div className="mx-4 max-w-md rounded-xl border border-amber-200 bg-amber-50 p-6 shadow-sm">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600" />
+            <div>
+              <h2 className="text-sm font-semibold text-amber-900">
+                Connection Issue
+              </h2>
+              <p className="mt-1 text-sm text-amber-700">
+                {error || "Unable to verify your session."}
+              </p>
+              {retryCount > 0 && retryCount <= 3 && (
+                <p className="mt-2 flex items-center gap-1 text-xs text-amber-600">
+                  <RefreshCw className="h-3 w-3 animate-spin" />
+                  Retrying... (attempt {retryCount}/3)
+                </p>
+              )}
+              {retryCount > 3 && (
+                <button
+                  onClick={() => checkAuth()}
+                  className="mt-3 inline-flex items-center gap-1 rounded-md bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700"
+                >
+                  <RefreshCw className="h-3 w-3" />
+                  Retry Now
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
+  // If unauthenticated, show nothing (redirect will happen)
+  if (status === "unauthenticated") {
+    return null;
+  }
+
+  // Authenticated or session_expired (modal will show)
   return (
     <>
-      <Dialog
-        open={showSessionExpiredModal}
-        onOpenChange={(open) => !open && goToLogin()}
-        title="Session expired"
-        maxWidth="sm"
-        footer={
-          <DialogFooter className="justify-end">
-            <Button onClick={goToLogin}>Log in</Button>
-          </DialogFooter>
-        }
-      >
-        <p className="text-sm text-muted-foreground">Please log in again to continue.</p>
-      </Dialog>
+      {/* Session Expired Modal - shown instead of hard redirect */}
+      <SessionExpiredModal
+        isOpen={showSessionExpiredModal}
+        onClose={clearSessionExpired}
+        message={error || undefined}
+      />
 
       <div
         className="flex h-screen bg-white text-gray-800 overflow-hidden max-w-full"
         data-admin-dashboard
         style={{ height: "100vh", overflow: "hidden" }}
       >
-        <Sidebar pathname={pathname} user={user} onLogout={handleLogout} />
-        <div className="flex flex-1 flex-col overflow-hidden min-w-0 h-screen" style={{ height: "100vh", overflow: "hidden" }}>
-          <Header user={user} />
+        <Sidebar
+          pathname={pathname}
+          user={user}
+          onLogout={handleLogout}
+          mobileOpen={sidebarOpen}
+          onMobileClose={() => setSidebarOpen(false)}
+        />
+
+        <div
+          className="flex flex-1 flex-col overflow-hidden min-w-0 h-screen"
+          style={{ height: "100vh", overflow: "hidden" }}
+        >
+          <Header user={user} onMenuClick={() => setSidebarOpen((prev) => !prev)} />
           <main
             id="main-content"
             tabIndex={-1}
@@ -90,12 +143,17 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function AdminDashboardLayout({ children }: { children: React.ReactNode }) {
+// Outer layout that provides auth context
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <AuthProvider>
       <ToastProvider>
         <ConfirmDialogProvider>
-          <DashboardShell>{children}</DashboardShell>
+          <AdminLayoutInner>{children}</AdminLayoutInner>
         </ConfirmDialogProvider>
       </ToastProvider>
     </AuthProvider>

@@ -4,7 +4,6 @@ import { useMemo } from 'react';
 import { User } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
 import { resolveImageSrc } from '@/app/lib/resolve-image-src';
-import { sanitizeHtml, stripHtml } from '@/app/lib/sanitize-html';
 
 type PreviewMember = {
   id: number;
@@ -153,17 +152,13 @@ export function LayoutPreviewTab({
           )}
         </div>
         <div className="truncate border-t border-border bg-muted/30 px-2 py-1 text-center">
-          <p
-            className="truncate text-xs font-medium text-foreground"
-            title={stripHtml(slot.member.name)}
-            dangerouslySetInnerHTML={{ __html: sanitizeHtml(slot.member.name) }}
-          />
+          <p className="truncate text-xs font-medium text-foreground" title={slot.member.name}>
+            {slot.member.name}
+          </p>
           {isBoss && (
-            <p
-              className="truncate text-[10px] text-muted-foreground"
-              title={stripHtml(slot.member.position)}
-              dangerouslySetInnerHTML={{ __html: sanitizeHtml(slot.member.position) }}
-            />
+            <p className="truncate text-[10px] text-muted-foreground" title={slot.member.position}>
+              {slot.member.position}
+            </p>
           )}
         </div>
       </div>

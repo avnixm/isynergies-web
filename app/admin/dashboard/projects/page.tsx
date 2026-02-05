@@ -213,6 +213,7 @@ export default function ProjectsPage() {
     }
 
     setSaving(true);
+    const token = localStorage.getItem('admin_token');
 
     try {
       const url = editingProject ? `/api/admin/projects/${editingProject.id}` : '/api/admin/projects';
@@ -222,8 +223,8 @@ export default function ProjectsPage() {
         method,
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
-        credentials: 'include',
         body: JSON.stringify(formData),
       });
 
@@ -251,10 +252,11 @@ export default function ProjectsPage() {
     
     if (!confirmed) return;
 
+    const token = localStorage.getItem('admin_token');
     try {
       const response = await fetch(`/api/admin/projects/${id}`, {
         method: 'DELETE',
-        credentials: 'include',
+        headers: { 'Authorization': `Bearer ${token}` },
       });
       
       if (response.ok) {

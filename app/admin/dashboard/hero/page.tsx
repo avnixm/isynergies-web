@@ -201,6 +201,7 @@ export default function HeroManagementPage() {
         setHeroImages(data);
         
         
+        const token = localStorage.getItem('admin_token');
         const urlMap: Record<number, string> = {};
         
         await Promise.all(
@@ -210,17 +211,21 @@ export default function HeroManagementPage() {
               if (image.image.startsWith('http') || image.image.startsWith('/')) {
                 urlMap[image.id] = image.image;
               } else if (image.image.match(/^\d+$/)) {
+                
                 try {
-                  const mediaResponse = await fetch(`/api/admin/media/${image.image}`, {
-                    credentials: 'include',
-                  });
-                  if (mediaResponse.ok) {
-                    const mediaRecord = await mediaResponse.json();
-                    if (mediaRecord?.url) {
-                      urlMap[image.id] = mediaRecord.url;
-                      return;
+                  if (token) {
+                    const mediaResponse = await fetch(`/api/admin/media/${image.image}`, {
+                      headers: { 'Authorization': `Bearer ${token}` },
+                    });
+                    if (mediaResponse.ok) {
+                      const mediaRecord = await mediaResponse.json();
+                      if (mediaRecord?.url) {
+                        urlMap[image.id] = mediaRecord.url;
+                        return;
+                      }
                     }
                   }
+                  
                   urlMap[image.id] = `/api/images/${image.image}`;
                 } catch (e) {
                   urlMap[image.id] = `/api/images/${image.image}`;
@@ -245,7 +250,6 @@ export default function HeroManagementPage() {
       const response = await fetch('/api/admin/hero-section', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({
           ...heroSection,
           useHeroImages: heroSection.useHeroImages ?? false,
@@ -334,6 +338,7 @@ export default function HeroManagementPage() {
     }
 
     setSavingTickerItem(true);
+    const token = localStorage.getItem('admin_token');
     try {
       if (editingTickerItem) {
         
@@ -341,8 +346,8 @@ export default function HeroManagementPage() {
           method: 'PUT',
           headers: { 
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
           },
-          credentials: 'include',
           body: JSON.stringify({
             text: tickerFormData.text,
             displayOrder: tickerFormData.displayOrder,
@@ -363,8 +368,8 @@ export default function HeroManagementPage() {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
           },
-          credentials: 'include',
           body: JSON.stringify({
             text: tickerFormData.text,
             displayOrder: tickerFormData.displayOrder,
@@ -396,10 +401,11 @@ export default function HeroManagementPage() {
     
     if (!confirmed) return;
 
+    const token = localStorage.getItem('admin_token');
     try {
       const response = await fetch(`/api/admin/hero-ticker/${id}`, {
         method: 'DELETE',
-        credentials: 'include',
+        headers: { 'Authorization': `Bearer ${token}` },
       });
 
       if (response.ok) {
@@ -444,6 +450,7 @@ export default function HeroManagementPage() {
     }
 
     setSavingHeroImage(true);
+    const token = localStorage.getItem('admin_token');
     try {
       if (editingHeroImage) {
         
@@ -451,8 +458,8 @@ export default function HeroManagementPage() {
           method: 'PUT',
           headers: { 
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
           },
-          credentials: 'include',
           body: JSON.stringify({
             image: heroImageFormData.image,
             alt: heroImageFormData.alt || 'Hero image',
@@ -474,8 +481,8 @@ export default function HeroManagementPage() {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
           },
-          credentials: 'include',
           body: JSON.stringify({
             image: heroImageFormData.image,
             alt: heroImageFormData.alt || 'Hero image',
@@ -508,10 +515,11 @@ export default function HeroManagementPage() {
     
     if (!confirmed) return;
 
+    const token = localStorage.getItem('admin_token');
     try {
       const response = await fetch(`/api/admin/hero-images/${id}`, {
         method: 'DELETE',
-        credentials: 'include',
+        headers: { 'Authorization': `Bearer ${token}` },
       });
 
       if (response.ok) {
@@ -535,8 +543,11 @@ export default function HeroManagementPage() {
   const fetchBlobs = async () => {
     setLoadingBlobs(true);
     try {
+      const token = localStorage.getItem('admin_token');
       const response = await fetch('/api/admin/blobs?limit=100', {
-        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
       });
       if (response.ok) {
         const data = await response.json();
@@ -559,12 +570,13 @@ export default function HeroManagementPage() {
 
     setDeletingBlobs(prev => new Set(prev).add(url));
     try {
+      const token = localStorage.getItem('admin_token');
       const response = await fetch('/api/admin/delete-blob', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
-        credentials: 'include',
         body: JSON.stringify({ url }),
       });
 

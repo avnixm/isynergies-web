@@ -78,14 +78,15 @@ export default function SiteSettingsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    const token = localStorage.getItem('admin_token');
 
     try {
       const response = await fetch('/api/admin/site-settings', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
-        credentials: 'include',
         body: JSON.stringify(settings),
       });
 

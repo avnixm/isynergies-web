@@ -283,13 +283,14 @@ export default function FeaturedAppPage() {
 
   const handleSaveContent = async () => {
     setSaving(true);
+    const token = localStorage.getItem('admin_token');
     try {
       const response = await fetch('/api/admin/featured-app', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
-        credentials: 'include',
         body: JSON.stringify(content),
       });
 
@@ -383,6 +384,7 @@ export default function FeaturedAppPage() {
     }
 
     setSavingCarouselImage(true);
+    const token = localStorage.getItem('admin_token');
     try {
       const url = editingCarouselImage
         ? `/api/admin/featured-app/carousel/${editingCarouselImage.id}`
@@ -403,8 +405,8 @@ export default function FeaturedAppPage() {
         method,
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
-        credentials: 'include',
         body: JSON.stringify(dataToSend),
       });
 
@@ -434,10 +436,13 @@ export default function FeaturedAppPage() {
     );
     if (!confirmed) return;
 
+    const token = localStorage.getItem('admin_token');
     try {
       const response = await fetch(`/api/admin/featured-app/carousel/${image.id}`, {
         method: 'DELETE',
-        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
       });
 
       if (response.ok) {
@@ -518,6 +523,7 @@ export default function FeaturedAppPage() {
     }
 
     setSavingFeature(true);
+    const token = localStorage.getItem('admin_token');
     try {
       const url = editingFeature
         ? `/api/admin/featured-app/features/${editingFeature.id}`
@@ -528,8 +534,8 @@ export default function FeaturedAppPage() {
         method,
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
-        credentials: 'include',
         body: JSON.stringify(formFeature),
       });
 
@@ -557,10 +563,13 @@ export default function FeaturedAppPage() {
     );
     if (!confirmed) return;
 
+    const token = localStorage.getItem('admin_token');
     try {
       const response = await fetch(`/api/admin/featured-app/features/${feature.id}`, {
         method: 'DELETE',
-        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
       });
 
       if (response.ok) {

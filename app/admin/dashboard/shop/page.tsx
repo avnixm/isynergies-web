@@ -171,14 +171,15 @@ export default function ShopPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    const token = localStorage.getItem('admin_token');
 
     try {
       const response = await fetch('/api/admin/shop', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
-        credentials: 'include',
         body: JSON.stringify({ content, categories }),
       });
 
@@ -240,6 +241,7 @@ export default function ShopPage() {
     }
 
     setSavingCategory(true);
+    const token = localStorage.getItem('admin_token');
     
     try {
       const url = editingCategory
@@ -251,8 +253,8 @@ export default function ShopPage() {
         method,
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
-        credentials: 'include',
         body: JSON.stringify(categoryFormData),
       });
 
@@ -282,10 +284,11 @@ export default function ShopPage() {
     
     if (!confirmed) return;
 
+    const token = localStorage.getItem('admin_token');
     try {
       const response = await fetch(`/api/admin/shop/categories/${categoryId}`, {
         method: 'DELETE',
-        credentials: 'include',
+        headers: { 'Authorization': `Bearer ${token}` },
       });
 
       if (response.ok) {
@@ -342,6 +345,7 @@ export default function ShopPage() {
     }
 
     setSavingDealer(true);
+    const token = localStorage.getItem('admin_token');
     
     try {
       const url = editingDealer
@@ -353,8 +357,8 @@ export default function ShopPage() {
         method,
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
-        credentials: 'include',
         body: JSON.stringify(dealerFormData),
       });
 
@@ -383,10 +387,11 @@ export default function ShopPage() {
     
     if (!confirmed) return;
 
+    const token = localStorage.getItem('admin_token');
     try {
       const response = await fetch(`/api/admin/authorized-dealers/${dealerId}`, {
         method: 'DELETE',
-        credentials: 'include',
+        headers: { 'Authorization': `Bearer ${token}` },
       });
 
       if (response.ok) {

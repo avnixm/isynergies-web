@@ -132,13 +132,14 @@ export default function WhatWeDoPage() {
 
   const handleSaveContent = async () => {
     setSaving(true);
+    const token = localStorage.getItem('admin_token');
     try {
       const response = await fetch('/api/admin/what-we-do', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
-        credentials: 'include',
         body: JSON.stringify(content),
       });
 
@@ -192,6 +193,7 @@ export default function WhatWeDoPage() {
     }
 
     setSavingImage(true);
+    const token = localStorage.getItem('admin_token');
     try {
       const url = editingImage
         ? `/api/admin/what-we-do/images/${editingImage.id}`
@@ -202,8 +204,8 @@ export default function WhatWeDoPage() {
         method,
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
-        credentials: 'include',
         body: JSON.stringify(formImage),
       });
 
@@ -231,10 +233,13 @@ export default function WhatWeDoPage() {
 
     if (!confirmed) return;
 
+    const token = localStorage.getItem('admin_token');
     try {
       const response = await fetch(`/api/admin/what-we-do/images/${id}`, {
         method: 'DELETE',
-        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
       });
 
       if (response.ok) {

@@ -17,8 +17,14 @@ export function Header({ user, onMenuClick }: HeaderProps) {
   useEffect(() => {
     const fetchUnreadCount = async () => {
       try {
+        const token = localStorage.getItem('admin_token')
+        if (!token) {
+          
+          return
+        }
+        
         const response = await fetch('/api/admin/contact-messages', {
-          credentials: 'include'
+          headers: { 'Authorization': `Bearer ${token}` }
         })
         
         if (response.ok) {
