@@ -16,10 +16,11 @@ interface ImageUploadProps {
 export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string>('');
+  const [deleting, setDeleting] = useState(false);
 
   
   const handleDelete = useCallback(async () => {
-    if (!value) return;
+    if (!value || deleting) return;
     
     const token = localStorage.getItem('admin_token');
     if (!token) {
@@ -27,6 +28,7 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
       return;
     }
 
+    setDeleting(true);
     try {
       if (value.startsWith('https://') && value.includes('blob.vercel-storage.com')) {
         await fetch('/api/admin/delete-blob', {
@@ -72,10 +74,11 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
       }
     } catch (error) {
       console.error('Error deleting media:', error);
+    } finally {
+      setDeleting(false);
+      onChange('');
     }
-    
-    onChange('');
-  }, [value, onChange]);
+  }, [value, onChange, deleting]);
 
   const deleteOldBlob = useCallback(async (oldUrl: string, token: string) => {
     
@@ -426,10 +429,14 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
             type="button"
             onClick={handleDelete}
             className="absolute top-2 right-2 p-1.5 rounded-lg bg-white border border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed z-20"
-            disabled={disabled}
+            disabled={disabled || deleting}
             aria-label="Delete media"
           >
-            <Trash2 className="h-4 w-4" />
+            {deleting ? (
+              <div className="h-4 w-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
           </button>
         </div>
       ) : (
