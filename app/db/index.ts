@@ -18,6 +18,28 @@ function parseNonNegativeInt(value: string | undefined, fallback: number): numbe
 
 
 
+const resolvedConnectionLimit = parsePositiveInt(
+  process.env.DB_CONNECTION_LIMIT,
+  isDevelopment ? 5 : 10
+);
+
+const resolvedQueueLimit = parseNonNegativeInt(
+  process.env.DB_QUEUE_LIMIT,
+  isDevelopment ? 10 : 100
+);
+
+if (isDevelopment) {
+  console.log('[DB] Using pool limits', {
+    connectionLimit: resolvedConnectionLimit,
+    queueLimit: resolvedQueueLimit,
+  });
+} else if (resolvedQueueLimit < 10) {
+  console.warn(
+    '[DB] DB_QUEUE_LIMIT is very low; chunked uploads and range requests may see queue errors under burst traffic.',
+    { queueLimit: resolvedQueueLimit }
+  );
+}
+
 const connection = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '3306'),
@@ -28,26 +50,15 @@ const connection = mysql.createPool({
   ssl: process.env.DB_SSL === 'true' ? {
     rejectUnauthorized: false, 
   } : undefined,
-  
-  
-  
   // MySQL2 pool sizing:
   // - cPanel/PM2 runs as a long-lived Node process, so we can safely use a higher pool size.
   // - Very small limits cause "Queue limit reached" under normal burst traffic (range requests, admin dashboard loads).
-  connectionLimit: parsePositiveInt(
-    process.env.DB_CONNECTION_LIMIT,
-    isDevelopment ? 5 : 10
-  ),
+  connectionLimit: resolvedConnectionLimit,
   // 0 = unlimited in mysql2; use a higher default instead of a tiny queue to avoid hard failures.
-  queueLimit: parseNonNegativeInt(
-    process.env.DB_QUEUE_LIMIT,
-    isDevelopment ? 10 : 50
-  ),
+  queueLimit: resolvedQueueLimit,
   idleTimeout: 5000,
   connectTimeout: parseInt(process.env.DB_CONNECT_TIMEOUT || '15000', 10), 
-  
   waitForConnections: true, 
-  
   enableKeepAlive: true,
   keepAliveInitialDelay: 0,
 });

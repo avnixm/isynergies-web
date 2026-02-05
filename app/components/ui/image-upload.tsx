@@ -177,11 +177,15 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
 
       
       // Image upload only (video uses VideoUpload component)
-      // Vercel has a 4.5MB limit, and MySQL has max_allowed_packet limits
-      // Base64 encoding increases size by ~33%, so we need smaller chunks
-      // Use 1MB raw chunks = ~1.33MB base64 (safe for both Vercel and MySQL)
+      // Vercel / proxies / MySQL can all have body size limits.
+      // Base64 encoding increases size by ~33%, so we need smaller chunks.
+      // Use 1MB raw chunks = ~1.33MB base64 (safe for both Vercel and MySQL).
       const CHUNK_SIZE = 1 * 1024 * 1024; // 1MB raw chunks (~1.33MB base64)
-      const useChunkedUpload = file.size > 4 * 1024 * 1024; // 4MB threshold
+      // In production we always use the chunked upload path to avoid
+      // large single-request bodies that some hosts/proxies reject or
+      // wrap in non-JSON error pages.
+      const FORCE_CHUNKED_IN_PROD = process.env.NODE_ENV === 'production';
+      const useChunkedUpload = FORCE_CHUNKED_IN_PROD || file.size > 4 * 1024 * 1024; // 4MB threshold in dev
 
       if (useChunkedUpload) {
         // Chunked upload for large files
@@ -301,13 +305,12 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
       if (error instanceof Error) {
         if (error.message.includes('token') || error.message.includes('unauthorized')) {
           errorMessage = 'Unauthorized. Please log in again.';
-        } else if (error.message && error.message !== 'Upload failed') {
+        } else if (error.message) {
+          // Use the underlying message directly to avoid "Upload failed: Upload failed" nesting
           errorMessage = error.message;
-        } else {
-          errorMessage = `Upload failed: ${error.message || 'Unknown error'}`;
         }
       } else {
-        errorMessage = `Upload failed: ${String(error)}`;
+        errorMessage = String(error);
       }
       
       alert(`Upload failed: ${errorMessage}`);

@@ -23,6 +23,8 @@ This document lists all environment variables used by the application, their def
 | `DB_NAME` | No | `isynergies` | `isynergies` | MySQL database name. | — |
 | `DB_SSL` | No | (falsy) | `true` | Enable TLS for MySQL. | Set `true` for cloud MySQL (e.g. DigitalOcean, Aiven). |
 | `DB_CONNECT_TIMEOUT` | No | `15000` | `15000` | Connection timeout in milliseconds. | Increase if DB is remote/slow. |
+| `DB_CONNECTION_LIMIT` | No | `5` dev / `10` prod | `20` | Max concurrent MySQL connections in the pool. | Tune based on server capacity; too low causes \"Queue limit reached\" under burst load. |
+| `DB_QUEUE_LIMIT` | No | `10` dev / `100` prod | `200` | Max waiting queries when all pool connections are busy. | Set high enough for chunked uploads and range requests; very low values can cause sporadic 500s. |
 | `JWT_SECRET` | Yes (admin) | Dev placeholder** | Long random string | Secret for signing/verifying admin JWT. | **Production:** Must be set and must not be the default placeholder; app throws on startup otherwise. Never commit. |
 | `NODE_ENV` | Set by runtime | — | `development`, `production` | Environment mode. | Affects cookie Secure, HSTS, error details in responses, test-api page. |
 | `EMAIL_USER` | No | — | `your@gmail.com` | SMTP user / Gmail address for contact form. | If missing, contact form still saves to DB but does not send email. |
@@ -34,7 +36,7 @@ This document lists all environment variables used by the application, their def
 | `SMTP_SECURE` | No | (falsy) | `true` | Use TLS for SMTP. | — |
 | `NEXT_PUBLIC_SITE_URL` | No | — | `https://yoursite.com` | Public site URL for redirects/links in emails. | Used in contact email template. |
 | `BASE_URL` | No | — | `https://yoursite.com` | Fallback for site URL when building links. | Used in contact route if origin/host not available. |
-| `BLOB_READ_WRITE_TOKEN` | No*** | — | `vercel_blob_rw_...` | Vercel Blob token for uploads. Read only from environment (e.g. `.env`). | ***Required for admin image/media uploads (Vercel Blob). From Vercel project → Storage. Never commit. |
+| `BLOB_READ_WRITE_TOKEN` | No*** | — | `vercel_blob_rw_...` | Vercel Blob token for uploads. Read only from environment (e.g. `.env`). | ***Required for admin image/media uploads via Vercel Blob (especially large videos). From Vercel project → Storage. Never commit. |
 | `SINGLE_VIDEO_UPLOAD` | No | — | `true` | When `true`, video uploads use a single HTTP request (no chunking). Recommended for cPanel/PM2; max video 20MB when Blob not used. | Set to `true` to avoid chunked upload reconstruction on same server. |
 
 \* Database is required for the app and admin; defaults allow local dev with a local MySQL instance.  
@@ -55,10 +57,17 @@ This document lists all environment variables used by the application, their def
 
 ### Production (e.g. Vercel)
 
-- **DB:** Set `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`; usually `DB_SSL=true`. For managed MySQL (e.g. DigitalOcean), add the deployment’s IP (or 0.0.0.0/0 for Vercel) to Trusted Sources.
+- **DB:** Set `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`; usually `DB_SSL=true`. For managed MySQL (e.g. DigitalOcean), add the deployment’s IP (or 0.0.0.0/0 for Vercel) to Trusted Sources. Tune `DB_CONNECTION_LIMIT` / `DB_QUEUE_LIMIT` so that bursty admin traffic (dashboard, uploads, video range requests) does not exhaust the pool.
 - **JWT_SECRET:** **Must** be set to a strong random value; app will throw on startup if missing or default.
 - **Email:** Set `EMAIL_USER` and `EMAIL_APP_PASSWORD` (or `APP_PASSWORD`) to send contact form emails.
-- **BLOB_READ_WRITE_TOKEN:** Set for admin image/media uploads via Vercel Blob.
+- **BLOB_READ_WRITE_TOKEN:** Set for admin image/media uploads via Vercel Blob. Without it, large video uploads fall back to DB-based storage and are constrained by HTTP body size and MySQL limits.
+
+### Web server / proxy (cPanel, Nginx, etc.)
+
+- Ensure the front web server allows request bodies at least as large as your chosen chunk size:
+  - For Nginx, set `client_max_body_size` to at least `2m`–`4m` to comfortably handle 1MB raw chunks (≈1.33MB base64) plus multipart overhead.
+  - For Apache/cPanel, adjust `LimitRequestBody` or the hosting panel's upload size settings accordingly.
+- Keep timeouts (e.g. `proxy_read_timeout`, `RequestReadTimeout`) high enough that a full sequence of chunked uploads plus finalization can complete without being cut off under normal network conditions.
 - **NODE_ENV:** Set to `production` by Vercel. Enables Secure cookie, HSTS (in middleware), and hides stack traces in API responses.
 
 ### Staging

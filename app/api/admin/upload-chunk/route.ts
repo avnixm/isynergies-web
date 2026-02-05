@@ -55,6 +55,7 @@ export async function POST(request: Request) {
         data: '', // Empty for chunked images
         isChunked: 1,
         chunkCount: totalChunks,
+        uploadId, // track logical upload session for fast lookup
       }).$returningId();
 
       const imageId = result[0]?.id;
@@ -62,14 +63,7 @@ export async function POST(request: Request) {
         throw new Error('Failed to create image record');
       }
 
-      
-      
-      
-      await db.update(images)
-        .set({ filename: `${uploadId}:${filename}` })
-        .where(eq(images.id, imageId));
-
-      
+      // Keep filename clean; uploadId is now stored separately.
       await db.insert(imageChunks).values({
         imageId,
         chunkIndex: 0,
@@ -83,25 +77,20 @@ export async function POST(request: Request) {
         totalChunks 
       });
     } else {
-      
-      const allImages = await db
+      // Fast lookup by uploadId + isChunked instead of scanning all images.
+      const [imageRow] = await db
         .select()
         .from(images)
-        .where(eq(images.isChunked, 1));
+        .where(and(eq(images.isChunked, 1), eq(images.uploadId, uploadId)))
+        .limit(1);
 
-      let targetImageId: number | null = null;
-      for (const img of allImages) {
-        if (img.filename.startsWith(`${uploadId}:`)) {
-          targetImageId = img.id;
-          break;
-        }
-      }
-
-      if (!targetImageId) {
+      if (!imageRow) {
         return NextResponse.json({ error: 'Upload session not found' }, { status: 404 });
       }
 
-      
+      const targetImageId = imageRow.id;
+
+      // Prevent duplicate chunk uploads for the same index.
       const existingChunk = await db
         .select()
         .from(imageChunks)

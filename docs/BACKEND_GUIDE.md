@@ -62,11 +62,19 @@ Then parse body, validate, call DB, return `NextResponse.json(...)`.
 
 | Mechanism | Route(s) | Flow |
 |-----------|----------|------|
-| **Vercel Blob** | `app/api/admin/upload-blob/route.ts` | Client uses `@vercel/blob/client` `handleUpload`. Route uses `handleUpload` from `@vercel/blob/client` with `onBeforeGenerateToken` (auth, MIME allowlist) and `onUploadCompleted` (optional DB record). Token from `app/lib/blob-token.ts` (BLOB_READ_WRITE_TOKEN). |
+| **Vercel Blob** | `app/api/admin/upload-blob/route.ts`, `/api/videos/upload` | Client uses `@vercel/blob/client` (`handleUpload` or `upload`) for large media. Routes use `handleUpload` with `onBeforeGenerateToken` (auth, MIME allowlist) and `onUploadCompleted` (optional DB record). Token from `app/lib/blob-token.ts` (`BLOB_READ_WRITE_TOKEN`). |
 | **DB single** | `app/api/admin/upload/route.ts` | Multipart or base64; max 20MB. Stores in `images` table (base64 in `data`). Auth required. |
 | **DB chunked** | `app/api/admin/upload-chunk/route.ts`, `upload-finalize/route.ts` | Chunks uploaded via upload-chunk; upload-finalize assembles and creates/updates `images` and `image_chunks`. Auth required. |
 
 **Allowed types (upload-blob):** image/png, image/jpeg, image/jpg, image/gif, image/webp, video/mp4, video/webm, video/quicktime, video/x-msvideo. SVG is explicitly disallowed (script risk). **Size:** 20MB limit enforced in upload route.
+
+**Blob configuration for videos:**
+
+- To ensure large video uploads use Vercel Blob instead of DB storage:
+  - Set `BLOB_READ_WRITE_TOKEN` in the environment (see [CONFIGURATION.md](CONFIGURATION.md)).
+  - Confirm the `/api/admin/blob-available` route reports `available: true` in production.
+  - Verify that the `VideoUpload` component shows \"Uploading to Vercel Blob...\" for large files.
+- When Blob is not configured, videos fall back to DB-based upload (`upload-chunk` / `upload`), which is limited by HTTP body size, MySQL packet limits, and DB pool sizing.
 
 ---
 
