@@ -77,39 +77,71 @@ export async function GET(
     let imageId = parseInt(id);
     const range = request.headers.get('range');
     
-    
-    let [image] = await db
-      .select()
-      .from(images)
-      .where(eq(images.id, imageId))
-      .limit(1);
-
-    let mediaRecord = null;
+    // We intentionally resolve MEDIA records first so that numeric IDs that
+    // collide between `media.id` and `images.id` prefer the media mapping.
+    // This is important because many frontends store numeric media IDs and
+    // call `/api/images/:id` for both images and videos.
+    let mediaRecord = null as any;
+    let image = null as any;
     let blobUrl: string | null = null;
     let contentType: string | null = null;
     let isVideoFile = false;
 
-    
-    if (!image) {
-      [mediaRecord] = await db
-        .select()
-        .from(media)
-        .where(eq(media.id, imageId))
-        .limit(1);
+    // 1) Try to resolve as media id
+    const mediaRows = await db
+      .select()
+      .from(media)
+      .where(eq(media.id, imageId))
+      .limit(1);
+    if (mediaRows.length > 0) {
+      mediaRecord = mediaRows[0];
+      blobUrl = mediaRecord.url;
+      contentType = mediaRecord.contentType;
+      isVideoFile = mediaRecord.type === 'video';
 
-      if (mediaRecord) {
-        blobUrl = mediaRecord.url;
-        contentType = mediaRecord.contentType;
-        isVideoFile = mediaRecord.type === 'video';
+      // If media points at /api/images/:imageId, resolve that image row.
+      if (blobUrl && typeof blobUrl === 'string' && blobUrl.startsWith('/api/images/')) {
+        const match = blobUrl.match(/\/api\/images\/(\d+)/);
+        if (match) {
+          const resolvedId = parseInt(match[1], 10);
+          const imageRows = await db
+            .select()
+            .from(images)
+            .where(eq(images.id, resolvedId))
+            .limit(1);
+          if (imageRows.length > 0) {
+            image = imageRows[0];
+            imageId = resolvedId;
+            // Override contentType/isVideoFile with underlying image metadata
+            contentType = image.mimeType || contentType;
+            isVideoFile = image.mimeType?.startsWith('video/') || isVideoFile;
+          } else {
+            return NextResponse.json(
+              { error: 'Media points to missing image' },
+              { status: 404 }
+            );
+          }
+        }
       }
-    } else {
-      
-      blobUrl = image.url || null;
-      contentType = image.mimeType || null;
-      isVideoFile = image.mimeType?.startsWith('video/') || false;
     }
 
-    
+    // 2) If no media record was found, or media didn't resolve to an image,
+    // fall back to treating the id as a raw images.id.
+    if (!image) {
+      const imageRows = await db
+        .select()
+        .from(images)
+        .where(eq(images.id, imageId))
+        .limit(1);
+      if (imageRows.length > 0) {
+        image = imageRows[0];
+        blobUrl = image.url || blobUrl;
+        contentType = image.mimeType || contentType;
+        isVideoFile = image.mimeType?.startsWith('video/') || isVideoFile;
+      }
+    }
+
+    // 3) If still nothing, return 404.
     if (!image && !mediaRecord) {
       return NextResponse.json(
         { error: 'Image/Media not found' },
@@ -117,74 +149,37 @@ export async function GET(
       );
     }
 
-    
-    // Media record pointing to DB-stored file: serve that image directly (no redirect) so Chromium URL safety accepts it
-    if (mediaRecord && blobUrl && typeof blobUrl === 'string' && blobUrl.startsWith('/api/images/')) {
-      const match = blobUrl.match(/\/api\/images\/(\d+)/);
-      if (match) {
-        const resolvedId = parseInt(match[1], 10);
-        const [resolvedImage] = await db
-          .select()
-          .from(images)
-          .where(eq(images.id, resolvedId))
-          .limit(1);
-        if (resolvedImage) {
-          image = resolvedImage;
-          imageId = resolvedId;
-        } else {
-          return NextResponse.json(
-            { error: 'Media points to missing image' },
-            { status: 404 }
-          );
-        }
-      }
-    }
-
+    // 4) External blob/URL handling (kept for backwards compatibility).
     if (blobUrl && blobUrl.startsWith('https://')) {
-      console.log(`Redirecting to Vercel Blob URL for ${image ? 'image' : 'media'} ${imageId}: ${blobUrl}`);
+      console.log(`Redirecting to external URL for ${image ? 'image' : 'media'} ${imageId}: ${blobUrl}`);
       
       if (isVideoFile) {
-        
-        
         const headers = new Headers();
         headers.set('Location', blobUrl);
         headers.set('Cache-Control', 'public, max-age=31536000, immutable');
         headers.set('Access-Control-Allow-Origin', '*');
         headers.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
         headers.set('Access-Control-Expose-Headers', 'Content-Range, Accept-Ranges, Content-Length, Content-Type');
-        
-        
-        if (contentType) {
-          headers.set('Content-Type', contentType);
-        }
-        
-        
-        if (range) {
-          headers.set('Range', range);
-        }
-        
-        return new NextResponse(null, {
-          status: 307,
-          headers,
-        });
+        if (contentType) headers.set('Content-Type', contentType);
+        if (range) headers.set('Range', range);
+        return new NextResponse(null, { status: 307, headers });
       }
       
       return NextResponse.redirect(blobUrl, 302);
     }
 
-    
-    if (mediaRecord && !blobUrl) {
+    // 5) A media record with no URL is invalid.
+    if (mediaRecord && !blobUrl && !image) {
       return NextResponse.json(
         { error: 'Media record found but has no URL' },
         { status: 404 }
       );
     }
 
-    
-    
+    // 6) At this point we must have an `image` row to serve from DB.
     if (!image) {
       return NextResponse.json(
-        { error: 'Media record found but has no blob URL' },
+        { error: 'Media record found but underlying image is missing' },
         { status: 404 }
       );
     }
