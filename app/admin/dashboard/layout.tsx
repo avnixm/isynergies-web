@@ -21,10 +21,9 @@ export default function AdminLayout({
 
   useEffect(() => {
     checkAuth();
-    // Prevent body scrolling in admin dashboard
-    document.body.classList.add('admin-dashboard-active');
+    document.body.classList.add("admin-dashboard-active");
     return () => {
-      document.body.classList.remove('admin-dashboard-active');
+      document.body.classList.remove("admin-dashboard-active");
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -37,20 +36,24 @@ export default function AdminLayout({
         return;
       }
 
+      // Show dashboard immediately if we have a recent valid session (avoids 200–500ms "Checking admin session" flash)
       const cached = getCachedUser();
       if (cached != null) {
         setUser(cached);
         setLoading(false);
-        return;
       }
 
       const response = await fetch("/api/admin/auth/me", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        console.error("[Auth] /api/admin/auth/me failed", {
+          status: response.status,
+          statusText: response.statusText,
+          error: body?.error ?? body,
+        });
         clearAdminCache();
         localStorage.removeItem("admin_token");
         router.push("/admin/login");
@@ -62,6 +65,7 @@ export default function AdminLayout({
       setCachedUser(data.user);
       setLoading(false);
     } catch (error) {
+      console.error("[Auth] /api/admin/auth/me request error", error);
       clearAdminCache();
       router.push("/admin/login");
     }

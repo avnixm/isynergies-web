@@ -3,7 +3,7 @@
  * Survives client-side navigation; cleared on logout.
  */
 
-const AUTH_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const AUTH_TTL_MS = 30 * 60 * 1000; // 30 minutes
 const STATS_TTL_MS = 2 * 60 * 1000; // 2 minutes
 
 let authCache: { user: unknown; expiresAt: number } | null = null;
