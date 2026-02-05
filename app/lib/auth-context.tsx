@@ -125,8 +125,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Instant display from cache while revalidating
     const cached = getCachedUser();
-    if (cached != null && !wasAuthenticatedRef.current) {
-      setUser(cached as AuthUser);
+    if (cached != null) {
+      console.log('[Auth] Using cached user (no /me flash)');
+      if (!wasAuthenticatedRef.current) {
+        setUser(cached as AuthUser);
+      }
+    } else {
+      console.log('[Auth] No cache, fetching /me');
     }
 
     // Only show full-screen "Checking admin session" on initial load, NOT on tab focus
