@@ -99,7 +99,7 @@ FLUSH PRIVILEGES;
 From the app directory:
 
 ```bash
-npm run db:setup
+npm run db:push
 ```
 
 *(If your project uses `db:push` or `db:migrate`, use that instead; see [DEPLOYMENT.md](DEPLOYMENT.md).)*
@@ -111,9 +111,16 @@ npm run db:setup
 In the app folder, create a `.env` file:
 
 ```env
-DATABASE_URL=mysql://isynergies_user:admin123@localhost:3306/isynergies
-PORT=3000
-NODE_ENV=production
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=
+DB_PASSWORD=
+DB_NAME=isynergies
+JWT_SECRET=isynergies-super-secret-jwt-key-2026-change-in-production
+
+APP_PASSWORD=
+EMAIL_USER=
+EMAIL_FROM="iSynergies Contact Inquiry"
 ```
 
 Add any other variables your app needs (e.g. `JWT_SECRET`). See [CONFIGURATION.md](CONFIGURATION.md).
