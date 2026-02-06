@@ -41,14 +41,10 @@ export default function Hero({ navLinks }: HeroProps) {
   const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [videoError, setVideoError] = useState(false);
-  const [videoCachedSrc, setVideoCachedSrc] = useState<string | null>(null);
-  const [videoCacheFailed, setVideoCacheFailed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
-  const videoObjectUrlRef = useRef<string | null>(null);
-  const previousVideoUrlRef = useRef<string | null>(null);
   const [headerVisible, setHeaderVisible] = useState(true);
   const announcementRef = useRef<HTMLDivElement>(null);
   const [useMarquee, setUseMarquee] = useState(false);
@@ -215,72 +211,7 @@ export default function Hero({ navLinks }: HeroProps) {
   }, [tickerItems]);
 
   useEffect(() => {
-    if (!bgVideo || videoError || heroSection?.useHeroImages) return;
-    if (typeof caches === 'undefined') return;
-
-    setVideoCacheFailed(false);
-    const cacheName = 'hero-video-v1';
-    const request = new Request(bgVideo, { mode: 'cors' });
-    const previousUrl = previousVideoUrlRef.current;
-    let aborted = false;
-
-    const load = async () => {
-      try {
-        const cache = await caches.open(cacheName);
-        
-        if (previousUrl && previousUrl !== bgVideo) {
-          try {
-            await cache.delete(new Request(previousUrl, { mode: 'cors' }));
-          } catch {
-            
-          }
-        }
-        previousVideoUrlRef.current = bgVideo;
-
-        const res = await cache.match(request);
-        if (res?.ok && !aborted) {
-          const blob = await res.blob();
-          if (aborted) return;
-          const u = URL.createObjectURL(blob);
-          videoObjectUrlRef.current = u;
-          setVideoCachedSrc(u);
-          return;
-        }
-        if (aborted) return;
-        const fetchRes = await fetch(request, { mode: 'cors' });
-        if (!fetchRes.ok) throw new Error(`HTTP ${fetchRes.status}`);
-        await cache.put(request, fetchRes.clone());
-        if (aborted) return;
-        const blob = await fetchRes.blob();
-        if (aborted) return;
-        const u = URL.createObjectURL(blob);
-        videoObjectUrlRef.current = u;
-        setVideoCachedSrc(u);
-      } catch (e) {
-        if (!aborted) {
-          console.warn('Hero video cache fetch failed, using direct src:', e);
-          setVideoCacheFailed(true);
-          previousVideoUrlRef.current = null;
-        }
-      }
-    };
-
-    load();
-
-    return () => {
-      aborted = true;
-      const u = videoObjectUrlRef.current;
-      if (u) {
-        URL.revokeObjectURL(u);
-        videoObjectUrlRef.current = null;
-      }
-      setVideoCachedSrc(null);
-    };
-  }, [bgVideo, videoError, heroSection?.useHeroImages]);
-
-  
-  useEffect(() => {
-    if (!videoRef.current || !heroRef.current || !bgVideo || videoError) return;
+    if (!videoRef.current || !heroRef.current || !videoSrc || videoError) return;
 
     const video = videoRef.current;
     const observer = new IntersectionObserver(
@@ -300,7 +231,7 @@ export default function Hero({ navLinks }: HeroProps) {
 
     observer.observe(heroRef.current);
     return () => observer.disconnect();
-  }, [bgVideo, videoError, videoCachedSrc, videoCacheFailed]);
+  }, [videoSrc, videoError]);
 
   return (
     <section id="home" ref={heroRef} aria-label="Hero" className="relative min-h-[100dvh] min-h-screen overflow-hidden">
@@ -322,17 +253,16 @@ export default function Hero({ navLinks }: HeroProps) {
       </div>
 
       {}
-      {!heroSection?.useHeroImages && bgVideo && !videoError && (videoCachedSrc || videoSrc) && (typeof caches === 'undefined' || videoCacheFailed ? true : !!videoCachedSrc) && (
+      {!heroSection?.useHeroImages && videoSrc && !videoError && (
         <div className="absolute inset-0 z-[5] overflow-hidden">
           <video
             ref={videoRef}
-            src={(typeof caches !== 'undefined' && !videoCacheFailed && videoCachedSrc ? videoCachedSrc : videoSrc) as string}
+            src={videoSrc as string}
             loop
             muted
             playsInline
             autoPlay
-            preload={typeof caches !== 'undefined' && !videoCacheFailed && videoCachedSrc ? 'auto' : 'metadata'}
-            crossOrigin="anonymous"
+            preload="metadata"
             className="w-full h-full object-cover opacity-40 scale-110"
             style={{ objectFit: 'cover', transform: 'scale(1.1)' }}
             onError={(e) => {

@@ -3,6 +3,71 @@ import { db } from '@/app/db';
 import { images, imageChunks, media } from '@/app/db/schema';
 import { eq, asc } from 'drizzle-orm';
 
+const CHUNKED_VIDEO_CACHE_TTL_MS = 2 * 60 * 1000;
+const CHUNKED_VIDEO_CACHE_MAX = 15;
+const chunkedVideoBufferCache = new Map<
+  number,
+  { buffer: Buffer; expiresAt: number }
+>();
+const chunkedVideoChunksCache = new Map<
+  number,
+  { chunks: any[]; expiresAt: number }
+>();
+
+function getCachedChunkedBuffer(imageId: number): Buffer | null {
+  const entry = chunkedVideoBufferCache.get(imageId);
+  if (!entry || Date.now() >= entry.expiresAt) {
+    if (entry) chunkedVideoBufferCache.delete(imageId);
+    return null;
+  }
+  return entry.buffer;
+}
+
+function setCachedChunkedBuffer(imageId: number, buffer: Buffer): void {
+  if (chunkedVideoBufferCache.size >= CHUNKED_VIDEO_CACHE_MAX) {
+    let oldestKey: number | null = null;
+    let oldestExp = Infinity;
+    for (const [k, v] of chunkedVideoBufferCache) {
+      if (v.expiresAt < oldestExp) {
+        oldestExp = v.expiresAt;
+        oldestKey = k;
+      }
+    }
+    if (oldestKey != null) chunkedVideoBufferCache.delete(oldestKey);
+  }
+  chunkedVideoBufferCache.set(imageId, {
+    buffer,
+    expiresAt: Date.now() + CHUNKED_VIDEO_CACHE_TTL_MS,
+  });
+}
+
+function getCachedChunks(imageId: number): any[] | null {
+  const entry = chunkedVideoChunksCache.get(imageId);
+  if (!entry || Date.now() >= entry.expiresAt) {
+    if (entry) chunkedVideoChunksCache.delete(imageId);
+    return null;
+  }
+  return entry.chunks;
+}
+
+function setCachedChunks(imageId: number, chunks: any[]): void {
+  if (chunkedVideoChunksCache.size >= CHUNKED_VIDEO_CACHE_MAX) {
+    let oldestKey: number | null = null;
+    let oldestExp = Infinity;
+    for (const [k, v] of chunkedVideoChunksCache) {
+      if (v.expiresAt < oldestExp) {
+        oldestExp = v.expiresAt;
+        oldestKey = k;
+      }
+    }
+    if (oldestKey != null) chunkedVideoChunksCache.delete(oldestKey);
+  }
+  chunkedVideoChunksCache.set(imageId, {
+    chunks,
+    expiresAt: Date.now() + CHUNKED_VIDEO_CACHE_TTL_MS,
+  });
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -12,39 +77,71 @@ export async function GET(
     let imageId = parseInt(id);
     const range = request.headers.get('range');
     
-    
-    let [image] = await db
-      .select()
-      .from(images)
-      .where(eq(images.id, imageId))
-      .limit(1);
-
-    let mediaRecord = null;
+    // We intentionally resolve MEDIA records first so that numeric IDs that
+    // collide between `media.id` and `images.id` prefer the media mapping.
+    // This is important because many frontends store numeric media IDs and
+    // call `/api/images/:id` for both images and videos.
+    let mediaRecord = null as any;
+    let image = null as any;
     let blobUrl: string | null = null;
     let contentType: string | null = null;
     let isVideoFile = false;
 
-    
-    if (!image) {
-      [mediaRecord] = await db
-        .select()
-        .from(media)
-        .where(eq(media.id, imageId))
-        .limit(1);
+    // 1) Try to resolve as media id
+    const mediaRows = await db
+      .select()
+      .from(media)
+      .where(eq(media.id, imageId))
+      .limit(1);
+    if (mediaRows.length > 0) {
+      mediaRecord = mediaRows[0];
+      blobUrl = mediaRecord.url;
+      contentType = mediaRecord.contentType;
+      isVideoFile = mediaRecord.type === 'video';
 
-      if (mediaRecord) {
-        blobUrl = mediaRecord.url;
-        contentType = mediaRecord.contentType;
-        isVideoFile = mediaRecord.type === 'video';
+      // If media points at /api/images/:imageId, resolve that image row.
+      if (blobUrl && typeof blobUrl === 'string' && blobUrl.startsWith('/api/images/')) {
+        const match = blobUrl.match(/\/api\/images\/(\d+)/);
+        if (match) {
+          const resolvedId = parseInt(match[1], 10);
+          const imageRows = await db
+            .select()
+            .from(images)
+            .where(eq(images.id, resolvedId))
+            .limit(1);
+          if (imageRows.length > 0) {
+            image = imageRows[0];
+            imageId = resolvedId;
+            // Override contentType/isVideoFile with underlying image metadata
+            contentType = image.mimeType || contentType;
+            isVideoFile = image.mimeType?.startsWith('video/') || isVideoFile;
+          } else {
+            return NextResponse.json(
+              { error: 'Media points to missing image' },
+              { status: 404 }
+            );
+          }
+        }
       }
-    } else {
-      
-      blobUrl = image.url || null;
-      contentType = image.mimeType || null;
-      isVideoFile = image.mimeType?.startsWith('video/') || false;
     }
 
-    
+    // 2) If no media record was found, or media didn't resolve to an image,
+    // fall back to treating the id as a raw images.id.
+    if (!image) {
+      const imageRows = await db
+        .select()
+        .from(images)
+        .where(eq(images.id, imageId))
+        .limit(1);
+      if (imageRows.length > 0) {
+        image = imageRows[0];
+        blobUrl = image.url || blobUrl;
+        contentType = image.mimeType || contentType;
+        isVideoFile = image.mimeType?.startsWith('video/') || isVideoFile;
+      }
+    }
+
+    // 3) If still nothing, return 404.
     if (!image && !mediaRecord) {
       return NextResponse.json(
         { error: 'Image/Media not found' },
@@ -52,74 +149,37 @@ export async function GET(
       );
     }
 
-    
-    // Media record pointing to DB-stored file: serve that image directly (no redirect) so Chromium URL safety accepts it
-    if (mediaRecord && blobUrl && typeof blobUrl === 'string' && blobUrl.startsWith('/api/images/')) {
-      const match = blobUrl.match(/\/api\/images\/(\d+)/);
-      if (match) {
-        const resolvedId = parseInt(match[1], 10);
-        const [resolvedImage] = await db
-          .select()
-          .from(images)
-          .where(eq(images.id, resolvedId))
-          .limit(1);
-        if (resolvedImage) {
-          image = resolvedImage;
-          imageId = resolvedId;
-        } else {
-          return NextResponse.json(
-            { error: 'Media points to missing image' },
-            { status: 404 }
-          );
-        }
-      }
-    }
-
+    // 4) External blob/URL handling (kept for backwards compatibility).
     if (blobUrl && blobUrl.startsWith('https://')) {
-      console.log(`Redirecting to Vercel Blob URL for ${image ? 'image' : 'media'} ${imageId}: ${blobUrl}`);
+      console.log(`Redirecting to external URL for ${image ? 'image' : 'media'} ${imageId}: ${blobUrl}`);
       
       if (isVideoFile) {
-        
-        
         const headers = new Headers();
         headers.set('Location', blobUrl);
         headers.set('Cache-Control', 'public, max-age=31536000, immutable');
         headers.set('Access-Control-Allow-Origin', '*');
         headers.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
         headers.set('Access-Control-Expose-Headers', 'Content-Range, Accept-Ranges, Content-Length, Content-Type');
-        
-        
-        if (contentType) {
-          headers.set('Content-Type', contentType);
-        }
-        
-        
-        if (range) {
-          headers.set('Range', range);
-        }
-        
-        return new NextResponse(null, {
-          status: 307,
-          headers,
-        });
+        if (contentType) headers.set('Content-Type', contentType);
+        if (range) headers.set('Range', range);
+        return new NextResponse(null, { status: 307, headers });
       }
       
       return NextResponse.redirect(blobUrl, 302);
     }
 
-    
-    if (mediaRecord && !blobUrl) {
+    // 5) A media record with no URL is invalid.
+    if (mediaRecord && !blobUrl && !image) {
       return NextResponse.json(
         { error: 'Media record found but has no URL' },
         { status: 404 }
       );
     }
 
-    
-    
+    // 6) At this point we must have an `image` row to serve from DB.
     if (!image) {
       return NextResponse.json(
-        { error: 'Media record found but has no blob URL' },
+        { error: 'Media record found but underlying image is missing' },
         { status: 404 }
       );
     }
@@ -135,39 +195,67 @@ export async function GET(
       
       const expectedChunks = (image as any).chunkCount || (image as any).chunk_count || 0;
       
-      
-      chunks = await db
-        .select()
-        .from(imageChunks)
-        .where(eq(imageChunks.imageId, imageId))
-        .orderBy(asc(imageChunks.chunkIndex));
+      const cachedChunks = getCachedChunks(imageId);
+      if (cachedChunks) {
+        chunks = cachedChunks;
+      } else {
+        chunks = await db
+          .select()
+          .from(imageChunks)
+          .where(eq(imageChunks.imageId, imageId))
+          .orderBy(asc(imageChunks.chunkIndex));
+        setCachedChunks(imageId, chunks);
+      }
 
       if (chunks.length === 0) {
-        console.error(`No chunks found for image ${imageId}`);
+        console.error('[images/:id] No chunks found for image', {
+          imageId,
+          expectedChunks,
+        });
         return NextResponse.json(
-          { error: 'Image chunks not found' },
-          { status: 404 }
+          {
+            error: 'Image chunks not found',
+            imageId,
+            expectedChunks,
+            actualChunks: 0,
+          },
+          { status: 404 },
         );
       }
 
-      console.log(`Reassembling ${chunks.length} chunks for image ${imageId} (expected: ${expectedChunks})`);
-      
-      
       if (expectedChunks > 0 && chunks.length !== expectedChunks) {
-        console.error(`Incomplete chunks for image ${imageId}: got ${chunks.length}, expected ${expectedChunks}`);
+        console.error('[images/:id] Incomplete chunk set for image', {
+          imageId,
+          expectedChunks,
+          actualChunks: chunks.length,
+          chunkIndices: chunks.map((c: any) => c.chunkIndex),
+        });
         return NextResponse.json(
-          { error: `Incomplete video data: ${chunks.length}/${expectedChunks} chunks available` },
-          { status: 500 }
+          {
+            error: `Incomplete video data: ${chunks.length}/${expectedChunks} chunks available`,
+            imageId,
+            expectedChunks,
+            actualChunks: chunks.length,
+          },
+          { status: 500 },
         );
       }
       
       
       for (let i = 0; i < chunks.length; i++) {
         if (chunks[i].chunkIndex !== i) {
-          console.error(`Missing chunk ${i} for image ${imageId}. Found indices: ${chunks.map(c => c.chunkIndex).join(', ')}`);
+          console.error('[images/:id] Detected missing or out-of-order chunk', {
+            imageId,
+            missingIndex: i,
+            chunkIndices: chunks.map((c: any) => c.chunkIndex),
+          });
           return NextResponse.json(
-            { error: `Missing chunk ${i} in video data` },
-            { status: 500 }
+            {
+              error: `Missing chunk ${i} in video data`,
+              imageId,
+              missingIndex: i,
+            },
+            { status: 500 },
           );
         }
       }
@@ -177,26 +265,37 @@ export async function GET(
       for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
         if (!chunk.data || chunk.data.length === 0) {
-          console.error(`Chunk ${i} for image ${imageId} is empty`);
+          console.error('[images/:id] Empty or missing chunk data', {
+            imageId,
+            chunkIndex: i,
+          });
           return NextResponse.json(
-            { error: `Chunk ${i} is empty or missing data` },
-            { status: 500 }
+            {
+              error: `Chunk ${i} is empty or missing data`,
+              imageId,
+              chunkIndex: i,
+            },
+            { status: 500 },
           );
         }
         chunkDataArray.push(chunk.data);
       }
       
       base64Data = chunkDataArray.join('');
-      console.log(`Reassembled ${imageId}: ${chunks.length} chunks, ${base64Data.length} base64 chars`);
     } else {
       
       base64Data = image.data;
       
       if (!base64Data || base64Data.length === 0) {
-        console.error(`Empty base64 data for non-chunked image ${imageId}`);
+        console.error('[images/:id] Empty base64 payload for non-chunked image', {
+          imageId,
+        });
         return NextResponse.json(
-          { error: 'Image data is empty' },
-          { status: 500 }
+          {
+            error: 'Image data is empty',
+            imageId,
+          },
+          { status: 500 },
         );
       }
     }
@@ -205,33 +304,50 @@ export async function GET(
     let buffer: Buffer;
     try {
       if (isChunked && chunks.length > 0) {
-        const bufferParts: Buffer[] = [];
-        for (const chunk of chunks) {
-          const part = Buffer.from(chunk.data, 'base64');
-          if (part.length === 0 && chunk.data.length > 0) {
-            return NextResponse.json(
-              { error: 'Invalid base64 data in chunks' },
-              { status: 500 }
-            );
+        const cached = getCachedChunkedBuffer(imageId);
+        if (cached) {
+          buffer = cached;
+        } else {
+          const bufferParts: Buffer[] = [];
+          for (const chunk of chunks) {
+            const part = Buffer.from(chunk.data, 'base64');
+            if (part.length === 0 && chunk.data.length > 0) {
+              return NextResponse.json(
+                { error: 'Invalid base64 data in chunks' },
+                { status: 500 }
+              );
+            }
+            bufferParts.push(part);
           }
-          bufferParts.push(part);
+          buffer = Buffer.concat(bufferParts);
+          setCachedChunkedBuffer(imageId, buffer);
         }
-        buffer = Buffer.concat(bufferParts);
       } else {
         buffer = Buffer.from(base64Data, 'base64');
       }
       if (buffer.length === 0) {
-        console.error(`Empty buffer after base64 decode for image ${imageId}`);
+        console.error('[images/:id] Empty buffer after base64 decode', {
+          imageId,
+        });
         return NextResponse.json(
-          { error: 'Failed to decode image data' },
-          { status: 500 }
+          {
+            error: 'Failed to decode image data',
+            imageId,
+          },
+          { status: 500 },
         );
       }
     } catch (decodeError: any) {
-      console.error(`Base64 decode error for image ${imageId}:`, decodeError);
+      console.error('[images/:id] Base64 decode error', {
+        imageId,
+        message: decodeError?.message,
+      });
       return NextResponse.json(
-        { error: `Failed to decode image data: ${decodeError.message}` },
-        { status: 500 }
+        {
+          error: `Failed to decode image data: ${decodeError.message}`,
+          imageId,
+        },
+        { status: 500 },
       );
     }
 
@@ -252,20 +368,14 @@ export async function GET(
         hexSignature.startsWith('464c5601') || 
         hexSignature.startsWith('3026b2758e66cf11a6d900aa0062ce6c'); 
       
-      console.log(`Serving video ${imageId}:`, {
-        mimeType: image.mimeType,
-        size: buffer.length,
-        filename: image.filename,
-        isChunked,
-        expectedChunks: isChunked ? ((image as any).chunkCount || (image as any).chunk_count || 0) : 1,
-        actualChunks: isChunked ? (chunks?.length || 0) : 1,
-        base64Length: base64Data.length,
-        bufferLength: buffer.length,
-        firstBytes: hexSignature,
-        lastBytes: lastHexSignature,
-        isValidVideoSignature: isValidVideo,
-        first16Bytes: buffer.slice(0, 16).toString('hex'),
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Serving video ${imageId}:`, {
+          mimeType: image.mimeType,
+          size: buffer.length,
+          bufferLength: buffer.length,
+          isValidVideoSignature: isValidVideo,
+        });
+      }
       
       
       if (buffer.length < 100) {
@@ -338,7 +448,9 @@ export async function GET(
         const chunkSize = (end - start) + 1;
         const chunk = buffer.slice(start, end + 1);
         
-        console.log(`Range request for video ${imageId}: ${start}-${end}/${buffer.length}`);
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Range request for video ${imageId}: ${start}-${end}/${buffer.length}`);
+        }
         
         return new NextResponse(new Uint8Array(chunk), {
           status: 206, // Partial Content

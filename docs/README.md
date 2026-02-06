@@ -1,15 +1,30 @@
 # iSynergies Web — Documentation Index
 
-**Start here.** This index points to all technical documentation for the iSynergies Web project. Use it to onboard, run locally, deploy, debug, and extend the system.
+**Start here.** This index lists all docs for the iSynergies Web project: local setup, deployment, APIs, and troubleshooting.
+
+---
+
+## Quick links
+
+| I want to… | Go to |
+|------------|--------|
+| **Run the app locally** | [SETUP_LOCAL.md](SETUP_LOCAL.md) |
+| **Deploy on my server with Apache** | [PRODUCTION_SETUP_APACHE_PM2.md](PRODUCTION_SETUP_APACHE_PM2.md) |
+| **Deploy on my server with Nginx** | [PRODUCTION_SETUP_NGINX_PM2.md](PRODUCTION_SETUP_NGINX_PM2.md) |
+| **Deploy on cPanel/WHM** | [INSTALLATION_CPANEL_PM2.md](INSTALLATION_CPANEL_PM2.md) |
+| **Understand deployment in general** | [DEPLOYMENT.md](DEPLOYMENT.md) |
+| **Set environment variables** | [CONFIGURATION.md](CONFIGURATION.md) |
+| **Fix something that’s broken** | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) |
 
 ---
 
 ## Table of contents
 
-1. [Project inventory](#project-inventory)
-2. [System requirements](#system-requirements)
-3. [Documentation map](#documentation-map)
-4. [Glossary](#glossary)
+1. [Quick links](#quick-links)
+2. [Project inventory](#project-inventory)
+3. [System requirements](#system-requirements)
+4. [Documentation map](#documentation-map)
+5. [Glossary](#glossary)
 
 ---
 
@@ -146,7 +161,9 @@ All paths are relative to the repository root. This inventory is derived from th
 | [AUTHORIZATION.md](AUTHORIZATION.md) | Auth flows, token/session, guards, failure handling. |
 | [FRONTEND_GUIDE.md](FRONTEND_GUIDE.md) | Routing, components, state, API client, adding pages. |
 | [BACKEND_GUIDE.md](BACKEND_GUIDE.md) | Route layout, validation, DB, uploads, adding endpoints. |
-| [DEPLOYMENT.md](DEPLOYMENT.md) | Environments, build, migrations, rollback, runbook. |
+| [DEPLOYMENT.md](DEPLOYMENT.md) | Where to deploy, environments, build, migrations, rollback, runbook. |
+| [PRODUCTION_SETUP_APACHE_PM2.md](PRODUCTION_SETUP_APACHE_PM2.md) | **Server (Apache):** Step-by-step production setup with Apache, PM2, and MySQL. |
+| [PRODUCTION_SETUP_NGINX_PM2.md](PRODUCTION_SETUP_NGINX_PM2.md) | **Server (Nginx):** Step-by-step production setup with Nginx, PM2, and MySQL. |
 | [OBSERVABILITY.md](OBSERVABILITY.md) | Logging, metrics, debugging workflow (gaps noted). |
 | [SECURITY.md](SECURITY.md) | Threat model, hardening, sanitization, incident steps. |
 | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Common issues, decision trees, escalation. |

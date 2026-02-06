@@ -52,6 +52,23 @@ export async function POST(request: Request) {
     }
 
     
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      if (chunk.chunkIndex !== i) {
+        return NextResponse.json(
+          { error: `Chunk sequence mismatch at index ${i}` },
+          { status: 400 }
+        );
+      }
+      if (!chunk.data || chunk.data.length === 0) {
+        return NextResponse.json(
+          { error: `Chunk ${i} is empty` },
+          { status: 400 }
+        );
+      }
+    }
+
+    
     if (image.filename.includes(':')) {
       const cleanFilename = image.filename.split(':').slice(1).join(':');
       await db.update(images)

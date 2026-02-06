@@ -5,6 +5,7 @@ import { useDropzone } from 'react-dropzone';
 import { Upload, Trash2, Video } from 'lucide-react';
 import { cn } from '@/app/lib/utils';
 import { MediaPreview } from './media-preview';
+import { useConfirm } from './confirm-dialog';
 
 const MAX_SINGLE_UPLOAD_BYTES = 20 * 1024 * 1024; // 20 MB
 
@@ -17,6 +18,75 @@ interface VideoUploadProps {
 export function VideoUpload({ value, onChange, disabled }: VideoUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string>('');
+  const [deleting, setDeleting] = useState(false);
+
+  const { confirm } = useConfirm();
+
+  const handleDelete = useCallback(async () => {
+    if (!value || deleting) return;
+
+    const confirmed = await confirm(
+      'Are you sure you want to delete this video? This will permanently remove the underlying file and any related media records.'
+    );
+    if (!confirmed) return;
+
+    const token = localStorage.getItem('admin_token');
+    if (!token) {
+      alert('No authentication token found. Please log in again.');
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      if (value.startsWith('https://') && value.includes('blob.vercel-storage.com')) {
+        await fetch('/api/admin/delete-blob', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ url: value }),
+        });
+      } else if (value.match(/^\d+$/)) {
+        const id = value;
+        const mediaRes = await fetch(`/api/admin/media/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (mediaRes.ok) {
+          await fetch(`/api/admin/media/${id}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        } else {
+          await fetch(`/api/admin/images/${id}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        }
+      } else if (value.startsWith('/api/images/')) {
+        const match = value.match(/\/api\/images\/(\d+)/);
+        if (match) {
+          await fetch(`/api/admin/images/${match[1]}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        }
+      } else if (value.startsWith('/api/media/')) {
+        const match = value.match(/\/api\/media\/(\d+)/);
+        if (match) {
+          await fetch(`/api/admin/media/${match[1]}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting video:', error);
+    } finally {
+      setDeleting(false);
+      onChange('');
+    }
+  }, [value, onChange, deleting, confirm]);
 
   const deleteOldBlob = useCallback(async (oldUrl: string, token: string) => {
     if (oldUrl && oldUrl.startsWith('https://') && oldUrl.includes('blob.vercel-storage.com')) {
@@ -53,6 +123,9 @@ export function VideoUpload({ value, onChange, disabled }: VideoUploadProps) {
 
       const oldValue = value;
       let oldBlobUrl: string | null = null;
+      // Legacy support: if previous value was backed by a Vercel Blob URL,
+      // attempt to clean it up after a successful DB upload. New uploads
+      // no longer use Blob.
       if (oldValue?.startsWith('https://') && oldValue.includes('blob.vercel-storage.com')) {
         oldBlobUrl = oldValue;
       } else if (oldValue?.match(/^\d+$/)) {
@@ -72,74 +145,11 @@ export function VideoUpload({ value, onChange, disabled }: VideoUploadProps) {
       }
 
       try {
-        const blobRes = await fetch('/api/admin/blob-available', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const blobPayload = blobRes.ok
-          ? await blobRes.json().catch(() => ({ available: false, singleVideoUploadOnly: false }))
-          : { available: false, singleVideoUploadOnly: false };
-        const blobAvailable = !!blobPayload.available;
-        const singleVideoUploadOnly = !!blobPayload.singleVideoUploadOnly;
-
-        if (blobAvailable) {
-          setUploadProgress('Uploading to Vercel Blob...');
-          const { upload } = await import('@vercel/blob/client');
-          const blob = await upload(file.name, file, {
-            access: 'public',
-            handleUploadUrl: '/api/videos/upload',
-            clientPayload: JSON.stringify({
-              filename: file.name,
-              contentType: file.type,
-              size: file.size,
-              oldBlobUrl: oldBlobUrl,
-            }),
-            onUploadProgress: (progress) => {
-              setUploadProgress(`Uploading: ${Math.round(progress.percentage || 0)}%`);
-            },
-          });
-
-          if (!blob?.url) {
-            throw new Error('Upload failed: No blob URL returned');
-          }
-
-          setUploadProgress('Creating media record...');
-          try {
-            const createMediaResponse = await fetch('/api/admin/media', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({
-                url: blob.url,
-                contentType: file.type,
-                sizeBytes: file.size,
-                title: file.name,
-              }),
-            });
-
-            if (!createMediaResponse.ok) {
-              const err = await createMediaResponse.json().catch(() => ({ error: 'Failed to create media record' }));
-              throw new Error(err.error || 'Failed to create media record');
-            }
-
-            const mediaData = await createMediaResponse.json();
-            if (mediaData.id) {
-              onChange(String(mediaData.id));
-              if (oldBlobUrl) await deleteOldBlob(oldBlobUrl, token);
-            } else {
-              throw new Error('Media record created but no ID returned');
-            }
-          } catch (mediaError) {
-            console.warn('Falling back to storing blob URL directly:', blob.url);
-            onChange(blob.url);
-            if (oldBlobUrl) await deleteOldBlob(oldBlobUrl, token);
-          }
-          setUploadProgress('');
-          return;
-        }
-
-        // DB upload path
+        // DB upload path (Blob is no longer used for new videos)
+        const singleVideoUploadOnly = !!(
+          process.env.SINGLE_VIDEO_UPLOAD === 'true' ||
+          process.env.DISABLE_CHUNKED_VIDEO_UPLOAD === 'true'
+        );
         if (singleVideoUploadOnly && file.size > MAX_SINGLE_UPLOAD_BYTES) {
           setUploading(false);
           setUploadProgress('');
@@ -151,7 +161,13 @@ export function VideoUpload({ value, onChange, disabled }: VideoUploadProps) {
 
         setUploadProgress('Uploading video to database...');
         const CHUNK_SIZE = 1 * 1024 * 1024;
-        const useChunkedUpload = !singleVideoUploadOnly && file.size > 4 * 1024 * 1024;
+        // In production we prefer the chunked upload path to avoid
+        // large single-request bodies that some hosts/proxies reject
+        // or wrap in non-JSON error pages. Respect singleVideoUploadOnly
+        // flag, which forces the single-request path when true.
+        const FORCE_CHUNKED_IN_PROD = process.env.NODE_ENV === 'production';
+        const useChunkedUpload =
+          !singleVideoUploadOnly && (FORCE_CHUNKED_IN_PROD || file.size > 4 * 1024 * 1024);
         let imageId: number | null = null;
 
         if (useChunkedUpload) {
@@ -237,8 +253,18 @@ export function VideoUpload({ value, onChange, disabled }: VideoUploadProps) {
         }
         setUploadProgress('');
       } catch (error) {
-        const msg = error instanceof Error ? error.message : String(error);
-        alert(msg.includes('token') || msg.includes('unauthorized') ? 'Unauthorized. Please log in again.' : `Upload failed: ${msg}`);
+        const rawMessage = error instanceof Error ? error.message : String(error);
+        const isAuthError =
+          rawMessage.toLowerCase().includes('token') ||
+          rawMessage.toLowerCase().includes('unauthorized');
+
+        if (isAuthError) {
+          alert('Unauthorized. Please log in again.');
+        } else {
+          // Use the underlying message directly to avoid nested
+          // "Upload failed: Upload failed" strings.
+          alert(`Upload failed: ${rawMessage}`);
+        }
       } finally {
         setUploading(false);
         setUploadProgress('');
@@ -318,12 +344,16 @@ export function VideoUpload({ value, onChange, disabled }: VideoUploadProps) {
           )}
           <button
             type="button"
-            onClick={() => onChange('')}
+            onClick={handleDelete}
             className="absolute top-2 right-2 p-1.5 rounded-lg bg-white border border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed z-20"
-            disabled={disabled}
+            disabled={disabled || deleting}
             aria-label="Delete video"
           >
-            <Trash2 className="h-4 w-4" />
+            {deleting ? (
+              <div className="h-4 w-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
           </button>
         </div>
       ) : (

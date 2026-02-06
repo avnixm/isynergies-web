@@ -314,13 +314,29 @@ export default function FeaturedAppPage() {
 
   const getMediaUrl = (value: string | null, kind: 'image' | 'video' = 'image'): string => {
     if (!value) return '';
-    if (value.startsWith('/api/images/') || value.startsWith('/api/media/') || value.startsWith('http') || value.startsWith('/')) {
+
+    // Videos/images can be stored as:
+    // - numeric IDs (media or image IDs), or
+    // - direct URLs (/api/images/:id, /api/media/:id, or external).
+    //
+    // For numeric IDs we prefer `/api/images/:id` because that route can
+    // resolve both raw image IDs and media IDs pointing at `/api/images/:id`,
+    // and it avoids extra redirects that some browsers may treat as unsafe
+    // for media playback.
+    if (kind === 'video' && isNumericId(value)) {
+      return `/api/images/${value.trim()}`;
+    }
+
+    if (
+      value.startsWith('/api/images/') ||
+      value.startsWith('/api/media/') ||
+      value.startsWith('http') ||
+      value.startsWith('/')
+    ) {
       return value;
     }
-    
-    if (kind === 'video' && isNumericId(value)) {
-      return `/api/media/${value}`;
-    }
+
+    // Fallback: assume image id/string from `images` table.
     return `/api/images/${value}`;
   };
 

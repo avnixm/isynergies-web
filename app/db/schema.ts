@@ -228,6 +228,10 @@ export const images = mysqlTable('images', {
   mimeType: varchar('mime_type', { length: 100 }).notNull(),
   size: int('size').notNull(),
   data: longtext('data').notNull(),
+  // Optional logical upload session identifier for chunked uploads.
+  // Allows fast lookup of the in-progress image row without scanning
+  // the entire images table.
+  uploadId: varchar('upload_id', { length: 255 }),
   url: varchar('url', { length: 500 }),
   isChunked: int('is_chunked').default(0),
   chunkCount: int('chunk_count').default(0),

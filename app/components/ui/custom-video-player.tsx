@@ -23,9 +23,15 @@ interface CustomVideoPlayerProps {
 function getDirectVideoUrl(url: string): string | null {
   if (!url) return null;
 
-  
-  
-  if (url.startsWith('/api/images/') || url.startsWith('/api/media/')) {
+  // Treat both relative and absolute same-origin API URLs as direct video sources.
+  // This covers:
+  // - `/api/images/:id` and `/api/media/:id`
+  // - `https://your-domain/api/images/:id` (copied from the address bar, etc.)
+  if (
+    url.startsWith('/api/images/') ||
+    url.startsWith('/api/media/') ||
+    /\/api\/(images|media)\//.test(url)
+  ) {
     return url;
   }
 
@@ -211,7 +217,13 @@ export function CustomVideoPlayer({
       );
       
       
-      if (directVideoUrl && !useIframeFallback) {
+      // Never iframe-fallback for internal app endpoints (/api/images, /api/media).
+      // If the <video> tag can't load it, an <iframe> will usually be blocked (X-Frame-Options),
+      // which produces the confusing "This content is blocked / refused to connect" overlay.
+      const isInternalApi =
+        src.startsWith('/api/') || /\/api\/(images|media)\//.test(src);
+
+      if (directVideoUrl && !useIframeFallback && !isInternalApi) {
         console.log('Attempting iframe fallback for:', src);
         setUseIframeFallback(true);
         setIsLoading(false);

@@ -12,8 +12,9 @@ This document covers the frontend architecture: routing, components, state, API 
 4. [API client and error handling](#api-client-and-error-handling)
 5. [Forms and validation](#forms-and-validation)
 6. [File upload UI](#file-upload-ui)
-7. [Styling and theming](#styling-and-theming)
-8. [Adding a new page](#adding-a-new-page)
+7. [Admin media deletion behavior](#admin-media-deletion-behavior)
+8. [Styling and theming](#styling-and-theming)
+9. [Adding a new page](#adding-a-new-page)
 
 ---
 
@@ -79,6 +80,23 @@ Next.js **App Router** (file-based under `app/`).
 - **ImageUpload / media components** in `app/components/ui/` (e.g. `image-upload.tsx`, `media-preview.tsx`) are used in admin forms.
 - Upload flow: either **Vercel Blob** (upload-blob route) or **chunked DB upload** (upload-chunk + upload-finalize). Choice is determined by the admin page and API it calls.
 - **Behavior:** User selects file; client sends to the appropriate endpoint (with auth cookie); progress/success/error shown in UI.
+
+---
+
+## Admin media deletion behavior
+
+- **Single source of truth:** Media and large uploads are represented primarily by rows in the `media` table, which often point to `/api/images/:imageId`.
+- **Trash icons in admin UIs:**
+  - Components like `ImageUpload` and `VideoUpload` always try to delete via `DELETE /api/admin/media/:id` first when the stored value is a numeric ID.
+  - If no `media` row exists, they fall back to `DELETE /api/admin/images/:id`.
+  - When the value is a URL (`/api/images/:id` or `/api/media/:id`), they call the corresponding admin delete route directly.
+- **Backend cleanup:**
+  - `DELETE /api/admin/media/:id` removes the `media` row and, when it points at `/api/images/:imageId`, also deletes the corresponding `images` + `image_chunks` rows.
+  - `DELETE /api/admin/images/:id` also removes any `media` rows whose `url` is `/api/images/:id`, then deletes the `images` + `image_chunks` rows.
+  - Featured App carousel deletion also attempts to clean up any underlying `media`/`images` entries when a carousel item is deleted.
+- **What this means for admins:**
+  - Deleting via any trash icon that comes from `ImageUpload` or `VideoUpload` automatically cleans up the associated database records where it is safe to do so.
+  - You no longer need to ask for manual database cleanup when an uploaded image or video is removed from an admin form.
 
 ---
 

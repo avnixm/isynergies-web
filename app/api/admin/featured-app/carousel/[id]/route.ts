@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/app/db';
-import { featuredAppCarouselImages } from '@/app/db/schema';
+import { featuredAppCarouselImages, images, imageChunks, media } from '@/app/db/schema';
 import { requireAuth } from '@/app/lib/auth-middleware';
 import { eq } from 'drizzle-orm';
 
@@ -147,6 +147,66 @@ export async function DELETE(
       );
     }
 
+    
+    
+    const [record] = await db
+      .select()
+      .from(featuredAppCarouselImages)
+      .where(eq(featuredAppCarouselImages.id, id))
+      .limit(1);
+
+    if (record) {
+      const rawImage = record.image;
+
+      if (typeof rawImage === 'string' && rawImage.trim() !== '') {
+        const value = rawImage.trim();
+
+        
+        
+        const numericMatch = /^\d+$/.test(value) ? parseInt(value, 10) : null;
+
+        
+        const apiImageMatch = value.match(/^\/api\/images\/(\d+)$/);
+        const apiImageId = apiImageMatch ? parseInt(apiImageMatch[1], 10) : null;
+
+        try {
+          
+          
+          if (numericMatch !== null) {
+            const mediaId = numericMatch;
+
+            const [mediaRecord] = await db
+              .select()
+              .from(media)
+              .where(eq(media.id, mediaId))
+              .limit(1);
+
+            if (mediaRecord && typeof mediaRecord.url === 'string') {
+              const url = mediaRecord.url;
+
+              if (url.startsWith('/api/images/')) {
+                const match = url.match(/\/api\/images\/(\d+)/);
+                if (match) {
+                  const imageId = parseInt(match[1], 10);
+                  await db.delete(imageChunks).where(eq(imageChunks.imageId, imageId));
+                  await db.delete(images).where(eq(images.id, imageId));
+                }
+              }
+
+              await db.delete(media).where(eq(media.id, mediaRecord.id));
+            }
+          } else if (apiImageId !== null) {
+            
+            await db.delete(imageChunks).where(eq(imageChunks.imageId, apiImageId));
+            await db.delete(images).where(eq(images.id, apiImageId));
+          }
+        } catch (cleanupError) {
+          console.error('Error during carousel media cleanup:', cleanupError);
+        }
+      }
+    }
+
+    
     await db.delete(featuredAppCarouselImages).where(eq(featuredAppCarouselImages.id, id));
 
     return NextResponse.json({ success: true });

@@ -6,6 +6,7 @@ import { Upload, Trash2, Image as ImageIcon } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/app/lib/utils';
 import { MediaPreview } from './media-preview';
+import { useConfirm } from './confirm-dialog';
 
 interface ImageUploadProps {
   value: string;
@@ -16,8 +17,76 @@ interface ImageUploadProps {
 export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string>('');
+  const [deleting, setDeleting] = useState(false);
 
-  
+  const { confirm } = useConfirm();
+
+  const handleDelete = useCallback(async () => {
+    if (!value || deleting) return;
+
+    const confirmed = await confirm(
+      'Are you sure you want to delete this image? This will permanently remove the underlying file and any related media records.'
+    );
+    if (!confirmed) return;
+
+    const token = localStorage.getItem('admin_token');
+    if (!token) {
+      alert('No authentication token found. Please log in again.');
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      if (value.startsWith('https://') && value.includes('blob.vercel-storage.com')) {
+        await fetch('/api/admin/delete-blob', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ url: value }),
+        });
+      } else if (value.match(/^\d+$/)) {
+        const id = value;
+        const mediaRes = await fetch(`/api/admin/media/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (mediaRes.ok) {
+          await fetch(`/api/admin/media/${id}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        } else {
+          await fetch(`/api/admin/images/${id}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        }
+      } else if (value.startsWith('/api/images/')) {
+        const match = value.match(/\/api\/images\/(\d+)/);
+        if (match) {
+          await fetch(`/api/admin/images/${match[1]}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        }
+      } else if (value.startsWith('/api/media/')) {
+        const match = value.match(/\/api\/media\/(\d+)/);
+        if (match) {
+          await fetch(`/api/admin/media/${match[1]}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting media:', error);
+    } finally {
+      setDeleting(false);
+      onChange('');
+    }
+  }, [value, onChange, deleting, confirm]);
+
   const deleteOldBlob = useCallback(async (oldUrl: string, token: string) => {
     
     if (oldUrl && oldUrl.startsWith('https://') && oldUrl.includes('blob.vercel-storage.com')) {
@@ -118,11 +187,15 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
 
       
       // Image upload only (video uses VideoUpload component)
-      // Vercel has a 4.5MB limit, and MySQL has max_allowed_packet limits
-      // Base64 encoding increases size by ~33%, so we need smaller chunks
-      // Use 1MB raw chunks = ~1.33MB base64 (safe for both Vercel and MySQL)
+      // Vercel / proxies / MySQL can all have body size limits.
+      // Base64 encoding increases size by ~33%, so we need smaller chunks.
+      // Use 1MB raw chunks = ~1.33MB base64 (safe for both Vercel and MySQL).
       const CHUNK_SIZE = 1 * 1024 * 1024; // 1MB raw chunks (~1.33MB base64)
-      const useChunkedUpload = file.size > 4 * 1024 * 1024; // 4MB threshold
+      // In production we always use the chunked upload path to avoid
+      // large single-request bodies that some hosts/proxies reject or
+      // wrap in non-JSON error pages.
+      const FORCE_CHUNKED_IN_PROD = process.env.NODE_ENV === 'production';
+      const useChunkedUpload = FORCE_CHUNKED_IN_PROD || file.size > 4 * 1024 * 1024; // 4MB threshold in dev
 
       if (useChunkedUpload) {
         // Chunked upload for large files
@@ -242,13 +315,12 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
       if (error instanceof Error) {
         if (error.message.includes('token') || error.message.includes('unauthorized')) {
           errorMessage = 'Unauthorized. Please log in again.';
-        } else if (error.message && error.message !== 'Upload failed') {
+        } else if (error.message) {
+          // Use the underlying message directly to avoid "Upload failed: Upload failed" nesting
           errorMessage = error.message;
-        } else {
-          errorMessage = `Upload failed: ${error.message || 'Unknown error'}`;
         }
       } else {
-        errorMessage = `Upload failed: ${String(error)}`;
+        errorMessage = String(error);
       }
       
       alert(`Upload failed: ${errorMessage}`);
@@ -362,12 +434,16 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
           )}
           <button
             type="button"
-            onClick={() => onChange('')}
+            onClick={handleDelete}
             className="absolute top-2 right-2 p-1.5 rounded-lg bg-white border border-red-400 text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed z-20"
-            disabled={disabled}
+            disabled={disabled || deleting}
             aria-label="Delete media"
           >
-            <Trash2 className="h-4 w-4" />
+            {deleting ? (
+              <div className="h-4 w-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
           </button>
         </div>
       ) : (
