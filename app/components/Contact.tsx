@@ -15,11 +15,20 @@ type SiteSettings = {
 };
 
 
-const GOOGLE_MAP_LAT = 15.488669777135174;
-const GOOGLE_MAP_LNG = 120.97511917033088;
-const GOOGLE_MAP_ZOOM = 17;
-const GOOGLE_MAP_EMBED = `https://www.google.com/maps?q=${GOOGLE_MAP_LAT},${GOOGLE_MAP_LNG}&z=${GOOGLE_MAP_ZOOM}&output=embed`;
-const GOOGLE_MAP_LINK = `https://www.google.com/maps?q=${GOOGLE_MAP_LAT},${GOOGLE_MAP_LNG}`;
+// Default coordinates (ASKI Building, Cabanatuan City)
+const DEFAULT_MAP_LAT = 15.488669777135174;
+const DEFAULT_MAP_LNG = 120.97511917033088;
+const MAP_ZOOM = 17;
+
+/** Google Maps embed URL (allowed via CSP frame-src in middleware) */
+function getGoogleMapEmbedUrl(lat: number, lng: number): string {
+  return `https://www.google.com/maps?q=${lat},${lng}&z=${MAP_ZOOM}&output=embed`;
+}
+
+/** Link to open the location in Google Maps in a new tab */
+function getGoogleMapLink(lat: number, lng: number): string {
+  return `https://www.google.com/maps?q=${lat},${lng}`;
+}
 
 export default function Contact() {
   const toast = useToast();
@@ -408,28 +417,34 @@ export default function Contact() {
                   </div>
                   <p className="text-[11px] sm:text-xs leading-relaxed break-all">{settings.companyEmail}</p>
                 </div>
-                {((settings.companyLat && settings.companyLng) || settings.companyAddress) && (
-                  <div className="mt-3 sm:mt-4">
-                    <div className="w-full h-32 sm:h-40 md:h-56 rounded-lg overflow-hidden border border-white/20">
-                      <iframe
-                        title="Company location"
-                        src={GOOGLE_MAP_EMBED}
-                        className="w-full h-full border-0"
-                        loading="lazy"
-                        referrerPolicy="no-referrer-when-downgrade"
-                        allowFullScreen
-                      />
+                {((settings.companyLat != null && settings.companyLng != null) || settings.companyAddress) && (() => {
+                  const lat = Number(settings.companyLat) || DEFAULT_MAP_LAT;
+                  const lng = Number(settings.companyLng) || DEFAULT_MAP_LNG;
+                  const embedUrl = getGoogleMapEmbedUrl(lat, lng);
+                  const mapLink = getGoogleMapLink(lat, lng);
+                  return (
+                    <div className="mt-3 sm:mt-4">
+                      <div className="w-full h-32 sm:h-40 md:h-56 rounded-lg overflow-hidden border border-white/20 bg-white/10">
+                        <iframe
+                          title="Company location (Google Maps)"
+                          src={embedUrl}
+                          className="w-full h-full border-0"
+                          loading="lazy"
+                          referrerPolicy="no-referrer-when-downgrade"
+                          allowFullScreen
+                        />
+                      </div>
+                      <a
+                        href={mapLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[11px] sm:text-xs text-white underline mt-1.5 sm:mt-2 inline-block touch-manipulation"
+                      >
+                        Open in Google Maps
+                      </a>
                     </div>
-                    <a
-                      href={GOOGLE_MAP_LINK}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[11px] sm:text-xs text-white underline mt-1.5 sm:mt-2 inline-block touch-manipulation"
-                    >
-                      Open in Google Maps
-                    </a>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             </div>
           </div>

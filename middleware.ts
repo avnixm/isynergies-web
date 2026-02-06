@@ -30,6 +30,8 @@ export function middleware(request: NextRequest) {
     "img-src 'self' data: blob: https: http:",
     "font-src 'self' data: https:",
     "connect-src 'self' https:",
+    // Allow embeds: map (OpenStreetMap) + video players used in the app
+    "frame-src 'self' https://www.openstreetmap.org https://www.youtube.com https://player.vimeo.com https://fast.wistia.net https://www.loom.com https://www.dailymotion.com https://player.twitch.tv https://www.facebook.com https://stream.mux.com https://iframe.videodelivery.net https://drive.google.com https://www.google.com",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
