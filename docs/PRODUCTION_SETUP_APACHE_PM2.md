@@ -99,7 +99,7 @@ FLUSH PRIVILEGES;
 From the app directory:
 
 ```bash
-npm run db:setup
+npm run db:push
 ```
 
 *(If your project uses `db:push` or `db:migrate`, use that instead; see [DEPLOYMENT.md](DEPLOYMENT.md).)*
