@@ -40,20 +40,16 @@ DB_SSL=false
 # Use a long, random string in production
 JWT_SECRET=your-secret-key-change-this-in-production
 
-# --- Optional: Contact form email ---
-# If missing, contact form submits but emails are not sent (warning logged).
-EMAIL_USER=your@gmail.com
-EMAIL_APP_PASSWORD=your_app_password
-# Alternative to EMAIL_APP_PASSWORD
-# APP_PASSWORD=your_app_password
-
+# --- Optional: Contact form email (cPanel / server SMTP) ---
+# Uses your server's SMTP (e.g. cPanel). No app password needed.
+# Set Contact Forward Email (or Company Email) in Site Settings so messages are forwarded.
+SMTP_HOST=mail.yourdomain.com
+SMTP_PORT=587
+SMTP_SECURE=false
 # Optional: custom "From" display name
 # EMAIL_FROM=iSynergies Contact
 
-# Optional: custom SMTP (defaults to Gmail if only EMAIL_USER + APP_PASSWORD)
-# SMTP_HOST=smtp.example.com
-# SMTP_PORT=587
-# SMTP_SECURE=false
+# (Only if you use Gmail instead of cPanel: set EMAIL_USER and EMAIL_APP_PASSWORD; do not set SMTP_HOST.)
 
 # Optional: site URL for redirects / links in emails
 # NEXT_PUBLIC_SITE_URL=https://yoursite.com
@@ -124,12 +120,12 @@ npm run db:setup:prod
 | `DB_SSL` | No | `"true"` for SSL (e.g. cloud MySQL) |
 | `DB_CONNECT_TIMEOUT` | No | Connect timeout in ms (default: `15000`) |
 | `JWT_SECRET` | Yes (admin) | Secret for admin JWT; use a strong random value in production |
-| `EMAIL_USER` | No | SMTP user / Gmail address for contact form |
-| `EMAIL_APP_PASSWORD` | No | App password (Gmail) or SMTP password; alt: `APP_PASSWORD` |
-| `EMAIL_FROM` | No | Custom "From" name for emails |
-| `SMTP_HOST` | No | Custom SMTP host (else Gmail) |
+| `SMTP_HOST` | No | cPanel / server SMTP hostname (e.g. `mail.yourdomain.com`); no app password needed |
 | `SMTP_PORT` | No | SMTP port (default: `587`) |
 | `SMTP_SECURE` | No | `"true"` for TLS |
+| `EMAIL_FROM` | No | Custom "From" name for emails |
+| `EMAIL_USER` | No | Only for Gmail or if cPanel SMTP requires auth |
+| `EMAIL_APP_PASSWORD` | No | Gmail only (not used for cPanel SMTP); alt: `APP_PASSWORD` |
 | `NEXT_PUBLIC_SITE_URL` | No | Public site URL for redirects/emails |
 | `BASE_URL` | No | Fallback for site URL |
 | `BLOB_READ_WRITE_TOKEN` | No** | Vercel Blob token for uploads |

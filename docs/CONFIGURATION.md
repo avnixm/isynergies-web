@@ -27,13 +27,13 @@ This document lists all environment variables used by the application, their def
 | `DB_QUEUE_LIMIT` | No | `10` dev / `100` prod | `200` | Max waiting queries when all pool connections are busy. | Set high enough for chunked uploads and range requests; very low values can cause sporadic 500s. |
 | `JWT_SECRET` | Yes (admin) | Dev placeholder** | Long random string | Secret for signing/verifying admin JWT. | **Production:** Must be set and must not be the default placeholder; app throws on startup otherwise. Never commit. |
 | `NODE_ENV` | Set by runtime | — | `development`, `production` | Environment mode. | Affects cookie Secure, HSTS, error details in responses, test-api page. |
-| `EMAIL_USER` | No | — | `your@gmail.com` | SMTP user / Gmail address for contact form. | If missing, contact form still saves to DB but does not send email. |
-| `EMAIL_APP_PASSWORD` | No | — | App password | Gmail app password or SMTP password. | Alternative: `APP_PASSWORD`. Never commit. |
-| `APP_PASSWORD` | No | — | (same as above) | Alternative to `EMAIL_APP_PASSWORD`. | Never commit. |
+| **`SMTP_HOST`** | No* | — | `mail.yourdomain.com` | **cPanel / server SMTP hostname.** Contact form uses this; no app password needed. | *Set this for cPanel or server mailer. If unset, app falls back to Gmail (which requires app password). |
+| `SMTP_PORT` | No | `587` | `587` or `465` | SMTP port. | 587 = STARTTLS; 465 = SSL. |
+| `SMTP_SECURE` | No | (falsy) | `true` | Use TLS/SSL for SMTP. | Set `true` for port 465 or when server requires SSL. |
 | `EMAIL_FROM` | No | — | `iSynergies Contact` | Custom "From" display name for emails. | — |
-| `SMTP_HOST` | No | (Gmail) | `smtp.example.com` | Custom SMTP host. | If set, custom SMTP is used instead of Gmail. |
-| `SMTP_PORT` | No | `587` | `587` | SMTP port. | — |
-| `SMTP_SECURE` | No | (falsy) | `true` | Use TLS for SMTP. | — |
+| `EMAIL_USER` | No | — | `noreply@yourdomain.com` | Only for Gmail, or if cPanel SMTP requires auth. | Not needed for typical cPanel SMTP. |
+| `EMAIL_APP_PASSWORD` | No | — | (secret) | **Gmail only** — app password. Not used for cPanel SMTP. | Alternative: `APP_PASSWORD`. Never commit. |
+| `APP_PASSWORD` | No | — | (same as above) | Alternative to `EMAIL_APP_PASSWORD` (Gmail only). | Not used for cPanel SMTP. Never commit. |
 | `NEXT_PUBLIC_SITE_URL` | No | — | `https://yoursite.com` | Public site URL for redirects/links in emails. | Used in contact email template. |
 | `BASE_URL` | No | — | `https://yoursite.com` | Fallback for site URL when building links. | Used in contact route if origin/host not available. |
 | `BLOB_READ_WRITE_TOKEN` | No*** | — | `vercel_blob_rw_...` | Vercel Blob token for uploads. Read only from environment (e.g. `.env`). | ***Required for admin image/media uploads via Vercel Blob (especially large videos). From Vercel project → Storage. Never commit. |
@@ -42,6 +42,29 @@ This document lists all environment variables used by the application, their def
 \* Database is required for the app and admin; defaults allow local dev with a local MySQL instance.  
 \** In development, a default placeholder is used if `JWT_SECRET` is unset; in production the app throws if unset or placeholder.  
 \*** Without it, admin uploads that use Vercel Blob will fail; DB-based upload (upload, upload-chunk, upload-finalize) may still work.
+
+### cPanel / server SMTP (no app password)
+
+Contact form email uses **cPanel or your server’s SMTP**. You do **not** need Gmail or app passwords.
+
+1. In **`.env`**: set **`SMTP_HOST`** to your mail server hostname (e.g. `mail.yourdomain.com` — from cPanel → Email → Connect Devices or your host’s docs).
+2. Set **`SMTP_PORT`** (usually `587`) and **`SMTP_SECURE`** (`false` for 587, `true` for 465) if needed.
+3. In the app: **Site Settings** → set **Contact Forward Email** (or **Company Email**) so messages are forwarded to your inbox.
+
+No **`EMAIL_APP_PASSWORD`** or **`APP_PASSWORD`** — the app uses the server’s SMTP, not Gmail.
+
+Example `.env` for cPanel:
+
+```env
+SMTP_HOST=mail.yourdomain.com
+SMTP_PORT=587
+SMTP_SECURE=false
+EMAIL_FROM=iSynergies Contact
+```
+
+If your cPanel SMTP requires authentication, you can optionally set `EMAIL_USER` and `APP_PASSWORD`; most cPanel setups on the same server do not.
+
+If **`SMTP_HOST`** is not set, the app falls back to Gmail and then requires `EMAIL_USER` and `EMAIL_APP_PASSWORD` (or `APP_PASSWORD`).
 
 ---
 
@@ -59,7 +82,7 @@ This document lists all environment variables used by the application, their def
 
 - **DB:** Set `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`; usually `DB_SSL=true`. For managed MySQL (e.g. DigitalOcean), add the deployment’s IP (or 0.0.0.0/0 for Vercel) to Trusted Sources. Tune `DB_CONNECTION_LIMIT` / `DB_QUEUE_LIMIT` so that bursty admin traffic (dashboard, uploads, video range requests) does not exhaust the pool.
 - **JWT_SECRET:** **Must** be set to a strong random value; app will throw on startup if missing or default.
-- **Email:** Set `EMAIL_USER` and `EMAIL_APP_PASSWORD` (or `APP_PASSWORD`) to send contact form emails.
+- **Email:** Set a forward address in Site Settings (Contact Forward Email or Company Email). For Gmail, set `EMAIL_USER` and `EMAIL_APP_PASSWORD`; for server SMTP (`SMTP_HOST`), auth is optional.
 - **BLOB_READ_WRITE_TOKEN:** Set for admin image/media uploads via Vercel Blob. Without it, large video uploads fall back to DB-based storage and are constrained by HTTP body size and MySQL limits.
 
 ### Web server / proxy (cPanel, Nginx, etc.)

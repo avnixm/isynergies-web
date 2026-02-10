@@ -75,17 +75,18 @@ export async function POST(request: Request) {
     
     const [settings] = await db.select().from(siteSettings).limit(1);
     const forwardTo = settings?.contactForwardEmail || settings?.companyEmail || process.env.EMAIL_USER;
+    const useSmtp = !!process.env.SMTP_HOST;
     const senderUser = process.env.EMAIL_USER || settings?.companyEmail;
     const senderPass = process.env.EMAIL_APP_PASSWORD || process.env.APP_PASSWORD;
+    const fromEmail = senderUser || settings?.companyEmail || forwardTo || 'noreply@localhost';
     const senderFrom = (() => {
       const fromEnv = process.env.EMAIL_FROM;
-      
       if (fromEnv) {
         return fromEnv.includes('@')
-          ? (fromEnv.includes('<') ? fromEnv : `${fromEnv} <${senderUser}>`)
-          : `${fromEnv} <${senderUser}>`;
+          ? (fromEnv.includes('<') ? fromEnv : `${fromEnv} <${fromEmail}>`)
+          : `${fromEnv} <${fromEmail}>`;
       }
-      return `iSynergies Contact <${senderUser}>`;
+      return `iSynergies Contact <${fromEmail}>`;
     })();
     const baseUrl = (() => {
       const originHdr = request.headers.get('origin');
@@ -108,25 +109,28 @@ export async function POST(request: Request) {
             ? logoPath
             : `/${logoPath}`;
 
-    if (!forwardTo || !senderUser || !senderPass) {
-      console.warn('Email configuration missing: ensure EMAIL_USER and EMAIL_APP_PASSWORD/APP_PASSWORD are set.');
+    const canSendSmtp = useSmtp && forwardTo;
+    const canSendGmail = !useSmtp && forwardTo && senderUser && senderPass;
+
+    if (!canSendSmtp && !canSendGmail) {
+      if (!forwardTo) {
+        console.warn('Email configuration missing: set Contact Forward Email in Site Settings or EMAIL_USER.');
+      } else if (useSmtp) {
+        console.warn('SMTP is configured (SMTP_HOST) but no forward address. Set Contact Forward Email in Site Settings.');
+      } else {
+        console.warn('Gmail sending requires EMAIL_USER and EMAIL_APP_PASSWORD/APP_PASSWORD in .env.');
+      }
     } else {
-      const transporter = process.env.SMTP_HOST
+      const transporter = useSmtp
         ? nodemailer.createTransport({
             host: process.env.SMTP_HOST,
             port: Number(process.env.SMTP_PORT || 587),
             secure: process.env.SMTP_SECURE === 'true',
-            auth: {
-              user: senderUser,
-              pass: senderPass,
-            },
+            ...(senderUser && senderPass ? { auth: { user: senderUser, pass: senderPass } } : {}),
           })
         : nodemailer.createTransport({
             service: 'gmail',
-            auth: {
-              user: senderUser,
-              pass: senderPass,
-            },
+            auth: { user: senderUser, pass: senderPass },
           });
 
       const subject = `New contact message from ${name}`;
