@@ -51,6 +51,8 @@ Contact form email uses **cPanel or your server’s SMTP**. You do **not** need 
 2. Set **`SMTP_PORT`** (usually `587`) and **`SMTP_SECURE`** (`false` for 587, `true` for 465) if needed.
 3. In the app: **Site Settings** → set **Contact Forward Email** (or **Company Email**) so messages are forwarded to your inbox.
 
+You can set **multiple recipients** in **Site Settings** by clicking **Add email** to add another recipient textbox.
+
 No **`EMAIL_APP_PASSWORD`** or **`APP_PASSWORD`** — the app uses the server’s SMTP, not Gmail.
 
 Example `.env` for cPanel:

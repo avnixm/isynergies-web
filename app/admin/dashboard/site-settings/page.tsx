@@ -11,7 +11,7 @@ import { Textarea } from '@/app/components/ui/textarea';
 import { Card, CardContent } from '@/app/components/ui/card';
 import { ImageUpload } from '@/app/components/ui/image-upload';
 import { useToast } from '@/app/components/ui/toast';
-import { Info } from 'lucide-react';
+import { Info, Plus, Trash2 } from 'lucide-react';
 
 type SiteSettings = {
   companyName: string;
@@ -24,6 +24,14 @@ type SiteSettings = {
   companyInstagram: string;
   logoImage: string | null;
 };
+
+function parseEmailList(raw: unknown): string[] {
+  if (typeof raw !== 'string') return [];
+  return raw
+    .split(/[,\n;]+/g)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
 
 export default function SiteSettingsPage() {
   const { success, error } = useToast();
@@ -38,6 +46,7 @@ export default function SiteSettingsPage() {
     companyInstagram: '',
     logoImage: null,
   });
+  const [forwardEmails, setForwardEmails] = useState<string[]>(['']);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -45,6 +54,10 @@ export default function SiteSettingsPage() {
     const cached = getCached<SiteSettings>('admin-site-settings');
     if (cached != null) {
       setSettings(cached);
+      setForwardEmails(() => {
+        const parsed = parseEmailList(cached.contactForwardEmail);
+        return parsed.length > 0 ? parsed : [''];
+      });
       setLoading(false);
       return;
     }
@@ -67,6 +80,10 @@ export default function SiteSettingsPage() {
         logoImage: data.logoImage || null,
       };
       setSettings(next);
+      setForwardEmails(() => {
+        const parsed = parseEmailList(next.contactForwardEmail);
+        return parsed.length > 0 ? parsed : [''];
+      });
       setCached('admin-site-settings', next);
     } catch (error) {
       console.error('Error fetching site settings:', error);
@@ -81,13 +98,19 @@ export default function SiteSettingsPage() {
     const token = localStorage.getItem('admin_token');
 
     try {
+      const forwardTo = forwardEmails
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .join(', ');
+      const payload: SiteSettings = { ...settings, contactForwardEmail: forwardTo };
+
       const response = await fetch('/api/admin/site-settings', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(settings),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
@@ -204,16 +227,55 @@ export default function SiteSettingsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="contactForwardEmail">Contact Form Forwarding Email</Label>
-                <Input
-                  id="contactForwardEmail"
-                  type="email"
-                  value={settings.contactForwardEmail}
-                  onChange={(e) => setSettings({ ...settings, contactForwardEmail: e.target.value })}
-                  placeholder="support@isynergies.com"
-                />
+                <div className="flex items-center justify-between gap-3">
+                  <Label>Contact Form Forwarding Email(s)</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setForwardEmails((prev) => [...prev, ''])}
+                    className="h-8"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add email
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {forwardEmails.map((value, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <Input
+                        type="email"
+                        value={value}
+                        onChange={(e) =>
+                          setForwardEmails((prev) => {
+                            const next = [...prev];
+                            next[idx] = e.target.value;
+                            return next;
+                          })
+                        }
+                        placeholder={idx === 0 ? 'support@isynergies.com' : 'another@isynergies.com'}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() =>
+                          setForwardEmails((prev) => {
+                            const next = prev.filter((_, i) => i !== idx);
+                            return next.length > 0 ? next : [''];
+                          })
+                        }
+                        className="shrink-0"
+                        aria-label="Remove email"
+                        title="Remove"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  Messages from the Contact form will be sent to this address. Defaults to the company email if left empty.
+                  Messages from the Contact form will be sent to these address(es). Defaults to the company email if left empty.
                 </p>
               </div>
             </div>

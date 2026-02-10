@@ -11,6 +11,15 @@ export const maxDuration = 60;
 const CONTACT_LIMIT = 5;
 const CONTACT_WINDOW_MS = 60 * 1000;
 
+function parseEmailList(raw: unknown): string[] {
+  if (typeof raw !== 'string') return [];
+  return raw
+    .split(/[,\n;]+/g)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .filter((s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s));
+}
+
 export async function POST(request: Request) {
   try {
     const key = getRateLimitKey(request, 'contact');
@@ -74,11 +83,12 @@ export async function POST(request: Request) {
 
     
     const [settings] = await db.select().from(siteSettings).limit(1);
-    const forwardTo = settings?.contactForwardEmail || settings?.companyEmail || process.env.EMAIL_USER;
+    const forwardToRaw = settings?.contactForwardEmail || settings?.companyEmail || process.env.EMAIL_USER || '';
+    const forwardToList = parseEmailList(forwardToRaw);
     const useSmtp = !!process.env.SMTP_HOST;
     const senderUser = process.env.EMAIL_USER || settings?.companyEmail;
     const senderPass = process.env.EMAIL_APP_PASSWORD || process.env.APP_PASSWORD;
-    const fromEmail = senderUser || settings?.companyEmail || forwardTo || 'noreply@localhost';
+    const fromEmail = senderUser || settings?.companyEmail || forwardToList[0] || 'noreply@localhost';
     const senderFrom = (() => {
       const fromEnv = process.env.EMAIL_FROM;
       if (fromEnv) {
@@ -109,11 +119,11 @@ export async function POST(request: Request) {
             ? logoPath
             : `/${logoPath}`;
 
-    const canSendSmtp = useSmtp && forwardTo;
-    const canSendGmail = !useSmtp && forwardTo && senderUser && senderPass;
+    const canSendSmtp = useSmtp && forwardToList.length > 0;
+    const canSendGmail = !useSmtp && forwardToList.length > 0 && senderUser && senderPass;
 
     if (!canSendSmtp && !canSendGmail) {
-      if (!forwardTo) {
+      if (forwardToList.length === 0) {
         console.warn('Email configuration missing: set Contact Forward Email in Site Settings or EMAIL_USER.');
       } else if (useSmtp) {
         console.warn('SMTP is configured (SMTP_HOST) but no forward address. Set Contact Forward Email in Site Settings.');
@@ -269,7 +279,7 @@ export async function POST(request: Request) {
       try {
         await transporter.sendMail({
           from: senderFrom,
-          to: forwardTo,
+          to: forwardToList,
           replyTo: email,
           subject,
           html,
