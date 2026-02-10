@@ -13,6 +13,9 @@ const encodeSansExpanded = Encode_Sans_Expanded({
 export const metadata: Metadata = {
   title: "iSynergies Inc. - We make IT possible",
   description: "iSynergies Inc. - We make IT possible",
+  icons: {
+    icon: "/IS.png",
+  },
 };
 
 export default function RootLayout({
